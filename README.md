@@ -12,7 +12,7 @@ Entropy는 특정 종목의 호가창을 추적하는 복합 주문 시스템으
 
      매수 및 매도 호가창에 채울 단위 호가수를 의미합니다. 
 
-     <img src="https://raw.githubusercontent.com/team-moebius/entropy/main/sample-order-book.png?token=ADT4RVKX5XENQJTME76EDUS72DTVW" />
+     <img src="https://github.com/team-moebius/entropy/blob/main/sample-order-book.png?raw=true" />
 
      먼저 단위 호가 수에 대해 정의하면, 거래소에서 지원하는(보여지는) 호가창이 위 스크린샷과 같다면 단위 호가 수는 6이 됩니다. 단위 호가 수 같은 경우, 보통 거래소에서 지원하는 최대 단위 호가 주문 수보다 같거나 많게 설정해야 합니다. 즉 위 경우는 6보다 크거나 같은 값이 됩니다.
 
