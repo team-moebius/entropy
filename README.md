@@ -94,4 +94,4 @@ Entropy는 특정 종목의 호가창을 추적하는 복합 주문 시스템으
 
 ## Architecture
 
-TBD
+<img src="https://github.com/team-moebius/entropy/blob/main/entropy-structure.png?raw=true" />
