@@ -1,0 +1,15 @@
+spring:
+  profiles:
+    active: local
+  main:
+    web-application-type: reactive
+
+exchange:
+  boboo:
+    websocket:
+      uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
+    orderbook:
+      topic: depth
+      event: sub
+      params:
+        binary: false
