@@ -22,19 +22,20 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.apache.commons:commons-lang3'
+	implementation 'org.codehaus.groovy:groovy:3.0.7'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	annotationProcessor('org.springframework.boot:spring-boot-configuration-processor')
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+		exclude group: 'ch.qos.logback', module: 'logback-classic'
+		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-logging'
 	}
+	testImplementation 'org.slf4j:slf4j-jdk14'
 	testImplementation 'io.projectreactor:reactor-test'
-	compile "org.codehaus.groovy:groovy:3.0.7"
-
 	testCompile platform("org.spockframework:spock-bom:2.0-M4-groovy-3.0")
-	testCompile "org.spockframework:spock-core"
-	testCompile "org.spockframework:spock-junit4"  // you can remove this if your code does not rely on old JUnit 4 rules
+	testImplementation 'org.spockframework:spock-core'
 }
 
 test {

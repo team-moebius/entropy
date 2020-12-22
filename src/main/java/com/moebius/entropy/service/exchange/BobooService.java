@@ -26,8 +26,8 @@ public class BobooService implements ExchangeService {
 				.thenMany(session.receive()
 					.map(bobooAssembler::assembleOrderBookDto))
 				.doOnNext(bobooOrderBookDto -> log.info("[Boboo] Succeeded in subscribing order book. [{}]", bobooOrderBookDto))
-				.then())
-			.doOnTerminate(() -> getAndLogOrderBook(symbol))
+				.then()
+				.doOnTerminate(() -> getAndLogOrderBook(symbol)))
 			.subscribe();
 	}
 }
