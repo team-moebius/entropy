@@ -2,17 +2,19 @@
 
 ## Definition
 
+<img src="https://github.com/team-moebius/entropy/blob/master/entropy-ui.png?raw=true" width="50%" />
+
 Entropy는 특정 종목의 호가창을 추적하는 복합 주문 시스템으로서, 자동 더미 매매(주문 등록 - 주문 취소) 및 호가창 채우기 / 수동 현재가 매매를 지원합니다.
 
 ## Features
 
-* ### Automatic
-
-  1. #### 단위 호가 수 설정 (ex : 6)
+* ### Automatic (자동 매도/매수 설정)
+  
+  1. #### 매도/매수 단위 호가 수 설정 (ex : 6)
 
      매수 및 매도 호가창에 채울 단위 호가수를 의미합니다. 
 
-     <img src="https://github.com/team-moebius/entropy/blob/main/sample-order-book.png?raw=true" />
+     <img src="https://github.com/team-moebius/entropy/blob/master/sample-order-book.png?raw=true" width="50%" />
 
      먼저 단위 호가 수에 대해 정의하면, 거래소에서 지원하는(보여지는) 호가창이 위 스크린샷과 같다면 단위 호가 수는 6이 됩니다. 단위 호가 수 같은 경우, 보통 거래소에서 지원하는 최대 단위 호가 주문 수보다 같거나 많게 설정해야 합니다. 즉 위 경우는 6보다 크거나 같은 값이 됩니다.
 
@@ -77,9 +79,9 @@ Entropy는 특정 종목의 호가창을 추적하는 복합 주문 시스템으
 
   
 
-* ### Manual
+* ### Manual (수동 매매 설정)
 
-  1. #### 매수/매도 현재가 주문 설정 (ex : 1100 ~ 2000)
+  1. #### 매도/매수 현재가 주문 설정 (ex : 1100 ~ 2000)
 
      이 설정은 실제 시세를 움직이는 용도로 사용합니다. 관리자가 시스템에 접속을 한 뒤에 수량 설정을 하고, 수동으로 현재가 매매를 요청하는 기능입니다. 상세한 내용은 아래 시나리오로 설명하겠습니다.
 
@@ -94,4 +96,4 @@ Entropy는 특정 종목의 호가창을 추적하는 복합 주문 시스템으
 
 ## Architecture
 
-<img src="https://github.com/team-moebius/entropy/blob/main/entropy-structure.png?raw=true" />
+<img src="https://github.com/team-moebius/entropy/blob/master/entropy-structure.png?raw=true" />
