@@ -6,8 +6,12 @@ spring:
 
 exchange:
   boboo:
+    rest:
+      uri: https://api.boboo.vip
     websocket:
       uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
+    order:
+      open-orders: /openapi/contract/v1/openOrders
     orderbook:
       topic: depth
       event: sub
