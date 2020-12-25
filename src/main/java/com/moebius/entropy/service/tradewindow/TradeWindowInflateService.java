@@ -10,6 +10,7 @@ import com.moebius.entropy.domain.OrderRequest;
 import com.moebius.entropy.domain.OrderType;
 import com.moebius.entropy.domain.TradePrice;
 import com.moebius.entropy.domain.TradeWindow;
+import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.tradewindow.repository.InflationConfigRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ import reactor.core.publisher.Mono;
 @Service
 public class TradeWindowInflateService {
 
-    private final TradeWindowService tradeWindowService;
+    private final TradeWindowQueryService tradeWindowQueryService;
     private final InflationConfigRepository inflationConfigRepository;
     private final OrderService orderService;
 
@@ -39,7 +40,7 @@ public class TradeWindowInflateService {
         Market market = inflateRequest.getMarket();
         InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(market);
 
-        return tradeWindowService.fetchTradeWindow(market)
+        return tradeWindowQueryService.fetchTradeWindow(market)
             .flatMap(tradeWindow -> {
                 Flux<Order> createdOrders = Mono.just(tradeWindow)
                     .filter(window -> shouldInflateTrade(window, inflationConfig))
@@ -65,7 +66,7 @@ public class TradeWindowInflateService {
         String symbol = market.getSymbol();
         Exchange exchange = market.getExchange();
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-        BigDecimal fallbackStartPrice = tradeWindowService.getMarketPrice(market);
+        BigDecimal fallbackStartPrice = tradeWindowQueryService.getMarketPrice(market);
 
         Flux<Order> askOrders = makeOrdersWith(
             symbol, exchange, OrderType.ASK, tradeWindow.getAskPrices(),

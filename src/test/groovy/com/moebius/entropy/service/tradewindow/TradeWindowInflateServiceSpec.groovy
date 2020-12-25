@@ -1,6 +1,7 @@
 package com.moebius.entropy.service.tradewindow
 
 import com.moebius.entropy.domain.*
+import com.moebius.entropy.service.order.OrderService
 import com.moebius.entropy.service.tradewindow.repository.InflationConfigRepository
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -13,7 +14,7 @@ import spock.lang.Unroll
 import java.util.stream.Collectors
 
 @SuppressWarnings('GroovyAssignabilityCheck')
-class TradeWindowInflateServiceTest extends Specification {
+class TradeWindowInflateServiceSpec extends Specification {
     @Shared
     def marketPrice = new BigDecimal("11.35")
     @Shared
@@ -22,7 +23,7 @@ class TradeWindowInflateServiceTest extends Specification {
     def symbol = "GTAX"
     @Shared
     def exchange = Exchange.BOBOO
-    def tradeWindowService = Mock(TradeWindowService)
+    def tradeWindowService = Mock(TradeWindowQueryService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def orderService = Mock(OrderService)
 

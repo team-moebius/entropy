@@ -5,7 +5,7 @@ import com.moebius.entropy.domain.TradeWindow;
 import java.math.BigDecimal;
 import reactor.core.publisher.Mono;
 
-public class TradeWindowService {
+public class TradeWindowQueryService {
 
     public Mono<TradeWindow> fetchTradeWindow(Market market) {
         return null;

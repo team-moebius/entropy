@@ -10,5 +10,5 @@ public class TradePrice {
 
     private final OrderType orderType;
     private final BigDecimal unitPrice;
-    private final int volume;
+    private final BigDecimal volume;
 }
