@@ -37,7 +37,7 @@ public class TradeWindowRepository {
     }
 
     private String keyFrom(Market market) {
-        return keyFrom(market.getExchange(), market.getSymbol());
+        return keyFrom(market.getExchange(), market.getSymbol() + market.getTradeCurrency().name());
     }
 
     private String keyFrom(Exchange exchange, String symbol) {
