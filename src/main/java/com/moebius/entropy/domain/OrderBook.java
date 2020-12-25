@@ -1,4 +1,4 @@
-package com.moebius.entropy.entity;
+package com.moebius.entropy.domain;
 
 import lombok.Builder;
 import lombok.Getter;

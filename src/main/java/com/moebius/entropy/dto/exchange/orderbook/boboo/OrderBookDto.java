@@ -1,4 +1,4 @@
-package com.moebius.entropy.dto.exchange.orderbook.response;
+package com.moebius.entropy.dto.exchange.orderbook.boboo;
 
 import java.util.List;
 

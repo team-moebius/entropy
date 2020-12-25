@@ -1,4 +1,4 @@
-package com.moebius.entropy.dto.exchange.orderbook.request;
+package com.moebius.entropy.dto.exchange.orderbook.boboo;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -2,8 +2,8 @@ package com.moebius.entropy.assembler
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.moebius.entropy.dto.exchange.orderbook.request.BobooOrderBookRequestDto
-import com.moebius.entropy.dto.exchange.orderbook.response.BobooOrderBookDto
+import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto
+import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
 import org.springframework.util.StringUtils
 import org.springframework.web.reactive.socket.WebSocketMessage
 import spock.lang.Specification

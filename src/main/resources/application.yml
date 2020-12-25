@@ -7,11 +7,12 @@ spring:
 exchange:
   boboo:
     rest:
-      uri: https://api.boboo.vip
+      scheme: https
+      host: api.boboo.vip
+      auth-header-name: X-BH-APIKEY
+      open-orders: /openapi/v1/openOrders
     websocket:
       uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
-    order:
-      open-orders: /openapi/contract/v1/openOrders
     orderbook:
       topic: depth
       event: sub
