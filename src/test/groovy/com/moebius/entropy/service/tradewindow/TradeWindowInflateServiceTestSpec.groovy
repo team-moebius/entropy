@@ -14,7 +14,7 @@ import spock.lang.Unroll
 import java.util.stream.Collectors
 
 @SuppressWarnings('GroovyAssignabilityCheck')
-class TradeWindowInflateServiceSpec extends Specification {
+class TradeWindowInflateServiceTestSpec extends Specification {
     @Shared
     def marketPrice = new BigDecimal("11.35")
     @Shared
