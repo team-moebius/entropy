@@ -1,6 +1,6 @@
 package com.moebius.entropy.service.tradewindow;
 
-import com.moebius.entropy.domain.Exchange;
+import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.TradeWindow;
 import com.moebius.entropy.service.tradewindow.repository.TradeWindowRepository;
 import java.math.BigDecimal;
@@ -13,9 +13,9 @@ public class TradeWindowCommandService {
 
     private final TradeWindowRepository tradeWindowRepository;
 
-    public void saveCurrentTradeWindow(Exchange exchange, String symbol, BigDecimal marketPrice,
+    public void saveCurrentTradeWindow(Market market, BigDecimal marketPrice,
         TradeWindow tradeWindow) {
-        tradeWindowRepository.savePriceForSymbol(exchange, symbol, marketPrice);
-        tradeWindowRepository.saveTradeWindowForSymbol(exchange, symbol, tradeWindow);
+        tradeWindowRepository.savePriceForSymbol(market, marketPrice);
+        tradeWindowRepository.saveTradeWindowForSymbol(market, tradeWindow);
     }
 }

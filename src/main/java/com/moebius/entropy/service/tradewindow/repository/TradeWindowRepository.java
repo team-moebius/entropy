@@ -19,17 +19,16 @@ public class TradeWindowRepository {
         tradeWindowForSymbol = new HashMap<>();
     }
 
-    public void savePriceForSymbol(Exchange exchange, String symbol, BigDecimal marketPrice) {
-        marketPriceForSymbol.put(keyFrom(exchange, symbol), marketPrice);
+    public void savePriceForSymbol(Market market, BigDecimal marketPrice) {
+        marketPriceForSymbol.put(keyFrom(market), marketPrice);
     }
 
     public BigDecimal getMarketPriceForSymbol(Market market) {
         return marketPriceForSymbol.getOrDefault(keyFrom(market), BigDecimal.ZERO);
     }
 
-    public void saveTradeWindowForSymbol(Exchange exchange, String symbol,
-        TradeWindow tradeWindow) {
-        tradeWindowForSymbol.put(keyFrom(exchange, symbol), tradeWindow);
+    public void saveTradeWindowForSymbol(Market market, TradeWindow tradeWindow) {
+        tradeWindowForSymbol.put(keyFrom(market), tradeWindow);
     }
 
     public TradeWindow getTradeWindowForSymbol(Market market) {

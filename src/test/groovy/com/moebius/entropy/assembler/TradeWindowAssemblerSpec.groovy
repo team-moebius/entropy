@@ -1,5 +1,6 @@
 package com.moebius.entropy.assembler
 
+import com.moebius.entropy.domain.TradeCurrency
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
 import spock.lang.Specification
 
@@ -9,12 +10,12 @@ class TradeWindowAssemblerSpec extends Specification {
     def "Test all data exist"() {
         given:
         def data = BobooOrderBookDto.builder()
-                .symbol("BTCUSDT")
-                .symbolName("BTCUSDT")
+                .symbol(bobooSymbol)
+                .symbolName(bobooSymbol)
                 .topic("depth").params([:])
                 .data([
                         BobooOrderBookDto.Data.builder()
-                                .symbol("BTCUSDT")
+                                .symbol(bobooSymbol)
                                 .timestamp("1565600357643")
                                 .version("112801745_18")
                                 .bids([["11371.49", "0.0014"],
@@ -42,7 +43,7 @@ class TradeWindowAssemblerSpec extends Specification {
                 .build()
         when:
         def tradeWindow = sut.assembleTradeWindow(data)
-        def symbol = sut.extractSymbol(data)
+        def market = sut.extractMarket(data)
         def marketPrice = sut.extractMarketPrice(data)
 
         then:
@@ -56,7 +57,14 @@ class TradeWindowAssemblerSpec extends Specification {
         def bidVolumes = tradeWindow.getBidPrices().collect { it.getVolume() }
         bidVolumes == [0.0014, 0.2, 0.3523, 0.5, 0.0934, 1.6809, 0.0047, 0.3, 0.2, 1.3203]
 
-        symbol == "BTCUSDT"
+        market.symbol == desiredSymbol
+        market.tradeCurrency == desiredCurrency
         marketPrice == 11375.41
+        where:
+        bobooSymbol | desiredSymbol | desiredCurrency
+        "BTCUSDT"   | "BTC"         | TradeCurrency.USDT
+        "BTCKRW"    | "BTC"         | TradeCurrency.KRW
+        "GTAXUSDT"  | "GTAX"        | TradeCurrency.USDT
+        "GTAXKRW"   | "GTAX"        | TradeCurrency.KRW
     }
 }
