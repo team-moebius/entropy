@@ -3,6 +3,7 @@ package com.moebius.entropy.service.exchange
 import com.moebius.entropy.assembler.BobooAssembler
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto
+import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.client.WebSocketClient
@@ -22,9 +23,10 @@ class BobooServiceTestSpec extends Specification {
     def webClient = Mock(WebClient)
     def webSocketClient = Mock(WebSocketClient)
     def bobooAssembler = Mock(BobooAssembler)
+    def eventListener = Mock(BobooTradeWindowChangeEventListener)
 
     @Subject
-    def bobooService = new BobooService(webClient, webSocketClient, bobooAssembler)
+    def bobooService = new BobooService(webClient, webSocketClient, bobooAssembler, eventListener)
 
     def "Should get open orders"() {
         given:
