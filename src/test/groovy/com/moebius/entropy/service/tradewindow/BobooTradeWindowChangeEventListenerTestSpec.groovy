@@ -12,8 +12,9 @@ import spock.lang.Subject
 class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
     def commandService = Mock(TradeWindowCommandService)
     def assembler = Mock(TradeWindowAssembler)
+    def inflateService = Mock(TradeWindowInflateService)
     @Subject
-    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler)
+    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler, inflateService)
 
     def "On any changes on trade window"() {
         given:
@@ -30,6 +31,7 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
 
         then:
         1 * commandService.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
+        1 * inflateService.inflateTrades({ it.market == market })
     }
 
     def "On failed to change on trade window"() {
@@ -46,5 +48,6 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
 
         then:
         0 * commandService.saveCurrentTradeWindow(_, _, _)
+        0 * inflateService.inflateTrades(_)
     }
 }
