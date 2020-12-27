@@ -1,0 +1,20 @@
+spring:
+  profiles:
+    active: local
+  main:
+    web-application-type: reactive
+
+exchange:
+  boboo:
+    rest:
+      scheme: https
+      host: api.boboo.vip
+      auth-header-name: X-BH-APIKEY
+      open-orders: /openapi/v1/openOrders
+    websocket:
+      uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
+    orderbook:
+      topic: depth
+      event: sub
+      params:
+        binary: false
