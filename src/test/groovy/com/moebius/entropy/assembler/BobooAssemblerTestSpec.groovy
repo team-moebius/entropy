@@ -2,8 +2,10 @@ package com.moebius.entropy.assembler
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.moebius.entropy.dto.exchange.order.ApiKeyDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
+import org.springframework.util.MultiValueMap
 import org.springframework.util.StringUtils
 import org.springframework.web.reactive.socket.WebSocketMessage
 import spock.lang.Specification
@@ -19,6 +21,21 @@ class BobooAssemblerTestSpec extends Specification {
 		bobooAssembler.topic = "depth"
 		bobooAssembler.event = "sub"
 		bobooAssembler.params = ["binary": "false"]
+	}
+
+	def "Should assemble open orders query params"() {
+		given:
+		def apiKey = Stub(ApiKeyDto) {
+			getAccessKey() >> "testAccessKey"
+			getSecretKey() >> "testSecretKey"
+		}
+
+		when:
+		def result = bobooAssembler.assembleOpenOrdersQueryParams("GTAXUSDT", apiKey)
+
+		then:
+		result instanceof MultiValueMap
+		result.size() == 3
 	}
 
 	def "Should assemble order book payload"() {

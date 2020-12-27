@@ -35,7 +35,7 @@ public class BobooService implements ExchangeService {
 	private final BobooAssembler bobooAssembler;
 
 	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKeyDto apiKey) {
-		return webClient.method(HttpMethod.GET)
+		return webClient.get()
 			.uri(uriBuilder -> uriBuilder.scheme(scheme)
 				.host(host)
 				.path(openOrdersPath)
