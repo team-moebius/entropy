@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @Getter
 public class Order {
-
+    private final String orderId;
     private final String symbol;
     private final Exchange exchange;
     private final OrderType orderType;

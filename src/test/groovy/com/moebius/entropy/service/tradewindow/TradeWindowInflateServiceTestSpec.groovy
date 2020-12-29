@@ -62,9 +62,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.requestOrder({
                 it.symbol == symbol && it.orderType == OrderType.ASK \
-                         && it.price == price
+                          && it.price == price
             }) >> Mono.just(
-                    new Order(symbol, exchange, OrderType.ASK, price, 1)
+                    new Order("${multiplier}", symbol, exchange, OrderType.ASK, price, 1)
             )
             return price
         }).collect(Collectors.toList())
@@ -73,9 +73,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.requestOrder({
                 it.symbol == symbol && it.orderType == OrderType.BID \
-                         && it.price == price
+                          && it.price == price
             }) >> Mono.just(
-                    new Order(symbol, exchange, OrderType.BID, price, 1)
+                    new Order("${multiplier}", symbol, exchange, OrderType.BID, price, 1)
             )
             return price
         }).collect(Collectors.toList())
@@ -84,9 +84,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.cancelOrder({
                 it.symbol == symbol && it.orderType == OrderType.ASK  \
-                        && it.price == price
+                         && it.price == price
             }) >> Mono.just(
-                    new Order(symbol, exchange, OrderType.ASK, price, 1)
+                    new Order("${multiplier}", symbol, exchange, OrderType.ASK, price, 1)
             )
             return price
         }).collect(Collectors.toList())
@@ -95,9 +95,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.cancelOrder({
                 it.symbol == symbol && it.orderType == OrderType.BID  \
-                        && it.price == price
+                         && it.price == price
             }) >> Mono.just(
-                    new Order(symbol, exchange, OrderType.BID, price, 1)
+                    new Order("${multiplier}", symbol, exchange, OrderType.BID, price, 1)
             )
             return price
         }).collect(Collectors.toList())
@@ -106,9 +106,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         StepVerifier.create(sut.inflateTrades(inflateRequest))
                 .assertNext({
                     it.getCreatedAskOrderPrices() == madeAskedPrices \
-                      && it.getCreatedBidOrderPrices() == madeBidPrices \
-                      && it.getCancelledAskOrderPrices() == cancelledAskedPrices \
-                      && it.getCancelledBidOrderPrices() == cancelledBiddenPrices
+                       && it.getCreatedBidOrderPrices() == madeBidPrices \
+                       && it.getCancelledAskOrderPrices() == cancelledAskedPrices \
+                       && it.getCancelledBidOrderPrices() == cancelledBiddenPrices
 
                     println("Case: " + comment)
                     println("Ask Orders should be made" + madeAskedPrices)
@@ -292,7 +292,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                     def priceMultiplier = orderType == OrderType.BID ? index + 1 : -index
                     def volume = volumes[index]
                     BigDecimal price = marketPrice + priceChangeUnit * priceMultiplier
-                    return new Order(symbol, exchange, orderType, price, volume)
+                    return new Order("${index}", symbol, exchange, orderType, price, volume)
                 })
                 .collect(Collectors.toList())
     }
