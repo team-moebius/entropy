@@ -26,10 +26,11 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def tradeWindowService = Mock(TradeWindowQueryService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def orderService = Mock(OrderService)
+    def inflationVolumeResolver = Mock(TradeWindowInflationVolumeResolver)
 
     @Subject
     TradeWindowInflateService sut = new TradeWindowInflateService(
-            tradeWindowService, inflationConfigRepository, orderService
+            tradeWindowService, inflationConfigRepository, orderService, inflationVolumeResolver
     )
 
     def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
@@ -45,6 +46,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     @Unroll
     def "Test when #comment"() {
         given:
+        def askInflationVolume = BigDecimal.valueOf(99.9999)
+        def bidInflationVolume = BigDecimal.valueOf(111.1111)
+
         def askTradeWindow = tradeWindow(askVolumeForTradeWndow, OrderType.ASK)
         def bidTradeWindow = tradeWindow(bidVolumeForTradeWndow, OrderType.BID)
         def tradeWindow = new TradeWindow(askTradeWindow, bidTradeWindow)
@@ -58,13 +62,16 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
         inflationConfigRepository.getConfigFor(market) >> inflationConfig
 
+        inflationVolumeResolver.getInflationVolume(market, OrderType.ASK) >> askInflationVolume
+        inflationVolumeResolver.getInflationVolume(market, OrderType.BID) >> bidInflationVolume
+
         def madeAskedPrices = priceUnitMultipliersForAskOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.requestOrder({
                 it.symbol == symbol && it.orderType == OrderType.ASK \
-                          && it.price == price
+                          && it.price == price && it.volume == askInflationVolume
             }) >> Mono.just(
-                    new Order("${multiplier}", symbol, exchange, OrderType.ASK, price, 1)
+                    new Order("${multiplier}", symbol, exchange, OrderType.ASK, price, askInflationVolume)
             )
             return price
         }).collect(Collectors.toList())
@@ -73,9 +80,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.requestOrder({
                 it.symbol == symbol && it.orderType == OrderType.BID \
-                          && it.price == price
+                          && it.price == price && it.volume == bidInflationVolume
             }) >> Mono.just(
-                    new Order("${multiplier}", symbol, exchange, OrderType.BID, price, 1)
+                    new Order("${multiplier}", symbol, exchange, OrderType.BID, price, bidInflationVolume)
             )
             return price
         }).collect(Collectors.toList())

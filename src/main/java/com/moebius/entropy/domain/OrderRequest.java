@@ -12,4 +12,6 @@ public class OrderRequest {
     private final Exchange exchange;
     private final OrderType orderType;
     private final BigDecimal price;
+    private final BigDecimal volume;
 }
+
