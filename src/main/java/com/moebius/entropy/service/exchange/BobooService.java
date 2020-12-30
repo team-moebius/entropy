@@ -1,8 +1,8 @@
 package com.moebius.entropy.service.exchange;
 
 import com.moebius.entropy.assembler.BobooAssembler;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
-import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto;
+import com.moebius.entropy.dto.exchange.order.*;
+import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,9 @@ import reactor.core.publisher.Mono;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BobooService implements ExchangeService {
+public class BobooService implements ExchangeService<
+    BobooCancelRequest, BobooCancelResponse, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto
+> {
 	@Value("${exchange.boboo.rest.scheme}")
 	private String scheme;
 	@Value("${exchange.boboo.rest.host}")
@@ -44,6 +46,16 @@ public class BobooService implements ExchangeService {
 			.header(authHeaderName, apiKey.getAccessKey())
 			.retrieve()
 			.bodyToFlux(BobooOpenOrdersDto.class);
+	}
+
+	@Override
+	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest) {
+		return null;
+	}
+
+	@Override
+	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest) {
+		return null;
 	}
 
 	public void getAndLogOrderBook(String symbol) {

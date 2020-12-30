@@ -3,24 +3,23 @@ package com.moebius.entropy.service.order;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.Order;
 import com.moebius.entropy.domain.OrderRequest;
-import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@Service
-public class OrderService {
+import java.util.List;
 
-    public Flux<Order> fetchAutomaticOrdersFor(Market market){
-        return Flux.empty();
-    }
+public interface OrderService {
+    Flux<Order> fetchAutomaticOrdersFor(Market market);
 
-    public Mono<Order> requestOrder(OrderRequest orderRequest){
-        return Mono.empty();
-    }
+    Flux<Order> fetchManualOrdersFor(Market market);
 
-    public Mono<Order> cancelOrder(Order order){
-        return Mono.empty();
-    }
+    Flux<Order> fetchAllOrdersFor(Market market);
 
+    Mono<Order> requestOrder(OrderRequest orderRequest);
 
+    Mono<Order> requestManualOrder(OrderRequest orderRequest);
+
+    Mono<Order> cancelOrder(Order order);
+
+    Mono<Void> updateOrders(List<Order> orders);
 }
