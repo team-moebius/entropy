@@ -61,7 +61,7 @@ public class BobooOrderService implements OrderService{
 
     public Mono<Order> cancelOrder(Order order){
         return Optional.ofNullable(order)
-                .filter(requestedOrder-> getAllOrderForMarket(order.getSymbol())
+                .filter(requestedOrder-> getAllOrderForMarket(order.getMarket().getSymbol())
                         .stream()
                         .anyMatch(trackedOrder->trackedOrder.getOrderId().equals(order.getOrderId()))
                 )
@@ -113,14 +113,14 @@ public class BobooOrderService implements OrderService{
 
     private void trackOrder(Order order) {
         List<Order> orders = orderListForSymbol.computeIfAbsent(
-                order.getSymbol(), symbol -> new LinkedList<>()
+                order.getMarket().getSymbol(), symbol -> new LinkedList<>()
         );
         orders.add(order);
     }
 
     private void releaseOrderFromTracking(Order order){
         automaticOrderIds.remove(order.getOrderId());
-        orderListForSymbol.computeIfPresent(order.getSymbol(), (s, orders) -> {
+        orderListForSymbol.computeIfPresent(order.getMarket().getSymbol(), (s, orders) -> {
             orders.removeIf(trackedOrder -> trackedOrder.getOrderId().equals(order.getOrderId()));
             return orders;
         });

@@ -33,7 +33,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             tradeWindowService, inflationConfigRepository, orderService, inflationVolumeResolver
     )
 
-    def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
+    def market = new Market(exchange, symbol, TradeCurrency.USDT)
     def inflateRequest = new InflateRequest(market)
     def inflationConfig = new InflationConfig(8, 9)
 
@@ -68,10 +68,10 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def madeAskedPrices = priceUnitMultipliersForAskOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.requestOrder({
-                it.symbol == symbol && it.orderType == OrderType.ASK \
+                it.market == market && it.orderType == OrderType.ASK \
                           && it.price == price && it.volume == askInflationVolume
             }) >> Mono.just(
-                    new Order("${multiplier}", symbol, exchange, OrderType.ASK, price, askInflationVolume)
+                    new Order("${multiplier}", market, OrderType.ASK, price, askInflationVolume)
             )
             return price
         }).collect(Collectors.toList())
@@ -79,10 +79,10 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def madeBidPrices = priceUnitMultipliersForBidOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.requestOrder({
-                it.symbol == symbol && it.orderType == OrderType.BID \
+                it.market == market && it.orderType == OrderType.BID \
                           && it.price == price && it.volume == bidInflationVolume
             }) >> Mono.just(
-                    new Order("${multiplier}", symbol, exchange, OrderType.BID, price, bidInflationVolume)
+                    new Order("${multiplier}", market, OrderType.BID, price, bidInflationVolume)
             )
             return price
         }).collect(Collectors.toList())
@@ -90,10 +90,10 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def cancelledAskedPrices = priceUnitMultipliersForAskOrdersShouldBeCanceled.stream().map({ int multiplier ->
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.cancelOrder({
-                it.symbol == symbol && it.orderType == OrderType.ASK  \
+                it.market == market && it.orderType == OrderType.ASK  \
                          && it.price == price
             }) >> Mono.just(
-                    new Order("${multiplier}", symbol, exchange, OrderType.ASK, price, 1)
+                    new Order("${multiplier}", market, OrderType.ASK, price, 1)
             )
             return price
         }).collect(Collectors.toList())
@@ -101,10 +101,10 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def cancelledBiddenPrices = priceUnitMultipliersForBidOrdersShouldBeCanceled.stream().map({ int multiplier ->
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.cancelOrder({
-                it.symbol == symbol && it.orderType == OrderType.BID  \
+                it.market == market && it.orderType == OrderType.BID  \
                          && it.price == price
             }) >> Mono.just(
-                    new Order("${multiplier}", symbol, exchange, OrderType.BID, price, 1)
+                    new Order("${multiplier}", market, OrderType.BID, price, 1)
             )
             return price
         }).collect(Collectors.toList())
@@ -299,7 +299,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                     def priceMultiplier = orderType == OrderType.BID ? index + 1 : -index
                     def volume = volumes[index]
                     BigDecimal price = marketPrice + priceChangeUnit * priceMultiplier
-                    return new Order("${index}", symbol, exchange, orderType, price, volume)
+                    return new Order("${index}", market, orderType, price, volume)
                 })
                 .collect(Collectors.toList())
     }

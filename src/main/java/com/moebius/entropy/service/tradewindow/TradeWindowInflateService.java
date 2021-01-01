@@ -84,8 +84,6 @@ public class TradeWindowInflateService {
         BigDecimal fallbackStartPrice,
         int countObjective, BinaryOperator<BigDecimal> priceCalculationHandler
     ) {
-        String symbol = market.getSymbol();
-        Exchange exchange = market.getExchange();
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
         int tradeWindowSize = prices.size();
 
@@ -107,7 +105,7 @@ public class TradeWindowInflateService {
                 .orElse(Collections.emptyList()))
             .map(price -> {
                 BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderType);
-                return new OrderRequest(symbol, exchange, orderType, price, inflationVolume);
+                return new OrderRequest(market, orderType, price, inflationVolume);
             })
             .flatMap(orderService::requestOrder);
     }

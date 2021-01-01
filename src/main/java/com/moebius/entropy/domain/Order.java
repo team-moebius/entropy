@@ -8,8 +8,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public class Order {
     private final String orderId;
-    private final String symbol;
-    private final Exchange exchange;
+    private final Market market;
     private final OrderType orderType;
     private final BigDecimal price;
     private final BigDecimal volume;

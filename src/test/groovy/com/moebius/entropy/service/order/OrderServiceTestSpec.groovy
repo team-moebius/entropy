@@ -37,13 +37,13 @@ class OrderServiceTestSpec extends Specification {
 
     def "After create automatic order then get automatic order list"() {
         given:
-        def orderRequest = new OrderRequest(symbol, market.exchange, orderType, price, volume)
+        def orderRequest = new OrderRequest(market, orderType, price, volume)
         1 * mockExchangeService.requestOrder(_, {
             it.accessKey==accessKey && it.secretKey == secretKey
         }) >> Mono.just(orderResponse)
         1 * mockAssembler.convertToOrderRequest(orderRequest) >> Mock(BobooOrderRequestDto)
         1 * mockAssembler.convertToOrder(orderResponse) >> new Order(
-                orderId, symbol, market.exchange, orderType, price, volume
+                orderId, market, orderType, price, volume
         )
 
         expect:
@@ -68,13 +68,13 @@ class OrderServiceTestSpec extends Specification {
 
     def "After create manual order then get automatic order list"() {
         given:
-        def orderRequest = new OrderRequest(symbol, market.exchange, orderType, price, volume)
+        def orderRequest = new OrderRequest(market, orderType, price, volume)
         1 * mockExchangeService.requestOrder(_, {
             it.accessKey==accessKey && it.secretKey == secretKey
         }) >> Mono.just(orderResponse)
         1 * mockAssembler.convertToOrderRequest(orderRequest) >> Mock(BobooOrderRequestDto)
         1 * mockAssembler.convertToOrder(orderResponse) >> new Order(
-                orderId, symbol, market.exchange, orderType, price, volume
+                orderId, market, orderType, price, volume
         )
 
         expect:
@@ -99,9 +99,9 @@ class OrderServiceTestSpec extends Specification {
 
     def "Cancel order traced by OrderService"() {
         given:
-        def orderTrackedByService = new Order(orderId, symbol, market.exchange, orderType, price, volume)
+        def orderTrackedByService = new Order(orderId, market, orderType, price, volume)
         addOrderList([orderTrackedByService])
-        def orderShouldBeCancelled = new Order(orderId, symbol, market.exchange, orderType, price, volume)
+        def orderShouldBeCancelled = new Order(orderId, market, orderType, price, volume)
 
         1 * mockExchangeService.cancelOrder(_, {
             it.accessKey==accessKey && it.secretKey == secretKey
@@ -120,7 +120,7 @@ class OrderServiceTestSpec extends Specification {
     }
 
     def "Cancel order not traced by OrderService"() {
-        def orderShouldBeCancelled = new Order(orderId, symbol, market.exchange, orderType, price, volume)
+        def orderShouldBeCancelled = new Order(orderId, market, orderType, price, volume)
 
         0 * mockExchangeService.cancelOrder(_, _)
         0 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled)
@@ -238,11 +238,10 @@ class OrderServiceTestSpec extends Specification {
 
     boolean assertOrderWithRequest(Order order, OrderRequest orderRequest) {
         assert order.orderId != null
-        assert order.exchange == orderRequest.exchange
+        assert order.market == orderRequest.market
         assert order.orderType == orderRequest.orderType
         assert order.price == price
         assert order.volume == volume
-        assert order.symbol == symbol
         return true
     }
 
@@ -253,7 +252,7 @@ class OrderServiceTestSpec extends Specification {
     }
 
     Order createOrderWith(String orderId, OrderType orderType, float price, float volume) {
-        return new Order(orderId, symbol, market.exchange, orderType, BigDecimal.valueOf(price), BigDecimal.valueOf(volume))
+        return new Order(orderId, market, orderType, BigDecimal.valueOf(price), BigDecimal.valueOf(volume))
     }
 
     def setAutomaticOrders(List<String> orderIds) {
