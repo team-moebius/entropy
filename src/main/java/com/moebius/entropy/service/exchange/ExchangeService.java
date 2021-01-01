@@ -6,7 +6,7 @@ import reactor.core.publisher.Mono;
 
 public interface ExchangeService<CANCEL_REQ, CANCEL_RES, ORDER_REQ, ORDER_RES, ORDERS> {
 	Flux<ORDERS> getOpenOrders(String symbol, ApiKeyDto apiKey);
-	Mono<CANCEL_RES> cancelOrder(CANCEL_REQ cancelRequest);
-	Mono<ORDER_RES> requestOrder(ORDER_REQ orderRequest);
+	Mono<CANCEL_RES> cancelOrder(CANCEL_REQ cancelRequest, ApiKeyDto apiKey);
+	Mono<ORDER_RES> requestOrder(ORDER_REQ orderRequest, ApiKeyDto apiKey);
 	void getAndLogOrderBook(String symbol);
 }

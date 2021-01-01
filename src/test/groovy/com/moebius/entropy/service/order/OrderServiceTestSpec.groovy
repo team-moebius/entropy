@@ -18,8 +18,11 @@ import spock.lang.Unroll
 class OrderServiceTestSpec extends Specification {
     def mockExchangeService = Mock(BobooService)
     def mockAssembler = Mock(OrderBobooExchangeAssembler)
+    def accessKey = "some_test_api_key"
+    def secretKey = "some_test_secret_key"
+
     @Subject
-    OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler)
+    OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, accessKey, secretKey)
 
     @Shared
     def symbol = "GTAX"
@@ -35,7 +38,9 @@ class OrderServiceTestSpec extends Specification {
     def "After create automatic order then get automatic order list"() {
         given:
         def orderRequest = new OrderRequest(symbol, market.exchange, orderType, price, volume)
-        1 * mockExchangeService.requestOrder(_) >> Mono.just(orderResponse)
+        1 * mockExchangeService.requestOrder(_, {
+            it.accessKey==accessKey && it.secretKey == secretKey
+        }) >> Mono.just(orderResponse)
         1 * mockAssembler.convertToOrderRequest(orderRequest) >> Mock(BobooOrderRequestDto)
         1 * mockAssembler.convertToOrder(orderResponse) >> new Order(
                 orderId, symbol, market.exchange, orderType, price, volume
@@ -64,7 +69,9 @@ class OrderServiceTestSpec extends Specification {
     def "After create manual order then get automatic order list"() {
         given:
         def orderRequest = new OrderRequest(symbol, market.exchange, orderType, price, volume)
-        1 * mockExchangeService.requestOrder(_) >> Mono.just(orderResponse)
+        1 * mockExchangeService.requestOrder(_, {
+            it.accessKey==accessKey && it.secretKey == secretKey
+        }) >> Mono.just(orderResponse)
         1 * mockAssembler.convertToOrderRequest(orderRequest) >> Mock(BobooOrderRequestDto)
         1 * mockAssembler.convertToOrder(orderResponse) >> new Order(
                 orderId, symbol, market.exchange, orderType, price, volume
@@ -96,7 +103,9 @@ class OrderServiceTestSpec extends Specification {
         addOrderList([orderTrackedByService])
         def orderShouldBeCancelled = new Order(orderId, symbol, market.exchange, orderType, price, volume)
 
-        1 * mockExchangeService.cancelOrder(_) >> Mono.just(Mock(BobooCancelResponse))
+        1 * mockExchangeService.cancelOrder(_, {
+            it.accessKey==accessKey && it.secretKey == secretKey
+        }) >> Mono.just(Mock(BobooCancelResponse))
         1 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled) >> Mock(BobooCancelRequest)
 
         expect:
@@ -113,7 +122,7 @@ class OrderServiceTestSpec extends Specification {
     def "Cancel order not traced by OrderService"() {
         def orderShouldBeCancelled = new Order(orderId, symbol, market.exchange, orderType, price, volume)
 
-        0 * mockExchangeService.cancelOrder(_)
+        0 * mockExchangeService.cancelOrder(_, _)
         0 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled)
 
         expect:

@@ -4,6 +4,7 @@ import com.moebius.entropy.assembler.OrderBobooExchangeAssembler;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.Order;
 import com.moebius.entropy.domain.OrderRequest;
+import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto;
 import com.moebius.entropy.service.exchange.BobooService;
 import org.springframework.stereotype.Service;
@@ -20,12 +21,16 @@ public class BobooOrderService implements OrderService{
     private final OrderBobooExchangeAssembler assembler;
     private final Map<String, List<Order>> orderListForSymbol;
     private final Set<String> automaticOrderIds;
+    private final ApiKeyDto apiKeyDto;
 
-    public BobooOrderService(BobooService exchangeService, OrderBobooExchangeAssembler assembler) {
+    public BobooOrderService(BobooService exchangeService,
+                             OrderBobooExchangeAssembler assembler,
+                             String accessKey, String secretKey) {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
         orderListForSymbol = new HashMap<>();
         automaticOrderIds = new LinkedHashSet<>();
+        apiKeyDto = ApiKeyDto.builder().accessKey(accessKey).secretKey(secretKey).build();
     }
 
     public Flux<Order> fetchAutomaticOrdersFor(Market market){
@@ -61,7 +66,7 @@ public class BobooOrderService implements OrderService{
                         .anyMatch(trackedOrder->trackedOrder.getOrderId().equals(order.getOrderId()))
                 )
                 .map(assembler::convertToCancelRequest)
-                .map(exchangeService::cancelOrder)
+                .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
                 .map(cancelMono->cancelMono
                         .map(bobooCancelResponse -> order)
                         .doOnSuccess(this::releaseOrderFromTracking)
@@ -94,7 +99,7 @@ public class BobooOrderService implements OrderService{
     private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted){
         return Optional.ofNullable(orderRequest)
                 .map(assembler::convertToOrderRequest)
-                .map(exchangeService::requestOrder)
+                .map(bobooOrderRequest->exchangeService.requestOrder(bobooOrderRequest, apiKeyDto))
                 .map(orderMono->orderMono.map(assembler::convertToOrder)
                         .doOnSuccess(afterOrderCompleted)
                 )

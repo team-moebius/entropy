@@ -49,12 +49,12 @@ public class BobooService implements ExchangeService<
 	}
 
 	@Override
-	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest) {
+	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest, ApiKeyDto apiKey) {
 		return null;
 	}
 
 	@Override
-	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest) {
+	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest, ApiKeyDto apiKey) {
 		return null;
 	}
 
