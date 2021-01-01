@@ -7,6 +7,7 @@ import com.moebius.entropy.domain.OrderRequest;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto;
 import com.moebius.entropy.service.exchange.BobooService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -25,7 +26,8 @@ public class BobooOrderService implements OrderService{
 
     public BobooOrderService(BobooService exchangeService,
                              OrderBobooExchangeAssembler assembler,
-                             String accessKey, String secretKey) {
+                             @Value("exchange.boboo.apikey.accessKey") String accessKey,
+                             @Value("exchange.boboo.apikey.eecret") String secretKey) {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
         orderListForSymbol = new HashMap<>();

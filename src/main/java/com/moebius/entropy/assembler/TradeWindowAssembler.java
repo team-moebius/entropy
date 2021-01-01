@@ -1,20 +1,19 @@
 package com.moebius.entropy.assembler;
 
-import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.OrderType;
-import com.moebius.entropy.domain.TradeCurrency;
 import com.moebius.entropy.domain.TradePrice;
 import com.moebius.entropy.domain.TradeWindow;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto.Data;
+import com.moebius.entropy.util.SymbolUtil;
+import org.springframework.stereotype.Component;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
 
 @Component
 public class TradeWindowAssembler {
@@ -62,12 +61,7 @@ public class TradeWindowAssembler {
             .map(BobooOrderBookDto::getData)
             .map(this::findFirst)
             .map(Data::getSymbol)
-            .map(orgSymbol -> {
-                TradeCurrency currency = orgSymbol.endsWith("USDT")
-                    ? TradeCurrency.USDT : TradeCurrency.KRW;
-                String symbol = StringUtils.substringBefore(orgSymbol, currency.name());
-                return new Market(Exchange.BOBOO, symbol, currency);
-            })
+            .map(SymbolUtil::marketFromSymbol)
             .orElseThrow();
     }
 

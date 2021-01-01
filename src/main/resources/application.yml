@@ -18,3 +18,6 @@ exchange:
       event: sub
       params:
         binary: false
+    apikey:
+      accessKey: some-place-holder-for-access-key
+      secretKey: some-place-holder-for-secret-key
