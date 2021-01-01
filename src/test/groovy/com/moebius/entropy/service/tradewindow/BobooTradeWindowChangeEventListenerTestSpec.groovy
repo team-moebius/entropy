@@ -14,7 +14,11 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
     def assembler = Mock(TradeWindowAssembler)
     def inflateService = Mock(TradeWindowInflateService)
     @Subject
-    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler, inflateService)
+    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler,)
+
+    def setup(){
+        sut.setTradeWindowInflateService(inflateService)
+    }
 
     def "On any changes on trade window"() {
         given:

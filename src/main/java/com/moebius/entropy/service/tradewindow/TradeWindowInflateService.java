@@ -28,6 +28,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
+
 @RequiredArgsConstructor
 @Service
 public class TradeWindowInflateService {
@@ -36,6 +38,12 @@ public class TradeWindowInflateService {
     private final InflationConfigRepository inflationConfigRepository;
     private final OrderService orderService;
     private final TradeWindowInflationVolumeResolver volumeResolver;
+    private final BobooTradeWindowChangeEventListener windowChangeEventListener;
+
+    @PostConstruct
+    public void onCreate(){
+        windowChangeEventListener.setTradeWindowInflateService(this);
+    }
 
     public Mono<InflationResult> inflateTrades(InflateRequest inflateRequest) {
         Market market = inflateRequest.getMarket();

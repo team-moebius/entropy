@@ -15,7 +15,7 @@ public class BobooTradeWindowChangeEventListener {
 
     private final TradeWindowCommandService commandService;
     private final TradeWindowAssembler assembler;
-    private final TradeWindowInflateService tradeWindowInflateService;
+    private TradeWindowInflateService tradeWindowInflateService;
 
     public void onTradeWindowChange(BobooOrderBookDto orderBookDto) {
         Optional.ofNullable(assembler.assembleTradeWindow(orderBookDto))
@@ -32,4 +32,7 @@ public class BobooTradeWindowChangeEventListener {
             });
     }
 
+    public void setTradeWindowInflateService(TradeWindowInflateService tradeWindowInflateService) {
+        this.tradeWindowInflateService = tradeWindowInflateService;
+    }
 }

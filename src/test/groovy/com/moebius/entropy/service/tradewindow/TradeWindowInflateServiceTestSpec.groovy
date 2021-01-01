@@ -27,10 +27,11 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def orderService = Mock(OrderService)
     def inflationVolumeResolver = Mock(TradeWindowInflationVolumeResolver)
+    def mockEventListener = Mock(BobooTradeWindowChangeEventListener)
 
     @Subject
     TradeWindowInflateService sut = new TradeWindowInflateService(
-            tradeWindowService, inflationConfigRepository, orderService, inflationVolumeResolver
+            tradeWindowService, inflationConfigRepository, orderService, inflationVolumeResolver, mockEventListener
     )
 
     def market = new Market(exchange, symbol, TradeCurrency.USDT)
