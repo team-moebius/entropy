@@ -3,6 +3,7 @@ package com.moebius.entropy.assembler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest;
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto;
@@ -89,13 +90,34 @@ public class BobooAssembler {
 
 	public MultiValueMap<String, String> assembleOrderRequestBodyValue(MultiValueMap<String, String> queryParam,
 																	   ApiKeyDto apiKeyDto) {
-		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-		requestBody.add("timestamp", String.valueOf(Instant.now().toEpochMilli()));
-		requestBody.add("recvWindow", maxReceiveTimeWindowInMills);
+		MultiValueMap<String, String> requestBody = createBaseBodyValue();
 
 		String signature = ParameterSecurityEncoder.encodeParameters(queryParam, requestBody, apiKeyDto.getSecretKey());
 		requestBody.add("signature", signature);
 
+		return requestBody;
+	}
+
+	public MultiValueMap<String, String> assembleCancelRequestQueryParam(BobooCancelRequest bobooCancelRequest) {
+		MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
+		queryParams.add("origClientOrderId", bobooCancelRequest.getOrderId());
+		return queryParams;
+	}
+
+	public MultiValueMap<String, String> assembleCancelRequestBodyValue(MultiValueMap<String, String> queryParam,
+																		ApiKeyDto apiKeyDto) {
+		MultiValueMap<String, String> requestBody = createBaseBodyValue();
+
+		String signature = ParameterSecurityEncoder.encodeParameters(queryParam, requestBody, apiKeyDto.getSecretKey());
+		requestBody.add("signature", signature);
+
+		return requestBody;
+	}
+
+	private MultiValueMap<String, String> createBaseBodyValue() {
+		MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+		requestBody.add("timestamp", String.valueOf(Instant.now().toEpochMilli()));
+		requestBody.add("recvWindow", maxReceiveTimeWindowInMills);
 		return requestBody;
 	}
 }

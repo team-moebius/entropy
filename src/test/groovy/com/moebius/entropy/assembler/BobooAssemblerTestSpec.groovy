@@ -6,6 +6,7 @@ import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.order.OrderSide
 import com.moebius.entropy.domain.order.TimeInForce
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
@@ -125,6 +126,37 @@ class BobooAssemblerTestSpec extends Specification {
 
 		when:
 		def bodyRequest = bobooAssembler.assembleOrderRequestBodyValue(queryParam, apiKeyDto)
+
+		then:
+		bodyRequest != null
+		!StringUtils.isEmpty(bodyRequest['signature'][0])
+		!StringUtils.isEmpty(bodyRequest['timestamp'][0])
+		bodyRequest['recvWindow'][0] == receiveTimeWindow.toString()
+	}
+
+	def "Should assemble query param for order cancel request"(){
+		given:
+		def cancelRequest = BobooCancelRequest.builder()
+				.orderId("some-test-string")
+				.build()
+
+		when:
+		def queryParam = bobooAssembler.assembleCancelRequestQueryParam(cancelRequest)
+
+		then:
+		queryParam != null
+		queryParam['origClientOrderId'][0] == cancelRequest.orderId
+	}
+	def "Should assemble requestBody for order cancel request"(){
+		given:
+		def queryParam = new LinkedMultiValueMap(["origClientOrderId": ["some-test-string"],])
+		def apiKeyDto = ApiKeyDto.builder()
+				.accessKey("test_access_key")
+				.secretKey("test_secrey_key")
+				.build()
+
+		when:
+		def bodyRequest = bobooAssembler.assembleCancelRequestBodyValue(queryParam, apiKeyDto)
 
 		then:
 		bodyRequest != null
