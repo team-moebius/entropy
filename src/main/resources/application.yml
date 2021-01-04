@@ -21,3 +21,4 @@ exchange:
     apikey:
       accessKey: some-place-holder-for-access-key
       secretKey: some-place-holder-for-secret-key
+    receiveTimeWindow: 3000

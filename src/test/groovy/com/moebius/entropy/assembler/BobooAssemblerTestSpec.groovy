@@ -2,9 +2,14 @@ package com.moebius.entropy.assembler
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.moebius.entropy.domain.order.OrderPosition
+import com.moebius.entropy.domain.order.OrderSide
+import com.moebius.entropy.domain.order.TimeInForce
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto
+import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
+import org.springframework.util.LinkedMultiValueMap
 import org.springframework.util.MultiValueMap
 import org.springframework.util.StringUtils
 import org.springframework.web.reactive.socket.WebSocketMessage
@@ -17,10 +22,13 @@ class BobooAssemblerTestSpec extends Specification {
 	@Subject
 	def bobooAssembler = new BobooAssembler(objectMapper)
 
+	def receiveTimeWindow = 3000
+
 	def setup() {
 		bobooAssembler.topic = "depth"
 		bobooAssembler.event = "sub"
 		bobooAssembler.params = ["binary": "false"]
+		bobooAssembler.maxReceiveTimeWindowInMills = receiveTimeWindow
 	}
 
 	def "Should assemble open orders query params"() {
@@ -77,5 +85,51 @@ class BobooAssemblerTestSpec extends Specification {
 		1 * objectMapper.readValue(_ as String, BobooOrderBookDto.class) >> { message, clazz -> throw Stub(JsonProcessingException) }
 
 		result == null
+	}
+
+	def "Should assemble query param for order request"(){
+		given:
+		def orderRequest = BobooOrderRequestDto.builder()
+				.symbol("GTAXUSDT")
+				.quantity(BigDecimal.valueOf(11.11))
+				.side(OrderSide.BUY)
+				.type(OrderPosition.LIMIT)
+				.timeInForce(TimeInForce.GTC)
+				.price(BigDecimal.valueOf(123.123))
+				.newClientOrderId("some-test-string")
+				.build()
+
+		when:
+		def queryParam = bobooAssembler.assembleOrderRequestQueryParam(orderRequest)
+
+		then:
+		queryParam != null
+		queryParam['symbol'][0] == orderRequest.getSymbol()
+		queryParam['quantity'][0] == orderRequest.getQuantity().toString()
+		queryParam['side'][0] == orderRequest.getSide().name()
+		queryParam['type'][0] == orderRequest.getType().name()
+		queryParam['timeInForce'][0] == orderRequest.getTimeInForce().name()
+		queryParam['price'][0] == orderRequest.getPrice().toString()
+		!StringUtils.isEmpty(queryParam['newClientOrderId'])
+	}
+	def "Should assemble requestBody for order request"(){
+		given:
+		def queryParam = new LinkedMultiValueMap([
+				"symbol": ["GTAXUSDT"], "side": ["BUY"], "type": ["LIMIT"],
+				"timeInForce": ["GTC"], "quantity": ["1"], "price": ["0.1"],
+		])
+		def apiKeyDto = ApiKeyDto.builder()
+				.accessKey("test_access_key")
+				.secretKey("test_secrey_key")
+				.build()
+
+		when:
+		def bodyRequest = bobooAssembler.assembleOrderRequestBodyValue(queryParam, apiKeyDto)
+
+		then:
+		bodyRequest != null
+		!StringUtils.isEmpty(bodyRequest['signature'][0])
+		!StringUtils.isEmpty(bodyRequest['timestamp'][0])
+		bodyRequest['recvWindow'][0] == receiveTimeWindow.toString()
 	}
 }
