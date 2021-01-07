@@ -2,6 +2,7 @@ package com.moebius.entropy.dto.exchange.orderbook.boboo;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.moebius.entropy.dto.exchange.orderbook.OrderBookDto;
 import lombok.*;
 
 import java.util.List;
