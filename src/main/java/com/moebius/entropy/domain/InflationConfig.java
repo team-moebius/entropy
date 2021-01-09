@@ -1,13 +1,20 @@
 package com.moebius.entropy.domain;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
-@RequiredArgsConstructor
+import java.math.BigDecimal;
+
+@Builder
 @Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InflationConfig {
 
-    private final int askCount;
-    private final int bidCount;
+    private int askCount;
+    private int bidCount;
+    private BigDecimal askMinVolume;
+    private BigDecimal askMaxVolume;
+    private BigDecimal bidMinVolume;
+    private BigDecimal bidMaxVolume;
 
 }

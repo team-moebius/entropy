@@ -36,7 +36,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
     def market = new Market(exchange, symbol, TradeCurrency.USDT)
     def inflateRequest = new InflateRequest(market)
-    def inflationConfig = new InflationConfig(8, 9)
+    def inflationConfig = InflationConfig.builder()
+            .askCount(8).bidCount(9)
+            .build()
 
 
 //    1. Event를 Parameter로 받고(Event data에 Exchange와 Symbol 받음)
