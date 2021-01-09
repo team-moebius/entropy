@@ -5,7 +5,6 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.Order;
 import com.moebius.entropy.domain.OrderRequest;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
-import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto;
 import com.moebius.entropy.service.exchange.BobooService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -77,7 +76,7 @@ public class BobooOrderService implements OrderService{
 
     }
 
-    public Mono<Void> updateOrders(List<Order> orders) {
+    public Mono<Integer> updateOrders(List<Order> orders) {
         return Mono.just(orders)
                 .map(updatedOrders->{
                     Set<String> aliveOrderIds = new LinkedHashSet<>();
@@ -95,7 +94,7 @@ public class BobooOrderService implements OrderService{
                     automaticOrderIds.addAll(aliveAutomaticOrderIds);
                     return automaticOrderIds;
                 })
-                .then();
+                .map(Set::size);
     }
 
     private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted){

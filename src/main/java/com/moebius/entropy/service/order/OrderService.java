@@ -21,5 +21,5 @@ public interface OrderService {
 
     Mono<Order> cancelOrder(Order order);
 
-    Mono<Void> updateOrders(List<Order> orders);
+    Mono<Integer> updateOrders(List<Order> orders);
 }
