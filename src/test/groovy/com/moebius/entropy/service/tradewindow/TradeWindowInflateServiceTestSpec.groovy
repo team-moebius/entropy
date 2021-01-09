@@ -71,7 +71,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def madeAskedPrices = priceUnitMultipliersForAskOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.requestOrder({
-                it.market == market && it.orderType == OrderPosition.ASK \
+                it.market == market && it.orderPosition == OrderPosition.ASK \
                           && it.price == price && it.volume == askInflationVolume
             }) >> Mono.just(
                     new Order("${multiplier}", market, OrderPosition.ASK, price, askInflationVolume)
@@ -82,7 +82,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def madeBidPrices = priceUnitMultipliersForBidOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.requestOrder({
-                it.market == market && it.orderType == OrderPosition.BID \
+                it.market == market && it.orderPosition == OrderPosition.BID \
                           && it.price == price && it.volume == bidInflationVolume
             }) >> Mono.just(
                     new Order("${multiplier}", market, OrderPosition.BID, price, bidInflationVolume)
@@ -93,7 +93,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def cancelledAskedPrices = priceUnitMultipliersForAskOrdersShouldBeCanceled.stream().map({ int multiplier ->
             def price = marketPrice - (priceChangeUnit * multiplier)
             1 * orderService.cancelOrder({
-                it.market == market && it.orderType == OrderPosition.ASK  \
+                it.market == market && it.orderPosition == OrderPosition.ASK  \
                          && it.price == price
             }) >> Mono.just(
                     new Order("${multiplier}", market, OrderPosition.ASK, price, 1)
@@ -104,7 +104,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def cancelledBiddenPrices = priceUnitMultipliersForBidOrdersShouldBeCanceled.stream().map({ int multiplier ->
             def price = marketPrice + priceChangeUnit * multiplier
             1 * orderService.cancelOrder({
-                it.market == market && it.orderType == OrderPosition.BID  \
+                it.market == market && it.orderPosition == OrderPosition.BID  \
                          && it.price == price
             }) >> Mono.just(
                     new Order("${multiplier}", market, OrderPosition.BID, price, 1)
@@ -278,31 +278,31 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
     }
 
-    List<TradePrice> tradeWindow(List<Integer> volumes, OrderPosition orderType) {
+    List<TradePrice> tradeWindow(List<Integer> volumes, OrderPosition orderPosition) {
         return (0..<volumes.size()).stream()
                 .filter({ index ->
                     volumes[index] != 0
                 })
                 .map({ index ->
-                    def priceMultiplier = orderType == OrderPosition.BID ? index + 1 : -index
+                    def priceMultiplier = orderPosition == OrderPosition.BID ? index + 1 : -index
                     def volume = volumes[index]
 
                     BigDecimal price = marketPrice + priceChangeUnit * priceMultiplier
-                    return new TradePrice(orderType, price, volume)
+                    return new TradePrice(orderPosition, price, volume)
                 })
                 .collect(Collectors.toList())
     }
 
-    List<Order> orders(List<Integer> volumes, OrderPosition orderType) {
+    List<Order> orders(List<Integer> volumes, OrderPosition orderPosition) {
         return (0..<volumes.size()).stream()
                 .filter({ index ->
                     volumes[index] != 0
                 })
                 .map({ index ->
-                    def priceMultiplier = orderType == OrderPosition.BID ? index + 1 : -index
+                    def priceMultiplier = orderPosition == OrderPosition.BID ? index + 1 : -index
                     def volume = volumes[index]
                     BigDecimal price = marketPrice + priceChangeUnit * priceMultiplier
-                    return new Order("${index}", market, orderType, price, volume)
+                    return new Order("${index}", market, orderPosition, price, volume)
                 })
                 .collect(Collectors.toList())
     }
