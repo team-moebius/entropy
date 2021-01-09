@@ -1,7 +1,7 @@
 package com.moebius.entropy.assembler;
 
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.OrderType;
+import com.moebius.entropy.domain.OrderPosition;
 import com.moebius.entropy.domain.TradePrice;
 import com.moebius.entropy.domain.TradeWindow;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
@@ -23,19 +23,19 @@ public class TradeWindowAssembler {
             .map(BobooOrderBookDto::getData)
             .map(this::findFirst)
             .map(data -> {
-                List<TradePrice> bidTrades = mapTrade(OrderType.BID, data.getBids());
-                List<TradePrice> askTrades = mapTrade(OrderType.ASK, data.getAsks());
+                List<TradePrice> bidTrades = mapTrade(OrderPosition.BID, data.getBids());
+                List<TradePrice> askTrades = mapTrade(OrderPosition.ASK, data.getAsks());
                 return new TradeWindow(askTrades, bidTrades);
             })
             .orElse(null);
     }
 
-    private List<TradePrice> mapTrade(OrderType orderType, List<List<String>> rawTradePrices) {
+    private List<TradePrice> mapTrade(OrderPosition orderPosition, List<List<String>> rawTradePrices) {
         return Optional.ofNullable(rawTradePrices)
             .map(prices -> prices.stream().map(pair -> {
                 BigDecimal unitPrice = new BigDecimal(pair.get(0));
                 BigDecimal volume = new BigDecimal(pair.get(1));
-                return new TradePrice(orderType, unitPrice, volume);
+                return new TradePrice(orderPosition, unitPrice, volume);
 
             }).collect(Collectors.toList()))
             .orElse(Collections.emptyList());

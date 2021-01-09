@@ -2,11 +2,11 @@ package com.moebius.entropy.assembler;
 
 import com.moebius.entropy.domain.Order;
 import com.moebius.entropy.domain.OrderRequest;
-import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.order.OrderType;
 import com.moebius.entropy.domain.order.TimeInForce;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.util.OrderIdUtil;
-import com.moebius.entropy.util.OrderTypeUtil;
+import com.moebius.entropy.util.OrderUtil;
 import com.moebius.entropy.util.SymbolUtil;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +21,8 @@ public class OrderBobooExchangeAssembler implements OrderExchangeAssembler<Boboo
                 .map(request->BobooOrderRequestDto.builder()
                         .symbol(SymbolUtil.symbolFromMarket(orderRequest.getMarket()))
                         .quantity(orderRequest.getVolume())
-                        .side(OrderTypeUtil.resolveFromOrderType(orderRequest.getOrderType()))
-                        .type(OrderPosition.LIMIT)
+                        .side(OrderUtil.resolveFromOrderPosition(orderRequest.getOrderPosition()))
+                        .type(OrderType.LIMIT)
                         .timeInForce(TimeInForce.GTC)
                         .price(orderRequest.getPrice())
                         .newClientOrderId(OrderIdUtil.generateOrderId())
@@ -37,7 +37,7 @@ public class OrderBobooExchangeAssembler implements OrderExchangeAssembler<Boboo
                 .map(responseDto->new Order(
                         orderResponse.getClientOrderId(),
                         SymbolUtil.marketFromSymbol(orderResponse.getSymbol()),
-                        OrderTypeUtil.resolveFromOrderSide(orderResponse.getSide()),
+                        OrderUtil.resolveFromOrderSide(orderResponse.getSide()),
                         orderResponse.getPrice(),
                         calculateRemainVolume(orderResponse.getOrigQty(), orderResponse.getExecutedQty())
                 ))
@@ -60,7 +60,7 @@ public class OrderBobooExchangeAssembler implements OrderExchangeAssembler<Boboo
                 .map(bobooOpenOrdersDto -> new Order(
                         bobooOpenOrdersDto.getId(),
                         SymbolUtil.marketFromSymbol(bobooOpenOrdersDto.getSymbol()),
-                        OrderTypeUtil.resolveFromOrderSide(bobooOpenOrdersDto.getOrderSide()),
+                        OrderUtil.resolveFromOrderSide(bobooOpenOrdersDto.getOrderSide()),
                         BigDecimal.valueOf(bobooOpenOrdersDto.getPrice()),
                         calculateRemainVolume(bobooOpenOrdersDto.getOriginalQuantity(), bobooOpenOrdersDto.getExecutedQuantity())
                 ))

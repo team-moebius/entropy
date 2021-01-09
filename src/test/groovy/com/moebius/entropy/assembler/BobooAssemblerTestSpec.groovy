@@ -2,7 +2,7 @@ package com.moebius.entropy.assembler
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.moebius.entropy.domain.order.OrderPosition
+import com.moebius.entropy.domain.order.OrderType
 import com.moebius.entropy.domain.order.OrderSide
 import com.moebius.entropy.domain.order.TimeInForce
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto
@@ -94,7 +94,7 @@ class BobooAssemblerTestSpec extends Specification {
 				.symbol("GTAXUSDT")
 				.quantity(BigDecimal.valueOf(11.11))
 				.side(OrderSide.BUY)
-				.type(OrderPosition.LIMIT)
+				.type(OrderType.LIMIT)
 				.timeInForce(TimeInForce.GTC)
 				.price(BigDecimal.valueOf(123.123))
 				.newClientOrderId("some-test-string")

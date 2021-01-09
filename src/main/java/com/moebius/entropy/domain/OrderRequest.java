@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderRequest {
 
     private final Market market;
-    private final OrderType orderType;
+    private final OrderPosition orderPosition;
     private final BigDecimal price;
     private final BigDecimal volume;
 }

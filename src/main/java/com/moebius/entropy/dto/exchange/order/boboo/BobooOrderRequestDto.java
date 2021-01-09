@@ -1,6 +1,6 @@
 package com.moebius.entropy.dto.exchange.order.boboo;
 
-import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.order.OrderType;
 import com.moebius.entropy.domain.order.OrderSide;
 import com.moebius.entropy.domain.order.TimeInForce;
 import lombok.*;
@@ -15,7 +15,7 @@ public class BobooOrderRequestDto {
     private String symbol;
     private BigDecimal quantity;
     private OrderSide side;
-    private OrderPosition type;
+    private OrderType type;
     private TimeInForce timeInForce;
     private BigDecimal price;
     private String newClientOrderId;

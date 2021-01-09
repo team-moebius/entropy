@@ -1,9 +1,8 @@
 package com.moebius.entropy.service.tradewindow;
 
-import com.moebius.entropy.domain.InflationConfig;
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.OrderType;
-import com.moebius.entropy.service.order.OrderQuantityService;
+import com.moebius.entropy.domain.OrderPosition;
+import com.moebius.entropy.util.EntropyRandomUtils;
 import com.moebius.entropy.service.tradewindow.repository.InflationConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,15 +15,15 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TradeWindowInflationVolumeResolver {
     private final InflationConfigRepository inflationConfigRepository;
-    private final OrderQuantityService orderQuantityService;
+    private final EntropyRandomUtils randomUtils;
     private final static int decimalPosition = 2;
 
-    public BigDecimal getInflationVolume(Market market, OrderType orderType) {
+    public BigDecimal getInflationVolume(Market market, OrderPosition orderPosition) {
         return Optional.ofNullable(inflationConfigRepository.getConfigFor(market))
                 .map(inflationConfig -> {
                     BigDecimal maxVolume;
                     BigDecimal minVolume;
-                    if (OrderType.ASK.equals(orderType)) {
+                    if (OrderPosition.ASK.equals(orderPosition)) {
                         maxVolume = inflationConfig.getAskMaxVolume();
                         minVolume = inflationConfig.getAskMinVolume();
                     } else {
@@ -33,7 +32,7 @@ public class TradeWindowInflationVolumeResolver {
                     }
                     return Pair.of(minVolume, maxVolume);
                 })
-                .map(rangePair -> orderQuantityService.getRandomQuantity(
+                .map(rangePair -> randomUtils.getRandomDecimal(
                         rangePair.getLeft().floatValue(), rangePair.getRight().floatValue(), decimalPosition
                 ))
                 .orElse(BigDecimal.ZERO);

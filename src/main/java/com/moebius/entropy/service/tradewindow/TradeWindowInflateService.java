@@ -1,13 +1,12 @@
 package com.moebius.entropy.service.tradewindow;
 
-import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.InflateRequest;
 import com.moebius.entropy.domain.InflationConfig;
 import com.moebius.entropy.domain.InflationResult;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.Order;
 import com.moebius.entropy.domain.OrderRequest;
-import com.moebius.entropy.domain.OrderType;
+import com.moebius.entropy.domain.OrderPosition;
 import com.moebius.entropy.domain.TradePrice;
 import com.moebius.entropy.domain.TradeWindow;
 import com.moebius.entropy.service.order.OrderService;
@@ -75,12 +74,12 @@ public class TradeWindowInflateService {
         BigDecimal fallbackStartPrice = tradeWindowQueryService.getMarketPrice(market);
 
         Flux<Order> askOrders = makeOrdersWith(
-            market, OrderType.ASK, tradeWindow.getAskPrices(), fallbackStartPrice,
+            market, OrderPosition.ASK, tradeWindow.getAskPrices(), fallbackStartPrice,
             inflationConfig.getAskCount(), BigDecimal::subtract
         );
 
         Flux<Order> bidOrders = makeOrdersWith(
-            market, OrderType.BID, tradeWindow.getBidPrices(), fallbackStartPrice,
+            market, OrderPosition.BID, tradeWindow.getBidPrices(), fallbackStartPrice,
             inflationConfig.getBidCount(), BigDecimal::add
         );
 
@@ -88,7 +87,7 @@ public class TradeWindowInflateService {
     }
 
     private Flux<Order> makeOrdersWith(
-        Market market, OrderType orderType, List<TradePrice> prices,
+        Market market, OrderPosition orderPosition, List<TradePrice> prices,
         BigDecimal fallbackStartPrice,
         int countObjective, BinaryOperator<BigDecimal> priceCalculationHandler
     ) {
@@ -112,8 +111,8 @@ public class TradeWindowInflateService {
                 )
                 .orElse(Collections.emptyList()))
             .map(price -> {
-                BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderType);
-                return new OrderRequest(market, orderType, price, inflationVolume);
+                BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
+                return new OrderRequest(market, orderPosition, price, inflationVolume);
             })
             .flatMap(orderService::requestOrder);
     }
@@ -144,7 +143,7 @@ public class TradeWindowInflateService {
 
         return orderService.fetchAutomaticOrdersFor(market)
             .filter(order -> {
-                if (OrderType.ASK.equals(order.getOrderType())) {
+                if (OrderPosition.ASK.equals(order.getOrderPosition())) {
                     return cancellableAskPriceSet.contains(order.getPrice());
                 } else {
                     return cancellableBidPriceSet.contains(order.getPrice());
@@ -156,25 +155,25 @@ public class TradeWindowInflateService {
     private Mono<InflationResult> collectResult(Flux<Order> createdOrders,
         Flux<Order> cancelledOrders) {
         return Mono.zip(
-            createdOrders.collectMultimap(Order::getOrderType, Order::getPrice),
-            cancelledOrders.collectMultimap(Order::getOrderType, Order::getPrice)
+            createdOrders.collectMultimap(Order::getOrderPosition, Order::getPrice),
+            cancelledOrders.collectMultimap(Order::getOrderPosition, Order::getPrice)
         ).map(resultsTuple -> {
-            Map<OrderType, Collection<BigDecimal>> createdOrderByType = resultsTuple.getT1();
-            Map<OrderType, Collection<BigDecimal>> cancelledOrderByType = resultsTuple.getT2();
+            Map<OrderPosition, Collection<BigDecimal>> createdOrderByType = resultsTuple.getT1();
+            Map<OrderPosition, Collection<BigDecimal>> cancelledOrderByType = resultsTuple.getT2();
             return new InflationResult(
-                getPrices(createdOrderByType, OrderType.ASK),
-                getPrices(createdOrderByType, OrderType.BID),
-                getPrices(cancelledOrderByType, OrderType.ASK),
-                getPrices(cancelledOrderByType, OrderType.BID)
+                getPrices(createdOrderByType, OrderPosition.ASK),
+                getPrices(createdOrderByType, OrderPosition.BID),
+                getPrices(cancelledOrderByType, OrderPosition.ASK),
+                getPrices(cancelledOrderByType, OrderPosition.BID)
             );
         });
     }
 
     private List<BigDecimal> getPrices(
-        Map<OrderType, Collection<BigDecimal>> pricesByType, OrderType orderType
+        Map<OrderPosition, Collection<BigDecimal>> pricesByType, OrderPosition orderPosition
     ) {
         return new ArrayList<>(
-            pricesByType.getOrDefault(orderType, Collections.emptyList())
+            pricesByType.getOrDefault(orderPosition, Collections.emptyList())
         );
 
     }

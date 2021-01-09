@@ -37,13 +37,13 @@ class OrderServiceTestSpec extends Specification {
 
     def "After create automatic order then get automatic order list"() {
         given:
-        def orderRequest = new OrderRequest(market, orderType, price, volume)
+        def orderRequest = new OrderRequest(market, orderPosition, price, volume)
         1 * mockExchangeService.requestOrder(_, {
             it.accessKey==accessKey && it.secretKey == secretKey
         }) >> Mono.just(orderResponse)
         1 * mockAssembler.convertToOrderRequest(orderRequest) >> Mock(BobooOrderRequestDto)
         1 * mockAssembler.convertToOrder(orderResponse) >> new Order(
-                orderId, market, orderType, price, volume
+                orderId, market, orderPosition, price, volume
         )
 
         expect:
@@ -63,18 +63,18 @@ class OrderServiceTestSpec extends Specification {
                 .verifyComplete()
 
         where:
-        orderType << [OrderType.ASK, OrderType.BID]
+        orderPosition << [OrderPosition.ASK, OrderPosition.BID]
     }
 
     def "After create manual order then get automatic order list"() {
         given:
-        def orderRequest = new OrderRequest(market, orderType, price, volume)
+        def orderRequest = new OrderRequest(market, orderPosition, price, volume)
         1 * mockExchangeService.requestOrder(_, {
             it.accessKey==accessKey && it.secretKey == secretKey
         }) >> Mono.just(orderResponse)
         1 * mockAssembler.convertToOrderRequest(orderRequest) >> Mock(BobooOrderRequestDto)
         1 * mockAssembler.convertToOrder(orderResponse) >> new Order(
-                orderId, market, orderType, price, volume
+                orderId, market, orderPosition, price, volume
         )
 
         expect:
@@ -94,14 +94,14 @@ class OrderServiceTestSpec extends Specification {
                 .verifyComplete()
 
         where:
-        orderType << [OrderType.ASK, OrderType.BID]
+        orderPosition << [OrderPosition.ASK, OrderPosition.BID]
     }
 
     def "Cancel order traced by OrderService"() {
         given:
-        def orderTrackedByService = new Order(orderId, market, orderType, price, volume)
+        def orderTrackedByService = new Order(orderId, market, orderPosition, price, volume)
         addOrderList([orderTrackedByService])
-        def orderShouldBeCancelled = new Order(orderId, market, orderType, price, volume)
+        def orderShouldBeCancelled = new Order(orderId, market, orderPosition, price, volume)
 
         1 * mockExchangeService.cancelOrder(_, {
             it.accessKey==accessKey && it.secretKey == secretKey
@@ -116,11 +116,11 @@ class OrderServiceTestSpec extends Specification {
                 .verifyComplete()
 
         where:
-        orderType << [OrderType.ASK, OrderType.BID]
+        orderPosition << [OrderPosition.ASK, OrderPosition.BID]
     }
 
     def "Cancel order not traced by OrderService"() {
-        def orderShouldBeCancelled = new Order(orderId, market, orderType, price, volume)
+        def orderShouldBeCancelled = new Order(orderId, market, orderPosition, price, volume)
 
         0 * mockExchangeService.cancelOrder(_, _)
         0 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled)
@@ -130,7 +130,7 @@ class OrderServiceTestSpec extends Specification {
                 .verifyComplete()
 
         where:
-        orderType << [OrderType.ASK, OrderType.BID]
+        orderPosition << [OrderPosition.ASK, OrderPosition.BID]
     }
 
     @Unroll
@@ -170,20 +170,20 @@ class OrderServiceTestSpec extends Specification {
 
         where:
         ordersTrackedByService << [
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("2", OrderType.BID, 22.22, 222.222),
-                 createOrderWith("3", OrderType.ASK, 33.33, 333.333),
-                 createOrderWith("4", OrderType.BID, 44.44, 444.444),
-                 createOrderWith("5", OrderType.ASK, 55.55, 555.555),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("2", OrderPosition.BID, 22.22, 222.222),
+                 createOrderWith("3", OrderPosition.ASK, 33.33, 333.333),
+                 createOrderWith("4", OrderPosition.BID, 44.44, 444.444),
+                 createOrderWith("5", OrderPosition.ASK, 55.55, 555.555),
                 ],
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("2", OrderType.BID, 22.22, 222.222),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("2", OrderPosition.BID, 22.22, 222.222),
                 ],
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("2", OrderType.BID, 22.22, 222.222),
-                 createOrderWith("3", OrderType.ASK, 33.33, 333.333),
-                 createOrderWith("4", OrderType.BID, 44.44, 444.444),
-                 createOrderWith("5", OrderType.ASK, 55.55, 555.555),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("2", OrderPosition.BID, 22.22, 222.222),
+                 createOrderWith("3", OrderPosition.ASK, 33.33, 333.333),
+                 createOrderWith("4", OrderPosition.BID, 44.44, 444.444),
+                 createOrderWith("5", OrderPosition.ASK, 55.55, 555.555),
                 ],
                 [],
                 []
@@ -196,27 +196,27 @@ class OrderServiceTestSpec extends Specification {
                 [],
         ]
         ordersReceivedFromExchange << [
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("2", OrderType.BID, 22.22, 222.222),
-                 createOrderWith("3", OrderType.ASK, 33.33, 333.333),
-                 createOrderWith("4", OrderType.BID, 44.44, 444.444),
-                 createOrderWith("5", OrderType.ASK, 55.55, 555.555),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("2", OrderPosition.BID, 22.22, 222.222),
+                 createOrderWith("3", OrderPosition.ASK, 33.33, 333.333),
+                 createOrderWith("4", OrderPosition.BID, 44.44, 444.444),
+                 createOrderWith("5", OrderPosition.ASK, 55.55, 555.555),
                 ],
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("2", OrderType.BID, 22.22, 222.222),
-                 createOrderWith("3", OrderType.ASK, 33.33, 333.333),
-                 createOrderWith("4", OrderType.BID, 44.44, 444.444),
-                 createOrderWith("5", OrderType.ASK, 55.55, 555.555),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("2", OrderPosition.BID, 22.22, 222.222),
+                 createOrderWith("3", OrderPosition.ASK, 33.33, 333.333),
+                 createOrderWith("4", OrderPosition.BID, 44.44, 444.444),
+                 createOrderWith("5", OrderPosition.ASK, 55.55, 555.555),
                 ],
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("5", OrderType.ASK, 55.55, 666.666),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("5", OrderPosition.ASK, 55.55, 666.666),
                 ],
                 [],
-                [createOrderWith("1", OrderType.ASK, 11.11, 111.111),
-                 createOrderWith("2", OrderType.BID, 22.22, 222.222),
-                 createOrderWith("3", OrderType.ASK, 33.33, 333.333),
-                 createOrderWith("4", OrderType.BID, 44.44, 444.444),
-                 createOrderWith("5", OrderType.ASK, 55.55, 555.555),
+                [createOrderWith("1", OrderPosition.ASK, 11.11, 111.111),
+                 createOrderWith("2", OrderPosition.BID, 22.22, 222.222),
+                 createOrderWith("3", OrderPosition.ASK, 33.33, 333.333),
+                 createOrderWith("4", OrderPosition.BID, 44.44, 444.444),
+                 createOrderWith("5", OrderPosition.ASK, 55.55, 555.555),
                 ],
         ]
         automaticOrderIdsAfterUpdate << [
@@ -239,7 +239,7 @@ class OrderServiceTestSpec extends Specification {
     boolean assertOrderWithRequest(Order order, OrderRequest orderRequest) {
         assert order.orderId != null
         assert order.market == orderRequest.market
-        assert order.orderType == orderRequest.orderType
+        assert order.orderPosition == orderRequest.orderPosition
         assert order.price == price
         assert order.volume == volume
         return true
@@ -251,8 +251,8 @@ class OrderServiceTestSpec extends Specification {
             .addAll(orders)
     }
 
-    Order createOrderWith(String orderId, OrderType orderType, float price, float volume) {
-        return new Order(orderId, market, orderType, BigDecimal.valueOf(price), BigDecimal.valueOf(volume))
+    Order createOrderWith(String orderId, OrderPosition orderPosition, float price, float volume) {
+        return new Order(orderId, market, orderPosition, BigDecimal.valueOf(price), BigDecimal.valueOf(volume))
     }
 
     def setAutomaticOrders(List<String> orderIds) {

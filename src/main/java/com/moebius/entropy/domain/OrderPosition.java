@@ -1,6 +1,6 @@
 package com.moebius.entropy.domain;
 
-public enum OrderType {
+public enum OrderPosition {
     ASK,
     BID
 }

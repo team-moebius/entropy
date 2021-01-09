@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TradePrice {
 
-    private final OrderType orderType;
+    private final OrderPosition orderPosition;
     private final BigDecimal unitPrice;
     private final BigDecimal volume;
 }
