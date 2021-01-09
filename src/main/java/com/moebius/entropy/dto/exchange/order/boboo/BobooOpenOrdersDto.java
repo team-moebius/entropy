@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.moebius.entropy.domain.order.OrderSide;
 import com.moebius.entropy.domain.order.OrderStatus;
-import com.moebius.entropy.domain.order.OrderType;
+import com.moebius.entropy.domain.order.OrderPosition;
 import lombok.*;
 
 @Getter
@@ -25,7 +25,7 @@ public class BobooOpenOrdersDto {
 	@JsonProperty("avgPrice")
 	private float averagePrice;
 	@JsonProperty("type")
-	private OrderType orderType;
+	private OrderPosition orderPosition;
 	@JsonProperty("side")
 	private OrderSide orderSide;
 	@JsonProperty("status")

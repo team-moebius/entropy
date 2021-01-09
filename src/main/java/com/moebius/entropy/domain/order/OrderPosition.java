@@ -1,6 +1,6 @@
 package com.moebius.entropy.domain.order;
 
-public enum OrderType {
+public enum OrderPosition {
 	LIMIT,
 	MARKET
 }
