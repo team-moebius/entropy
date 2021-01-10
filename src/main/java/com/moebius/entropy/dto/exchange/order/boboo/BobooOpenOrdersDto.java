@@ -30,4 +30,6 @@ public class BobooOpenOrdersDto {
 	private OrderSide orderSide;
 	@JsonProperty("status")
 	private OrderStatus orderStatus;
+	@JsonProperty("orderId")
+	private String internalId;
 }
