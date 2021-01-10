@@ -100,7 +100,7 @@ public class BobooAssembler {
 
 	public MultiValueMap<String, String> assembleCancelRequestQueryParam(BobooCancelRequest bobooCancelRequest) {
 		MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
-		queryParams.add("origClientOrderId", bobooCancelRequest.getOrderId());
+		queryParams.add("orderId", bobooCancelRequest.getOrderId());
 		return queryParams;
 	}
 

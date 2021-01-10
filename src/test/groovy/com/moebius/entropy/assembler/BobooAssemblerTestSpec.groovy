@@ -145,7 +145,7 @@ class BobooAssemblerTestSpec extends Specification {
 
 		then:
 		queryParam != null
-		queryParam['origClientOrderId'][0] == cancelRequest.orderId
+		queryParam['orderId'][0] == cancelRequest.orderId
 	}
 	def "Should assemble requestBody for order cancel request"(){
 		given:

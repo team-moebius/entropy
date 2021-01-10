@@ -63,7 +63,7 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 		def order = sut.convertToOrder(bobooOrderResponse)
 
 		then:
-		order.orderId == bobooOrderResponse.clientOrderId
+		order.orderId == bobooOrderResponse.orderId
 		order.market.symbol == symbol
 		order.market.exchange == market.getExchange()
 		order.orderPosition == OrderPosition.BID
@@ -100,12 +100,13 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 				.orderStatus(OrderStatus.NEW)
 				.orderType(OrderType.LIMIT)
 				.orderSide(orderSide)
+				.internalId("12983789f89h23213")
 				.build()
 		when:
 		def order = sut.convertExchangeOrder(bobooOrderResponse)
 
 		then:
-		order.orderId == bobooOrderResponse.id
+		order.orderId == bobooOrderResponse.internalId
 		order.market.symbol == symbol
 		order.market.exchange == market.exchange
 		order.orderPosition == orderPosition

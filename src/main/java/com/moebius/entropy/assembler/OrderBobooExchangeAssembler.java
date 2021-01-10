@@ -35,7 +35,7 @@ public class OrderBobooExchangeAssembler implements OrderExchangeAssembler<Boboo
     public Order convertToOrder(BobooOrderResponseDto orderResponse) {
         return Optional.ofNullable(orderResponse)
                 .map(responseDto->new Order(
-                        orderResponse.getClientOrderId(),
+                        orderResponse.getOrderId(),
                         SymbolUtil.marketFromSymbol(orderResponse.getSymbol()),
                         OrderUtil.resolveFromOrderSide(orderResponse.getSide()),
                         orderResponse.getPrice(),
@@ -58,7 +58,7 @@ public class OrderBobooExchangeAssembler implements OrderExchangeAssembler<Boboo
     public Order convertExchangeOrder(BobooOpenOrdersDto ordersFromExchange) {
         return Optional.ofNullable(ordersFromExchange)
                 .map(bobooOpenOrdersDto -> new Order(
-                        bobooOpenOrdersDto.getId(),
+                        bobooOpenOrdersDto.getInternalId(),
                         SymbolUtil.marketFromSymbol(bobooOpenOrdersDto.getSymbol()),
                         OrderUtil.resolveFromOrderSide(bobooOpenOrdersDto.getOrderSide()),
                         BigDecimal.valueOf(bobooOpenOrdersDto.getPrice()),
