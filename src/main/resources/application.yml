@@ -11,8 +11,8 @@ exchange:
       host: api.boboo.vip
       auth-header-name: X-BH-APIKEY
       open-orders: /openapi/v1/openOrders
-      request-orders: /openapi/v1/orders
-      cancel-orders: /openapi/v1/orders
+      request-orders: /openapi/v1/order
+      cancel-orders: /openapi/v1/order
     websocket:
       uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
     orderbook:
