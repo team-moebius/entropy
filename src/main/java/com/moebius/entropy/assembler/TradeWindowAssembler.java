@@ -1,9 +1,9 @@
 package com.moebius.entropy.assembler;
 
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.OrderPosition;
-import com.moebius.entropy.domain.TradePrice;
-import com.moebius.entropy.domain.TradeWindow;
+import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.trade.TradePrice;
+import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto.Data;
 import com.moebius.entropy.util.SymbolUtil;

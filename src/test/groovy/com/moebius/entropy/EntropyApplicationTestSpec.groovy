@@ -1,6 +1,6 @@
 package com.moebius.entropy
 
-import com.moebius.entropy.service.exchange.BobooService
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.test.context.SpringBootTest
@@ -9,7 +9,7 @@ import spock.lang.Specification
 
 @SpringBootTest(classes = EntropyApplication)
 class EntropyApplicationTestSpec extends Specification {
-	def bobooService = Mock(BobooService)
+	def bobooService = Mock(BobooExchangeService)
 	def exchangeServices = [bobooService]
 	def applicationReadyEvent = Stub(ApplicationReadyEvent)
 

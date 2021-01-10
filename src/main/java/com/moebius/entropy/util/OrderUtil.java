@@ -1,6 +1,6 @@
 package com.moebius.entropy.util;
 
-import com.moebius.entropy.domain.OrderPosition;
+import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderSide;
 
 public class OrderUtil {

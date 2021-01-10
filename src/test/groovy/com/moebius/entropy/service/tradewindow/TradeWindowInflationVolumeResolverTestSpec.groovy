@@ -1,12 +1,12 @@
 package com.moebius.entropy.service.tradewindow
 
 import com.moebius.entropy.domain.Exchange
-import com.moebius.entropy.domain.InflationConfig
+import com.moebius.entropy.domain.inflate.InflationConfig
 import com.moebius.entropy.domain.Market
-import com.moebius.entropy.domain.OrderPosition
-import com.moebius.entropy.domain.TradeCurrency
+import com.moebius.entropy.domain.order.OrderPosition
+import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.util.EntropyRandomUtils
-import com.moebius.entropy.service.tradewindow.repository.InflationConfigRepository
+import com.moebius.entropy.repository.InflationConfigRepository
 import spock.lang.Shared
 import spock.lang.Specification
 

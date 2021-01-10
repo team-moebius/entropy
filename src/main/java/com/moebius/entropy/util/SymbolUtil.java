@@ -2,7 +2,7 @@ package com.moebius.entropy.util;
 
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.TradeCurrency;
+import com.moebius.entropy.domain.trade.TradeCurrency;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Optional;

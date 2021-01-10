@@ -7,6 +7,7 @@ import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponse
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
 import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ClientHttpRequest
@@ -25,7 +26,7 @@ import spock.lang.Subject
 
 import java.util.function.Function
 
-class BobooServiceTestSpec extends Specification {
+class BobooExchangeServiceTestSpec extends Specification {
     def uriSpec = Mock(WebClient.RequestHeadersUriSpec)
     def headersSpec = Mock(WebClient.RequestHeadersSpec)
     def responseSpec = Mock(WebClient.ResponseSpec)
@@ -35,7 +36,7 @@ class BobooServiceTestSpec extends Specification {
     def eventListener = Mock(BobooTradeWindowChangeEventListener)
 
     @Subject
-    def bobooService = new BobooService(webClient, webSocketClient, bobooAssembler, eventListener)
+    def bobooService = new BobooExchangeService(webClient, webSocketClient, bobooAssembler, eventListener)
 
     def "Should get open orders"() {
         given:

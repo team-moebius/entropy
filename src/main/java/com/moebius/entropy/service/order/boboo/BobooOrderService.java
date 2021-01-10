@@ -1,11 +1,12 @@
-package com.moebius.entropy.service.order;
+package com.moebius.entropy.service.order.boboo;
 
-import com.moebius.entropy.assembler.OrderBobooExchangeAssembler;
+import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.Order;
-import com.moebius.entropy.domain.OrderRequest;
+import com.moebius.entropy.domain.order.Order;
+import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
-import com.moebius.entropy.service.exchange.BobooService;
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
+import com.moebius.entropy.service.order.OrderService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -16,15 +17,15 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 @Service
-public class BobooOrderService implements OrderService{
-    private final BobooService exchangeService;
-    private final OrderBobooExchangeAssembler assembler;
+public class BobooOrderService implements OrderService {
+    private final BobooExchangeService exchangeService;
+    private final BobooOrderExchangeAssembler assembler;
     private final Map<String, List<Order>> orderListForSymbol;
     private final Set<String> automaticOrderIds;
     private final ApiKeyDto apiKeyDto;
 
-    public BobooOrderService(BobooService exchangeService,
-                             OrderBobooExchangeAssembler assembler,
+    public BobooOrderService(BobooExchangeService exchangeService,
+                             BobooOrderExchangeAssembler assembler,
                              @Value("exchange.boboo.apikey.accessKey") String accessKey,
                              @Value("exchange.boboo.apikey.eecret") String secretKey) {
         this.exchangeService = exchangeService;
@@ -45,10 +46,10 @@ public class BobooOrderService implements OrderService{
     }
 
     public Flux<Order> fetchAllOrdersFor(Market market){
-        return Flux.fromIterable(getAllOrderForMarket(market.getSymbol()));
+        return Flux.fromIterable(getAllOrdersForMarket(market.getSymbol()));
     }
 
-    private List<Order> getAllOrderForMarket(String symbol) {
+    private List<Order> getAllOrdersForMarket(String symbol) {
         return orderListForSymbol.getOrDefault(symbol, Collections.emptyList());
     }
 
@@ -62,7 +63,7 @@ public class BobooOrderService implements OrderService{
 
     public Mono<Order> cancelOrder(Order order){
         return Optional.ofNullable(order)
-                .filter(requestedOrder-> getAllOrderForMarket(order.getMarket().getSymbol())
+                .filter(requestedOrder-> getAllOrdersForMarket(order.getMarket().getSymbol())
                         .stream()
                         .anyMatch(trackedOrder->trackedOrder.getOrderId().equals(order.getOrderId()))
                 )

@@ -1,6 +1,6 @@
 package com.moebius.entropy.assembler
 
-import com.moebius.entropy.domain.TradeCurrency
+import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
 import spock.lang.Specification
 

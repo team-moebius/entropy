@@ -1,16 +1,16 @@
 package com.moebius.entropy.service.tradewindow;
 
-import com.moebius.entropy.domain.InflateRequest;
-import com.moebius.entropy.domain.InflationConfig;
-import com.moebius.entropy.domain.InflationResult;
+import com.moebius.entropy.domain.inflate.InflateRequest;
+import com.moebius.entropy.domain.inflate.InflationConfig;
+import com.moebius.entropy.domain.inflate.InflationResult;
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.Order;
-import com.moebius.entropy.domain.OrderRequest;
-import com.moebius.entropy.domain.OrderPosition;
-import com.moebius.entropy.domain.TradePrice;
-import com.moebius.entropy.domain.TradeWindow;
+import com.moebius.entropy.domain.order.Order;
+import com.moebius.entropy.domain.order.OrderRequest;
+import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.trade.TradePrice;
+import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.service.order.OrderService;
-import com.moebius.entropy.service.tradewindow.repository.InflationConfigRepository;
+import com.moebius.entropy.repository.InflationConfigRepository;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,8 +29,8 @@ import reactor.core.publisher.Mono;
 
 import javax.annotation.PostConstruct;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class TradeWindowInflateService {
 
     private final TradeWindowQueryService tradeWindowQueryService;

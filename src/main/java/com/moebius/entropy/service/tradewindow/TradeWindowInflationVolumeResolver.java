@@ -1,9 +1,9 @@
 package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.OrderPosition;
+import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.util.EntropyRandomUtils;
-import com.moebius.entropy.service.tradewindow.repository.InflationConfigRepository;
+import com.moebius.entropy.repository.InflationConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;

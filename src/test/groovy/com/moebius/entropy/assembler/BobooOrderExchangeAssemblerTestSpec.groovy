@@ -1,10 +1,14 @@
 package com.moebius.entropy.assembler
 
 import com.moebius.entropy.domain.*
+import com.moebius.entropy.domain.order.Order
+import com.moebius.entropy.domain.order.OrderPosition
+import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.order.OrderSide
 import com.moebius.entropy.domain.order.OrderStatus
 import com.moebius.entropy.domain.order.OrderType
 import com.moebius.entropy.domain.order.TimeInForce
+import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
 import org.apache.commons.lang3.StringUtils
@@ -12,9 +16,9 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 
-class OrderBobooExchangeAssemblerTestSpec extends Specification {
+class BobooOrderExchangeAssemblerTestSpec extends Specification {
 	@Subject
-	def sut = new OrderBobooExchangeAssembler()
+	def sut = new BobooOrderExchangeAssembler()
 
 	@Shared
 	def symbol = "GTAX"
@@ -40,7 +44,7 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 
 		where:
 		orderPosition     | orderSide
-		OrderPosition.ASK | OrderSide.BUY
+        OrderPosition.ASK | OrderSide.BUY
 		OrderPosition.BID | OrderSide.SELL
 	}
 

@@ -1,4 +1,4 @@
-package com.moebius.entropy.domain;
+package com.moebius.entropy.domain.trade;
 
 import java.math.BigDecimal;
 import lombok.Getter;

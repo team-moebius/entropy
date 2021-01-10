@@ -1,4 +1,4 @@
-package com.moebius.entropy.domain;
+package com.moebius.entropy.domain.inflate;
 
 import java.math.BigDecimal;
 import java.util.List;
