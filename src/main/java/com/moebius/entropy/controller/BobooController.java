@@ -1,16 +1,20 @@
 package com.moebius.entropy.controller;
 
+import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.OrderSide;
 import com.moebius.entropy.domain.order.OrderType;
 import com.moebius.entropy.domain.order.TimeInForce;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
+import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
+import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
 import com.moebius.entropy.util.OrderIdUtil;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -24,6 +28,7 @@ import java.util.Optional;
 @Slf4j
 public class BobooController {
 	private final BobooExchangeService bobooExchangeService;
+	private final BobooDividedDummyOrderService bobooDividedDummyOrderService;
 
 	/**
 	 * Sample request for testing
@@ -40,6 +45,16 @@ public class BobooController {
 	@GetMapping("/open-orders")
 	public Flux<BobooOpenOrdersDto> getOpenOrders(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto) {
 		return bobooExchangeService.getOpenOrders(symbol, apiKeyDto);
+	}
+
+	@PostMapping("/divided-dummy-order")
+	public Mono<ServerResponse> testDividedDummyOrder(@RequestBody DividedDummyOrderDto dividedDummyOrderDto) {
+		return bobooDividedDummyOrderService.executeDividedDummyOrders(dividedDummyOrderDto);
+	}
+
+	@DeleteMapping("/divided-dummy-order")
+	public Mono<ServerResponse> testCancelDividedDummyOrder(@RequestParam String disposableId, @RequestBody Market market) {
+		return bobooDividedDummyOrderService.cancelDividedDummyOrders(market, disposableId);
 	}
 	@PostMapping("/cancel-test-order")
 	public Flux<BobooCancelResponse> cancelAllOpenOrders(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto){

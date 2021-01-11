@@ -6,10 +6,12 @@ import com.moebius.entropy.domain.order.DummyOrderConfig;
 import lombok.*;
 
 @Getter
+@Builder
 @RequiredArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class DividedDummyOrderDto {
-	private final Market market;
-	private final InflationConfig inflationConfig;
-	private final DummyOrderConfig askOrderConfig;
-	private final DummyOrderConfig bidOrderConfig;
+	private Market market;
+	private InflationConfig inflationConfig;
+	private DummyOrderConfig askOrderConfig;
+	private DummyOrderConfig bidOrderConfig;
 }

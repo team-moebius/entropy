@@ -7,8 +7,12 @@ import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.util.EntropyRandomUtils
 import com.moebius.entropy.repository.InflationConfigRepository
+import org.apache.commons.collections4.CollectionUtils
+import org.apache.commons.lang3.tuple.Pair
 import spock.lang.Shared
 import spock.lang.Specification
+
+import java.math.RoundingMode
 
 class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def inflationConfigRepository = Mock(InflationConfigRepository)
@@ -20,7 +24,7 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def exchange = Exchange.BOBOO
     def market = new Market(exchange, symbol, TradeCurrency.USDT)
 
-    def "Get Random volume fron configuration"() {
+    def "Should get Random volume from configuration"() {
         given:
         def desiredMaxVolume
         def desiredMinVolume
@@ -59,5 +63,31 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
         0.0             |   0.0                 |   0.0             |   10.2312         |   OrderPosition.BID
         -12312.2        |   -123123.231         |   12312.2         |   123123.231      |   OrderPosition.BID
 
+    }
+
+    def "Should get divided volume from request"() {
+        given:
+        def market = Stub(Market)
+        def orderRange = Pair.of(1, 5)
+        1 * inflationConfigRepository.getConfigFor(_ as Market) >> Stub(InflationConfig) {
+            getAskMaxVolume() >> 1000
+            getAskMinVolume() >> 10
+            getBidMaxVolume() >> 1000
+            getBidMinVolume() >> 10
+        }
+        1 * entropyRandomUtils.getRandomInteger(1, 5) >> 3
+        1 * entropyRandomUtils.getRandomDecimal(10, 1000, 2) >> BigDecimal.valueOf(500)
+        1 * entropyRandomUtils.getRandomDecimal(0.2f, _, 2) >> BigDecimal.valueOf(50)
+        1 * entropyRandomUtils.getRandomDecimal(0.1f, _, 2) >> BigDecimal.valueOf(100)
+
+        when:
+        def result = sut.getDividedVolume(market, ORDER_POSITION, orderRange)
+
+        then:
+        CollectionUtils.isNotEmpty(result)
+        result.stream().allMatch(dividedVolume -> dividedVolume >= 50 && dividedVolume <= 350)
+
+        where:
+        ORDER_POSITION << [OrderPosition.ASK, OrderPosition.BID]
     }
 }

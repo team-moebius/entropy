@@ -9,6 +9,6 @@ import org.apache.commons.lang3.tuple.Pair;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class DummyOrderConfig {
 	private Pair<Integer, Integer> orderRange;
-	private float period;
+	private float secondPeriod;
 	private Pair<Integer, Integer> orderCountRange;
 }
