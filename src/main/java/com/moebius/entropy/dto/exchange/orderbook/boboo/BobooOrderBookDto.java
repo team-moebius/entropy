@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Getter
 @Builder
-@ToString
+@ToString(exclude = "data")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -40,10 +40,10 @@ public class TradeWindowInflationVolumeResolver {
 			.orElse(BigDecimal.ZERO);
 	}
 
-	public List<BigDecimal> getDividedVolume(Market market, OrderPosition orderPosition, Pair<Integer, Integer> orderRange) {
+	public List<BigDecimal> getDividedVolume(Market market, OrderPosition orderPosition, int minDividedOrderCount, int maxDividedOrderCount) {
 		List<BigDecimal> dividedVolumes = new ArrayList<>();
 		BigDecimal inflationVolume = getInflationVolume(market, orderPosition);
-		int range = randomUtils.getRandomInteger(orderRange.getLeft(), orderRange.getRight());
+		int range = randomUtils.getRandomInteger(minDividedOrderCount, maxDividedOrderCount);
 
 		for (int i = range - 1; i > 0; --i) {
 			BigDecimal dividedVolume = randomUtils.getRandomDecimal(0.1f * i, inflationVolume.floatValue(), 2);

@@ -1,5 +1,6 @@
 package com.moebius.entropy.service.tradewindow;
 
+import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.inflate.InflateRequest;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.inflate.InflationResult;
@@ -7,6 +8,7 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.service.order.OrderService;
@@ -42,7 +44,15 @@ public class TradeWindowInflateService {
     @PostConstruct
     public void onCreate(){
         windowChangeEventListener.setTradeWindowInflateService(this);
-    }
+        inflationConfigRepository.saveConfigFor(new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT), InflationConfig.builder()
+            .askCount(10)
+            .bidCount(10)
+            .askMinVolume(BigDecimal.valueOf(10.5))
+            .askMaxVolume(BigDecimal.valueOf(100.38))
+            .bidMinVolume(BigDecimal.valueOf(10.5))
+            .bidMaxVolume(BigDecimal.valueOf(100.5))
+            .build());
+}
 
     public Mono<InflationResult> inflateTrades(InflateRequest inflateRequest) {
         Market market = inflateRequest.getMarket();

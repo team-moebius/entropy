@@ -19,7 +19,7 @@ public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<Boboo
     public BobooOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
         return Optional.ofNullable(orderRequest)
                 .map(request->BobooOrderRequestDto.builder()
-                        .symbol(SymbolUtil.symbolFromMarket(orderRequest.getMarket()))
+                        .symbol(orderRequest.getMarket().getSymbol())
                         .quantity(orderRequest.getVolume())
                         .side(OrderUtil.resolveFromOrderPosition(orderRequest.getOrderPosition()))
                         .type(OrderType.LIMIT)

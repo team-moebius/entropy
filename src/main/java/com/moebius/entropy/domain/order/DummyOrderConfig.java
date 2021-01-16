@@ -1,14 +1,15 @@
 package com.moebius.entropy.domain.order;
 
 import lombok.*;
-import org.apache.commons.lang3.tuple.Pair;
 
 @Getter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class DummyOrderConfig {
-	private Pair<Integer, Integer> orderRange;
-	private float secondPeriod;
-	private Pair<Integer, Integer> orderCountRange;
+	private int minDividedOrderCount;
+	private int maxDividedOrderCount;
+	private float period;
+	private int minReorderCount;
+	private int maxReorderCount;
 }

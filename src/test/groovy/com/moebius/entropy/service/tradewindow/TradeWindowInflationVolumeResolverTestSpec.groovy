@@ -1,18 +1,15 @@
 package com.moebius.entropy.service.tradewindow
 
 import com.moebius.entropy.domain.Exchange
-import com.moebius.entropy.domain.inflate.InflationConfig
 import com.moebius.entropy.domain.Market
+import com.moebius.entropy.domain.inflate.InflationConfig
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
-import com.moebius.entropy.util.EntropyRandomUtils
 import com.moebius.entropy.repository.InflationConfigRepository
+import com.moebius.entropy.util.EntropyRandomUtils
 import org.apache.commons.collections4.CollectionUtils
-import org.apache.commons.lang3.tuple.Pair
 import spock.lang.Shared
 import spock.lang.Specification
-
-import java.math.RoundingMode
 
 class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def inflationConfigRepository = Mock(InflationConfigRepository)
@@ -68,7 +65,6 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def "Should get divided volume from request"() {
         given:
         def market = Stub(Market)
-        def orderRange = Pair.of(1, 5)
         1 * inflationConfigRepository.getConfigFor(_ as Market) >> Stub(InflationConfig) {
             getAskMaxVolume() >> 1000
             getAskMinVolume() >> 10
@@ -81,7 +77,7 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
         1 * entropyRandomUtils.getRandomDecimal(0.1f, _, 2) >> BigDecimal.valueOf(100)
 
         when:
-        def result = sut.getDividedVolume(market, ORDER_POSITION, orderRange)
+        def result = sut.getDividedVolume(market, ORDER_POSITION, 1, 5)
 
         then:
         CollectionUtils.isNotEmpty(result)

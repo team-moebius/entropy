@@ -4,8 +4,8 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-@Builder
 @Getter
+@Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InflationConfig {

@@ -1,11 +1,13 @@
 package com.moebius.entropy.repository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.Disposable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 @Repository
 public class DisposableOrderRepository {
 	private final Map<String, List<Disposable>> disposableOrders = new ConcurrentHashMap<>();
@@ -19,5 +21,6 @@ public class DisposableOrderRepository {
 		disposables.add(disposable);
 
 		disposableOrders.put(disposableId, disposables);
+		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{}]", disposableId);
 	}
 }
