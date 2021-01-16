@@ -25,8 +25,8 @@ public class BobooOrderService implements OrderService{
 
     public BobooOrderService(BobooService exchangeService,
                              OrderBobooExchangeAssembler assembler,
-                             @Value("exchange.boboo.apikey.accessKey") String accessKey,
-                             @Value("exchange.boboo.apikey.eecret") String secretKey) {
+                             @Value("${exchange.boboo.apikey.access-key}") String accessKey,
+                             @Value("${exchange.boboo.apikey.secret-key}") String secretKey) {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
         orderListForSymbol = new HashMap<>();
