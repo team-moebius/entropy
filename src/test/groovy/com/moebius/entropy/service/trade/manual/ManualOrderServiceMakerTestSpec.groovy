@@ -34,10 +34,7 @@ class ManualOrderServiceMakerTestSpec extends Specification {
                 .map({ BigDecimal.valueOf(it) })
                 .collect(Collectors.toList())
 
-        def totalRequestedVolumeBeforeLast = randomVolumes.sum() as BigDecimal ?: BigDecimal.ZERO
-        def lastOrderVolume = BigDecimal.valueOf(requestedVolume).subtract(totalRequestedVolumeBeforeLast)
-        def allRequestedVolumes = randomVolumes + [lastOrderVolume]
-        def remainVolumes = zipCollections(allRequestedVolumes, executedVolumes).stream()
+        def remainVolumes = zipCollections(randomVolumes, executedVolumes).stream()
                 .map({
                     def volume = it.getLeft() as BigDecimal
                     def executedVolume = it.getRight() as float
@@ -49,12 +46,12 @@ class ManualOrderServiceMakerTestSpec extends Specification {
                 .map({ it.round(2) })
                 .collect(Collectors.toList())
 
-        randomUtil.getRandomDecimal(_, _, _) >>> randomVolumes
+        randomUtil.getRandomSlices(requestedVolume, selectedDivision, _) >> randomVolumes
         randomUtil.getRandomInteger(divisionRange[0], divisionRange[1]) >> selectedDivision
         tradeWindowRepository.getMarketPriceForSymbol(market) >> marketPrice
 
         (0..<selectedDivision).forEach({ index ->
-            def volume = allRequestedVolumes[index]
+            def volume = randomVolumes[index]
             def remainVolume = remainVolumes[index]
             orderService.requestManualOrder({
                 it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(marketPrice) && it.volume == volume
@@ -102,20 +99,20 @@ class ManualOrderServiceMakerTestSpec extends Specification {
 
         where:
         orderPosition     | divisionRange | selectedDivision | requestedVolume | marketPrice | currentVolume | executedVolumes                                                           | randomValues
-        OrderPosition.ASK | [1, 10]       | 10               | 2500.0          | 17.52       | 2500.0        | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12, 268.66] | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12]
-        OrderPosition.ASK | [1, 10]       | 1                | 3000.0          | 17.52       | 2500.0        | [2500.0]                                                                  | []
-        OrderPosition.ASK | [1, 10]       | 1                | 2000.0          | 17.52       | 2500.0        | [2000.0]                                                                  | []
-        OrderPosition.ASK | [1, 10]       | 1                | 2500.0          | 17.52       | 2500.0        | [2500.0]                                                                  | []
-        OrderPosition.ASK | [1, 10]       | 5                | 2500.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0]
-        OrderPosition.ASK | [1, 10]       | 5                | 3000.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0]
-        OrderPosition.ASK | [1, 10]       | 5                | 2000.0          | 17.52       | 2500.0        | [312.02, 454.12, 125.23, 867.0, 241.63]                                   | [312.02, 454.12, 125.23, 867.0]
-        OrderPosition.BID | [1, 10]       | 10               | 2500.0          | 17.52       | 2500.0        | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12, 268.66] | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12]
-        OrderPosition.BID | [1, 10]       | 1                | 2500.0          | 17.52       | 2500.0        | [2500.0]                                                                  | []
-        OrderPosition.BID | [1, 10]       | 1                | 3000.0          | 17.52       | 2500.0        | [2000.0]                                                                  | []
-        OrderPosition.BID | [1, 10]       | 1                | 2000.0          | 17.52       | 2500.0        | [2500.0]                                                                  | []
-        OrderPosition.BID | [1, 10]       | 5                | 2500.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0]
-        OrderPosition.BID | [1, 10]       | 5                | 3000.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0]
-        OrderPosition.BID | [1, 10]       | 5                | 2000.0          | 17.52       | 2500.0        | [312.02, 454.12, 125.23, 867.0, 241.63]                                   | [312.02, 454.12, 125.23, 867.0]
+        OrderPosition.ASK | [1, 10]       | 10               | 2500.0          | 17.52       | 2500.0        | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12, 268.66] | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12, 268.66]
+        OrderPosition.ASK | [1, 10]       | 1                | 3000.0          | 17.52       | 2500.0        | [2500.0]                                                                  | [3000.0]
+        OrderPosition.ASK | [1, 10]       | 1                | 2000.0          | 17.52       | 2500.0        | [2000.0]                                                                  | [2000.0]
+        OrderPosition.ASK | [1, 10]       | 1                | 2500.0          | 17.52       | 2500.0        | [2500.0]                                                                  | [2500.0]
+        OrderPosition.ASK | [1, 10]       | 5                | 2500.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0, 441.63]
+        OrderPosition.ASK | [1, 10]       | 5                | 3000.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0, 941.63]
+        OrderPosition.ASK | [1, 10]       | 5                | 2000.0          | 17.52       | 2500.0        | [312.02, 454.12, 125.23, 867.0, 58.37]                                    | [312.02, 454.12, 125.23, 867.0, 58.37]
+        OrderPosition.BID | [1, 10]       | 10               | 2500.0          | 17.52       | 2500.0        | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12, 268.66] | [177.0, 175.8, 320.5, 198.6, 275.2, 252.12, 193.0, 364.0, 275.12, 268.66]
+        OrderPosition.BID | [1, 10]       | 1                | 2500.0          | 17.52       | 2500.0        | [2500.0]                                                                  | [3000.0]
+        OrderPosition.BID | [1, 10]       | 1                | 3000.0          | 17.52       | 2500.0        | [2000.0]                                                                  | [2000.0]
+        OrderPosition.BID | [1, 10]       | 1                | 2000.0          | 17.52       | 2500.0        | [2500.0]                                                                  | [2500.0]
+        OrderPosition.BID | [1, 10]       | 5                | 2500.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0, 441.63]
+        OrderPosition.BID | [1, 10]       | 5                | 3000.0          | 17.52       | 2500.0        | [312.02, 754.12, 125.23, 867.0, 441.63]                                   | [312.02, 754.12, 125.23, 867.0, 941.63]
+        OrderPosition.BID | [1, 10]       | 5                | 2000.0          | 17.52       | 2500.0        | [312.02, 454.12, 125.23, 867.0, 58.37]                                    | [312.02, 454.12, 125.23, 867.0, 58.37]
     }
 
     static List<Pair<?, ?>> zipCollections(List<?> first, List<?> second) {

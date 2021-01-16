@@ -7,16 +7,17 @@ import com.moebius.entropy.util.EntropyRandomUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Component
 @RequiredArgsConstructor
 @Slf4j
 public class ManualOrderMakerService {
@@ -27,11 +28,14 @@ public class ManualOrderMakerService {
 
     public Mono<ManualOrderResult> requestManualOrderMaking(ManualOrderMakingRequest request) {
         int division = randomUtil.getRandomInteger(request.getStartRange(), request.getEndRange());
-        List<BigDecimal> randomVolumes = divideVolumeWith(request.getRequestedVolume(), division);
+        List<BigDecimal> randomVolumes = randomUtil.getRandomSlices(request.getRequestedVolume(), division, decimalPosition);
 
         Market market = request.getMarket();
         BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
         OrderPosition orderPosition = request.getOrderPosition();
+
+        log.info("[ManualOrder] Started to request Order symbol:{}{}, position: {}, quantities:{}",
+                market.getSymbol(), market.getTradeCurrency(), orderPosition, randomVolumes);
 
         return Flux.fromIterable(randomVolumes)
                 .map(volume -> new OrderRequest(market, orderPosition, marketPrice, volume))
@@ -47,20 +51,6 @@ public class ManualOrderMakerService {
                 })
                 .collectList()
                 .map(this::makeResult);
-    }
-
-    private List<BigDecimal> divideVolumeWith(BigDecimal requestedVolume, int division) {
-        BigDecimal remainVolume = requestedVolume;
-        List<BigDecimal> dividedVolumes = new ArrayList<>(division);
-
-        for (int i = 1; i < division; i++) {
-            BigDecimal randomVolume = randomUtil.getRandomDecimal(0.0f, remainVolume.floatValue(), decimalPosition);
-            dividedVolumes.add(randomVolume);
-            remainVolume = remainVolume.subtract(randomVolume);
-        }
-        dividedVolumes.add(remainVolume);
-
-        return dividedVolumes;
     }
 
     private ManualOrderResult makeResult(List<Pair<Order, ?>> pairs) {
