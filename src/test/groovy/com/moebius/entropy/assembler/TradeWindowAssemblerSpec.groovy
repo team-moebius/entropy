@@ -62,9 +62,9 @@ class TradeWindowAssemblerSpec extends Specification {
         marketPrice == 11375.41
         where:
         bobooSymbol | desiredSymbol | desiredCurrency
-        "BTCUSDT"   | "BTC"         | TradeCurrency.USDT
-        "BTCKRW"    | "BTC"         | TradeCurrency.KRW
-        "GTAXUSDT"  | "GTAX"        | TradeCurrency.USDT
-        "GTAXKRW"   | "GTAX"        | TradeCurrency.KRW
+        "BTCUSDT"   | "BTCUSDT"     | TradeCurrency.USDT
+        "BTCKRW"    | "BTCKRW"      | TradeCurrency.KRW
+        "GTAXUSDT"  | "GTAXUSDT"    | TradeCurrency.USDT
+        "GTAXKRW"   | "GTAXKRW"     | TradeCurrency.KRW
     }
 }

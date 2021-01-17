@@ -23,4 +23,4 @@ exchange:
     apikey:
       accessKey: ulty827N2vakJap9OdAAejTe7VwykXxUplXSbPGhkLq5r5ImeXACdcr3pZhl6inF
       secretKey: QCzWtRLiuB1vyd1wrmcpZ7m2HywSzasGhQv0olXvUXxpezNhn9RQwFnW2nWYX6lH
-    receiveTimeWindow: 3000
+    receiveTimeWindow: 5000

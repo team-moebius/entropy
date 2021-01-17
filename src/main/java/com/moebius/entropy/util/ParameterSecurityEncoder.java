@@ -27,7 +27,7 @@ public class ParameterSecurityEncoder {
 		String rawQueryString = toQueryString(queryParams);
 		String rawBodyValue = toQueryString(bodyValues);
 		String targetForMAC = rawQueryString + rawBodyValue;
-		log.info(targetForMAC);
+//		log.info(targetForMAC);
 		byte[] bytesToBeSigned = targetForMAC.getBytes();
 
 		try {

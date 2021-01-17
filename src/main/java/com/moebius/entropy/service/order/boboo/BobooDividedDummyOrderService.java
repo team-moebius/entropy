@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
 	private static final String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
+
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowInflationVolumeResolver volumeResolver;
@@ -52,76 +53,99 @@ public class BobooDividedDummyOrderService {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
+		// TODO : duration should be refined more.
+		Disposable disposable = Flux.interval(Duration.ZERO, Duration.ofSeconds(15))
+			.subscribeOn(Schedulers.parallel())
+			.flatMap(tick -> executeDummyOrders(dividedDummyOrderDto, inflationConfig, market))
+			.subscribe();
+
+		String disposableId = market.getExchange() + "-" + market.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
+		disposableOrderRepository.set(disposableId, disposable);
+		return Mono.just(ResponseEntity.ok(disposableId));
+	}
+
+	private Mono<Void> executeDummyOrders(DividedDummyOrderDto dividedDummyOrderDto, InflationConfig inflationConfig,
+		MarketDto market) {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market.toDomainEntity());
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
-		Flux.fromStream(IntStream.rangeClosed(1, inflationConfig.getAskCount())
-			.mapToObj(BigDecimal::valueOf)
-			.map(multiplier -> marketPrice.add(priceUnit.multiply(multiplier))))
-			.subscribeOn(Schedulers.parallel())
-			.flatMap(price -> executeDummyOrderMono(dividedDummyOrderDto, OrderPosition.ASK, price))
-			.subscribe(disposable -> disposableOrderRepository.set(market.getExchange() + "-" + market.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX,
-				disposable));
-
-		Flux.fromStream(IntStream.rangeClosed(1, inflationConfig.getBidCount())
-			.mapToObj(BigDecimal::valueOf)
-			.map(multiplier -> marketPrice.subtract(priceUnit.multiply(multiplier))))
-			.subscribeOn(Schedulers.parallel())
-			.flatMap(price -> executeDummyOrderMono(dividedDummyOrderDto, OrderPosition.BID, price))
-			.subscribe(disposable -> disposableOrderRepository.set(market.getExchange() + "-" + market.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX,
-				disposable));
-
-		return Mono.just(ResponseEntity.ok().build());
+		return Mono.when(Flux.fromStream(IntStream.range(0, inflationConfig.getAskCount())
+				.mapToObj(BigDecimal::valueOf)
+				.map(multiplier -> marketPrice.add(priceUnit.multiply(multiplier))))
+				.delayElements(Duration.ofMillis(500))
+				.flatMap(price -> executeDividedDummyOrdersMono(dividedDummyOrderDto, OrderPosition.ASK, price)),
+			Flux.fromStream(IntStream.rangeClosed(1, inflationConfig.getBidCount())
+				.mapToObj(BigDecimal::valueOf)
+				.map(multiplier -> marketPrice.subtract(priceUnit.multiply(multiplier))))
+				.delayElements(Duration.ofMillis(500))
+				.flatMap(price -> executeDividedDummyOrdersMono(dividedDummyOrderDto, OrderPosition.BID, price))
+		);
 	}
 
-	public Mono<ResponseEntity<?>> cancelDividedDummyOrders(Market market, String disposableId) {
-		Optional.ofNullable(disposableOrderRepository.get(market.getExchange() + "-" + market.getSymbol() + "-" + disposableId))
+	public Mono<ResponseEntity<?>> stopDividedDummyOrders(String disposableId) {
+		Optional.ofNullable(disposableOrderRepository.get(disposableId))
 			.ifPresent(disposables -> disposables.forEach(Disposable::dispose));
 
-		return Mono.just(ResponseEntity.ok().build());
+		log.info("[DummyOrder] Succeeded to stop dummy orders. [{}]", disposableId);
+		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
-	private Mono<Disposable> executeDummyOrderMono(DividedDummyOrderDto dividedDummyOrderDto, OrderPosition orderPosition, BigDecimal price) {
-		return Mono.fromCallable(() -> {
-			MarketDto marketDto = dividedDummyOrderDto.getMarket();
-			Market market = marketDto.toDomainEntity();
+	private Mono<List<OrderRequest>> executeDividedDummyOrdersMono(DividedDummyOrderDto dividedDummyOrderDto, OrderPosition orderPosition,
+		BigDecimal price) {
+		MarketDto marketDto = dividedDummyOrderDto.getMarket();
+		Market market = marketDto.toDomainEntity();
 
+		return Mono.fromCallable(() -> {
 			List<OrderRequest> orderRequests = new ArrayList<>();
 			int reorderCount = 0;
 			Duration orderDuration = Duration.ZERO;
 
-			while (true) {
-				if (orderPosition == OrderPosition.ASK) {
-					DummyOrderConfig askOrderConfig = dividedDummyOrderDto.getAskOrderConfig();
+			if (orderPosition == OrderPosition.ASK) {
+				DummyOrderConfig askOrderConfig = dividedDummyOrderDto.getAskOrderConfig();
 
-					orderRequests = volumeResolver.getDividedVolume(market, orderPosition, askOrderConfig.getMinDividedOrderCount(),
-						askOrderConfig.getMaxDividedOrderCount()).stream()
-						.map(volume -> new OrderRequest(market, orderPosition, price, volume))
-						.collect(Collectors.toList());
-					reorderCount = randomUtils.getRandomInteger(askOrderConfig.getMinReorderCount(), askOrderConfig.getMaxReorderCount());
-					orderDuration = Duration.ofMillis((long) askOrderConfig.getPeriod() / reorderCount * 1000);
-				} else if (orderPosition == OrderPosition.BID) {
-					DummyOrderConfig bidOrderConfig = dividedDummyOrderDto.getBidOrderConfig();
-					int minDividedOrderCount = bidOrderConfig.getMinDividedOrderCount();
-					int maxDividedOrderCount = bidOrderConfig.getMaxDividedOrderCount();
+				orderRequests = volumeResolver.getDividedVolume(dividedDummyOrderDto, OrderPosition.ASK).stream()
+					.map(volume -> new OrderRequest(market, orderPosition, price, volume))
+					.collect(Collectors.toList());
+				reorderCount = randomUtils.getRandomInteger(askOrderConfig.getMinReorderCount(), askOrderConfig.getMaxReorderCount());
+				orderDuration = Duration.ofMillis((long) (askOrderConfig.getPeriod() / reorderCount * 1000));
+			} else if (orderPosition == OrderPosition.BID) {
+				DummyOrderConfig bidOrderConfig = dividedDummyOrderDto.getBidOrderConfig();
 
-					orderRequests = volumeResolver.getDividedVolume(market, orderPosition, minDividedOrderCount, maxDividedOrderCount).stream()
-						.map(volume -> new OrderRequest(market, orderPosition, price, volume))
-						.collect(Collectors.toList());
-					reorderCount = randomUtils.getRandomInteger(bidOrderConfig.getMinReorderCount(), bidOrderConfig.getMaxReorderCount());
-					orderDuration = Duration.ofMillis((long) bidOrderConfig.getPeriod() / reorderCount * 1000);
-				}
-
-				log.info("[DummyOrder] Start dummy order. [orderRequests: {} | reorderCount : {} | orderDuration : {}]", orderRequests, reorderCount,
-					orderDuration.toMillis());
-				for (int i = 0; i < reorderCount; ++i) {
-					for (OrderRequest orderRequest : orderRequests) {
-						orderService.requestManualOrder(orderRequest)
-							.delayElement(orderDuration)
-							.subscribe(orderService::cancelOrder);
-					}
-				}
+				orderRequests = volumeResolver.getDividedVolume(dividedDummyOrderDto, OrderPosition.BID).stream()
+					.map(volume -> new OrderRequest(market, orderPosition, price, volume))
+					.collect(Collectors.toList());
+				reorderCount = randomUtils.getRandomInteger(bidOrderConfig.getMinReorderCount(), bidOrderConfig.getMaxReorderCount());
+				orderDuration = Duration.ofMillis((long) (bidOrderConfig.getPeriod() / reorderCount * 1000));
 			}
+
+			for (int i = 0; i < reorderCount; ++i) {
+				for (OrderRequest orderRequest : orderRequests) {
+					int finalReorderCount = i;
+					Duration finalOrderDuration = orderDuration;
+
+					orderService.requestOrderWithoutTracking(orderRequest)
+						.doOnSuccess(order -> log.info(
+							"[DummyOrder] Succeeded in requesting dummy order. [orderRequest: {} | reorderCount : {} | orderDuration : {}]",
+							orderRequest,
+							finalReorderCount,
+							finalOrderDuration.toMillis()))
+						.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. {}]",
+							((WebClientResponseException) throwable).getResponseBodyAsString()))
+						.delayElement(orderDuration)
+						.flatMap(orderService::cancelOrderWithoutTracking)
+						.doOnSuccess(order -> log.info(
+							"[DummyOrder] Succeeded to cancel dummy order. [order: {} | reorderCount : {} | orderDuration : {}]",
+							order,
+							finalReorderCount,
+							finalOrderDuration.toMillis()))
+						.doOnError(throwable -> log.error("[DummyOrder] Failed to cancel dummy order. {}]",
+							((WebClientResponseException) throwable).getResponseBodyAsString()))
+						.subscribe();
+				}
+				Thread.sleep(Duration.ofMillis(500).toMillis());
+			}
+
+			return orderRequests;
 		});
 	}
 }

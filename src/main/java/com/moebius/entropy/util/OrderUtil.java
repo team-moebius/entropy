@@ -6,16 +6,16 @@ import com.moebius.entropy.domain.order.OrderSide;
 public class OrderUtil {
     public static OrderSide resolveFromOrderPosition(OrderPosition orderPosition){
         if (OrderPosition.ASK.equals(orderPosition)){
-            return OrderSide.BUY;
-        } else {
             return OrderSide.SELL;
+        } else {
+            return OrderSide.BUY;
         }
     }
     public static OrderPosition resolveFromOrderSide(OrderSide orderSide){
         if (OrderSide.SELL.equals(orderSide)){
-            return OrderPosition.BID;
-        } else {
             return OrderPosition.ASK;
+        } else {
+            return OrderPosition.BID;
         }
     }
 }

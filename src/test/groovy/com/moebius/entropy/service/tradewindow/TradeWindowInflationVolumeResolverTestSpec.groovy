@@ -3,8 +3,10 @@ package com.moebius.entropy.service.tradewindow
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationConfig
+import com.moebius.entropy.domain.order.DummyOrderConfig
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
+import com.moebius.entropy.dto.order.DividedDummyOrderDto
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.util.EntropyRandomUtils
 import org.apache.commons.collections4.CollectionUtils
@@ -64,12 +66,21 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
 
     def "Should get divided volume from request"() {
         given:
-        def market = Stub(Market)
-        1 * inflationConfigRepository.getConfigFor(_ as Market) >> Stub(InflationConfig) {
-            getAskMaxVolume() >> 1000
-            getAskMinVolume() >> 10
-            getBidMaxVolume() >> 1000
-            getBidMinVolume() >> 10
+        def dividedDummyOrderDto = Stub(DividedDummyOrderDto) {
+            getInflationConfig() >> Stub(InflationConfig) {
+                getAskMinVolume() >> 10
+                getAskMaxVolume() >> 1000
+                getBidMinVolume() >> 10
+                getBidMaxVolume() >> 1000
+            }
+            getAskOrderConfig() >> Stub(DummyOrderConfig) {
+                getMinDividedOrderCount() >> 1
+                getMaxDividedOrderCount() >> 5
+            }
+            getBidOrderConfig() >> Stub(DummyOrderConfig) {
+                getMinDividedOrderCount() >> 1
+                getMaxDividedOrderCount() >> 5
+            }
         }
         1 * entropyRandomUtils.getRandomInteger(1, 5) >> 3
         1 * entropyRandomUtils.getRandomDecimal(10, 1000, 2) >> BigDecimal.valueOf(500)
@@ -77,7 +88,7 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
         1 * entropyRandomUtils.getRandomDecimal(0.1f, _, 2) >> BigDecimal.valueOf(100)
 
         when:
-        def result = sut.getDividedVolume(market, ORDER_POSITION, 1, 5)
+        def result = sut.getDividedVolume(dividedDummyOrderDto, ORDER_POSITION)
 
         then:
         CollectionUtils.isNotEmpty(result)

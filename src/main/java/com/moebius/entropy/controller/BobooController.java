@@ -1,6 +1,5 @@
 package com.moebius.entropy.controller;
 
-import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.OrderSide;
 import com.moebius.entropy.domain.order.OrderType;
 import com.moebius.entropy.domain.order.TimeInForce;
@@ -53,8 +52,8 @@ public class BobooController {
 	}
 
 	@DeleteMapping("/divided-dummy-order")
-	public Mono<ResponseEntity<?>> testCancelDividedDummyOrder(@RequestParam String disposableId, @RequestBody Market market) {
-		return bobooDividedDummyOrderService.cancelDividedDummyOrders(market, disposableId);
+	public Mono<ResponseEntity<?>> testStopDividedDummyOrder(@RequestParam String disposableId) {
+		return bobooDividedDummyOrderService.stopDividedDummyOrders(disposableId);
 	}
 
 	@PostMapping("/cancel-test-order")
@@ -83,7 +82,7 @@ public class BobooController {
 			.side(OrderSide.BUY)
 			.type(OrderType.LIMIT)
 			.timeInForce(TimeInForce.GTC)
-			.price(BigDecimal.valueOf(13.00))
+			.price(BigDecimal.valueOf(13.50))
 			.newClientOrderId(clientOrderId)
 			.build();
 		return getBobooOrderResponseDto(symbol, apiKeyDto, clientOrderId, orderRequest);
@@ -98,7 +97,7 @@ public class BobooController {
 			.side(OrderSide.SELL)
 			.type(OrderType.LIMIT)
 			.timeInForce(TimeInForce.GTC)
-			.price(BigDecimal.valueOf(99999.99))
+			.price(BigDecimal.valueOf(13.65))
 			.newClientOrderId(clientOrderId)
 			.build();
 		return getBobooOrderResponseDto(symbol, apiKeyDto, clientOrderId, orderRequest);

@@ -25,8 +25,8 @@ public class BobooOpenOrderRefreshService {
     public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
                                         BobooOrderService bobooOrderService,
                                         BobooOrderExchangeAssembler assembler,
-                                        @Value("exchange.boboo.apikey.accessKey") String accessKey,
-                                        @Value("exchange.boboo.apikey.eecret") String secretKey) {
+                                        @Value("${exchange.boboo.apikey.accessKey}") String accessKey,
+                                        @Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
         this.bobooExchangeService = bobooExchangeService;
         this.bobooOrderService = bobooOrderService;
         this.assembler = assembler;

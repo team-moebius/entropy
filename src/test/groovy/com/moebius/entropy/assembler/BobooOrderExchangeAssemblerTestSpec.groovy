@@ -21,7 +21,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 	def sut = new BobooOrderExchangeAssembler()
 
 	@Shared
-	def symbol = "GTAX"
+	def symbol = "GTAXUSDT"
 	@Shared
 	def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
 	def price = BigDecimal.valueOf(11.11)
@@ -34,7 +34,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 		def bobooOrderRequest = sut.convertToOrderRequest(orderRequest)
 
 		then:
-		bobooOrderRequest.symbol == "${symbol}${market.tradeCurrency.name()}"
+		bobooOrderRequest.symbol == "${symbol}"
 		bobooOrderRequest.quantity == volume
 		bobooOrderRequest.side == orderSide
 		bobooOrderRequest.type == OrderType.LIMIT
@@ -44,8 +44,8 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 
 		where:
 		orderPosition     | orderSide
-        OrderPosition.ASK | OrderSide.BUY
-		OrderPosition.BID | OrderSide.SELL
+        OrderPosition.ASK | OrderSide.SELL
+		OrderPosition.BID | OrderSide.BUY
 	}
 
 	def "Convert BobooOrderResultResponse to Order entity"() {
@@ -70,7 +70,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 		order.orderId == bobooOrderResponse.orderId
 		order.market.symbol == symbol
 		order.market.exchange == market.getExchange()
-		order.orderPosition == OrderPosition.BID
+		order.orderPosition == OrderPosition.ASK
 		order.price == bobooOrderResponse.price
 		order.volume == bobooOrderResponse.origQty
 	}
@@ -119,8 +119,8 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 
 		where:
 		orderSide      | orderPosition
-		OrderSide.SELL | OrderPosition.BID
-		OrderSide.BUY  | OrderPosition.ASK
+		OrderSide.SELL | OrderPosition.ASK
+		OrderSide.BUY  | OrderPosition.BID
 	}
 
 
