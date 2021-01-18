@@ -1,5 +1,6 @@
 package com.moebius.entropy.domain;
 
+import com.moebius.entropy.domain.order.OrderPosition;
 import lombok.*;
 
 import java.math.BigDecimal;

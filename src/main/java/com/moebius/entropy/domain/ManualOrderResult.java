@@ -1,5 +1,6 @@
 package com.moebius.entropy.domain;
 
+import com.moebius.entropy.domain.order.Order;
 import lombok.*;
 
 import java.util.List;
