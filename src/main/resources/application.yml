@@ -3,7 +3,8 @@ spring:
     active: local
   main:
     web-application-type: reactive
-
+  thymeleaf:
+    cache: false
 exchange:
   boboo:
     rest:
