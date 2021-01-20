@@ -1,12 +1,17 @@
 package com.moebius.entropy.service.order
 
-import com.moebius.entropy.assembler.OrderBobooExchangeAssembler
+import com.moebius.entropy.assembler.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.*
+import com.moebius.entropy.domain.order.Order
+import com.moebius.entropy.domain.order.OrderPosition
+import com.moebius.entropy.domain.order.OrderRequest
+import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
 import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponse
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
-import com.moebius.entropy.service.exchange.BobooService
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
+import com.moebius.entropy.service.order.boboo.BobooOrderService
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import spock.lang.Shared
@@ -16,8 +21,8 @@ import spock.lang.Unroll
 
 @SuppressWarnings(['GroovyAssignabilityCheck', 'GroovyAccessibility'])
 class OrderServiceTestSpec extends Specification {
-    def mockExchangeService = Mock(BobooService)
-    def mockAssembler = Mock(OrderBobooExchangeAssembler)
+    def mockExchangeService = Mock(BobooExchangeService)
+    def mockAssembler = Mock(BobooOrderExchangeAssembler)
     def accessKey = "some_test_api_key"
     def secretKey = "some_test_secret_key"
 

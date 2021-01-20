@@ -1,5 +1,6 @@
-package com.moebius.entropy.domain;
+package com.moebius.entropy.domain.inflate;
 
+import com.moebius.entropy.domain.Market;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 

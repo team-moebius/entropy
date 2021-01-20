@@ -1,8 +1,9 @@
-package com.moebius.entropy.service.exchange;
+package com.moebius.entropy.service.exchange.boboo;
 
 import com.moebius.entropy.assembler.BobooAssembler;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
+import com.moebius.entropy.service.exchange.ExchangeService;
 import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +23,7 @@ import java.net.URI;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BobooService implements ExchangeService<
+public class BobooExchangeService implements ExchangeService<
     BobooCancelRequest, BobooCancelResponse, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto
 > {
 	@Value("${exchange.boboo.rest.scheme}")
@@ -100,8 +101,7 @@ public class BobooService implements ExchangeService<
 				.doOnNext(bobooOrderBookDto -> log
 					.info("[Boboo] Succeeded in subscribing order book. [{}]", bobooOrderBookDto))
 				.doOnNext(tradeWindowEventListener::onTradeWindowChange)
-				.then()
-				.doOnTerminate(() -> getAndLogOrderBook(symbol)))
+				.then())
 			.subscribe();
 	}
 }

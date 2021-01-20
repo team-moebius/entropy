@@ -2,9 +2,9 @@ package com.moebius.entropy.service.tradewindow
 
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
-import com.moebius.entropy.domain.TradeCurrency
-import com.moebius.entropy.domain.TradeWindow
-import com.moebius.entropy.service.tradewindow.repository.TradeWindowRepository
+import com.moebius.entropy.domain.trade.TradeCurrency
+import com.moebius.entropy.domain.trade.TradeWindow
+import com.moebius.entropy.repository.TradeWindowRepository
 import reactor.test.StepVerifier
 import spock.lang.Specification
 import spock.lang.Subject

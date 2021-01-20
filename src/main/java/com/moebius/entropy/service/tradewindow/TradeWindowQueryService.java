@@ -1,14 +1,15 @@
 package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.domain.Market;
-import com.moebius.entropy.domain.TradeWindow;
-import com.moebius.entropy.service.tradewindow.repository.TradeWindowRepository;
+import com.moebius.entropy.domain.trade.TradeWindow;
+import com.moebius.entropy.repository.TradeWindowRepository;
 import java.math.BigDecimal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class TradeWindowQueryService {
 

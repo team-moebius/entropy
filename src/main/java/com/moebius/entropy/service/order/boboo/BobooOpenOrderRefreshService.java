@@ -1,9 +1,8 @@
-package com.moebius.entropy.service.order;
+package com.moebius.entropy.service.order.boboo;
 
-import com.moebius.entropy.assembler.OrderBobooExchangeAssembler;
+import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
-import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto;
-import com.moebius.entropy.service.exchange.BobooService;
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -17,18 +16,18 @@ import java.util.List;
 @Service
 @Slf4j
 public class BobooOpenOrderRefreshService {
-    private final BobooService bobooService;
+    private final BobooExchangeService bobooExchangeService;
     private final BobooOrderService bobooOrderService;
-    private final OrderBobooExchangeAssembler assembler;
+    private final BobooOrderExchangeAssembler assembler;
     private final ApiKeyDto apiKeyDto;
     private static final List<String> trackingSymbols = Collections.singletonList("GTAXUSDT");
 
-    public BobooOpenOrderRefreshService(BobooService bobooService,
+    public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
                                         BobooOrderService bobooOrderService,
-                                        OrderBobooExchangeAssembler assembler,
-                                        @Value("exchange.boboo.apikey.accessKey") String accessKey,
-                                        @Value("exchange.boboo.apikey.eecret") String secretKey) {
-        this.bobooService = bobooService;
+                                        BobooOrderExchangeAssembler assembler,
+                                        @Value("${exchange.boboo.apikey.accessKey}") String accessKey,
+                                        @Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
+        this.bobooExchangeService = bobooExchangeService;
         this.bobooOrderService = bobooOrderService;
         this.assembler = assembler;
         apiKeyDto = ApiKeyDto.builder()
@@ -40,7 +39,7 @@ public class BobooOpenOrderRefreshService {
     public void refreshOpenOrderFromExchange(){
         log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
         Flux.fromIterable(trackingSymbols)
-                .flatMap(symbol-> bobooService.getOpenOrders(symbol, apiKeyDto)
+                .flatMap(symbol-> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
                             .map(assembler::convertExchangeOrder)
                             .collectList()
                             .map(bobooOrderService::updateOrders)

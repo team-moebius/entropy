@@ -1,7 +1,7 @@
 package com.moebius.entropy.assembler;
 
-import com.moebius.entropy.domain.Order;
-import com.moebius.entropy.domain.OrderRequest;
+import com.moebius.entropy.domain.order.Order;
+import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.OrderType;
 import com.moebius.entropy.domain.order.TimeInForce;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
@@ -14,12 +14,12 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Component
-public class OrderBobooExchangeAssembler implements OrderExchangeAssembler<BobooCancelRequest, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto>{
+public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<BobooCancelRequest, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto>{
     @Override
     public BobooOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
         return Optional.ofNullable(orderRequest)
                 .map(request->BobooOrderRequestDto.builder()
-                        .symbol(SymbolUtil.symbolFromMarket(orderRequest.getMarket()))
+                        .symbol(orderRequest.getMarket().getSymbol())
                         .quantity(orderRequest.getVolume())
                         .side(OrderUtil.resolveFromOrderPosition(orderRequest.getOrderPosition()))
                         .type(OrderType.LIMIT)

@@ -1,7 +1,7 @@
 package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.assembler.TradeWindowAssembler;
-import com.moebius.entropy.domain.InflateRequest;
+import com.moebius.entropy.domain.inflate.InflateRequest;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
 import java.math.BigDecimal;

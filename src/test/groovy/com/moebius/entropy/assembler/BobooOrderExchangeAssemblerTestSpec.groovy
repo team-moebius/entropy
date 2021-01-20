@@ -1,10 +1,14 @@
 package com.moebius.entropy.assembler
 
 import com.moebius.entropy.domain.*
+import com.moebius.entropy.domain.order.Order
+import com.moebius.entropy.domain.order.OrderPosition
+import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.order.OrderSide
 import com.moebius.entropy.domain.order.OrderStatus
 import com.moebius.entropy.domain.order.OrderType
 import com.moebius.entropy.domain.order.TimeInForce
+import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
 import org.apache.commons.lang3.StringUtils
@@ -12,12 +16,12 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 
-class OrderBobooExchangeAssemblerTestSpec extends Specification {
+class BobooOrderExchangeAssemblerTestSpec extends Specification {
 	@Subject
-	def sut = new OrderBobooExchangeAssembler()
+	def sut = new BobooOrderExchangeAssembler()
 
 	@Shared
-	def symbol = "GTAX"
+	def symbol = "GTAXUSDT"
 	@Shared
 	def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
 	def price = BigDecimal.valueOf(11.11)
@@ -30,7 +34,7 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 		def bobooOrderRequest = sut.convertToOrderRequest(orderRequest)
 
 		then:
-		bobooOrderRequest.symbol == "${symbol}${market.tradeCurrency.name()}"
+		bobooOrderRequest.symbol == "${symbol}"
 		bobooOrderRequest.quantity == volume
 		bobooOrderRequest.side == orderSide
 		bobooOrderRequest.type == OrderType.LIMIT
@@ -40,8 +44,8 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 
 		where:
 		orderPosition     | orderSide
-		OrderPosition.ASK | OrderSide.BUY
-		OrderPosition.BID | OrderSide.SELL
+        OrderPosition.ASK | OrderSide.SELL
+		OrderPosition.BID | OrderSide.BUY
 	}
 
 	def "Convert BobooOrderResultResponse to Order entity"() {
@@ -66,7 +70,7 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 		order.orderId == bobooOrderResponse.orderId
 		order.market.symbol == symbol
 		order.market.exchange == market.getExchange()
-		order.orderPosition == OrderPosition.BID
+		order.orderPosition == OrderPosition.ASK
 		order.price == bobooOrderResponse.price
 		order.volume == bobooOrderResponse.origQty
 	}
@@ -115,8 +119,8 @@ class OrderBobooExchangeAssemblerTestSpec extends Specification {
 
 		where:
 		orderSide      | orderPosition
-		OrderSide.SELL | OrderPosition.BID
-		OrderSide.BUY  | OrderPosition.ASK
+		OrderSide.SELL | OrderPosition.ASK
+		OrderSide.BUY  | OrderPosition.BID
 	}
 
 

@@ -1,4 +1,4 @@
-package com.moebius.entropy.domain;
+package com.moebius.entropy.domain.order;
 
 import lombok.Builder;
 import lombok.Getter;
