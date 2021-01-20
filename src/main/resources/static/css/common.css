@@ -38,7 +38,7 @@ body{
     border-bottom: black 1px solid;
     margin-bottom: 20px;
 }
-.automatic-form{
+#automatic-form{
     margin-bottom: 20px;
 }
 .row.auto-sell-header{
