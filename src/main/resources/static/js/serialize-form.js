@@ -8,5 +8,5 @@ function serializeForm(formId){
 }
 
 const requestApi = (method, path, body={}) => axios({
-    method, url: path, body
+    method, url: path, data: body
 })
