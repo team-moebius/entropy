@@ -1,6 +1,8 @@
 package com.moebius.entropy.service.tradewindow
 
-import com.moebius.entropy.domain.*
+
+import com.moebius.entropy.domain.Exchange
+import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflateRequest
 import com.moebius.entropy.domain.inflate.InflationConfig
 import com.moebius.entropy.domain.order.Order
@@ -8,8 +10,8 @@ import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradePrice
 import com.moebius.entropy.domain.trade.TradeWindow
-import com.moebius.entropy.service.order.OrderService
 import com.moebius.entropy.repository.InflationConfigRepository
+import com.moebius.entropy.service.order.OrderService
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -76,7 +78,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.BID) >> bidInflationVolume
 
         def madeAskedPrices = priceUnitMultipliersForAskOrdersShouldBeMade.stream().map({ multiplier ->
-            def price = marketPrice - (priceChangeUnit * multiplier)
+            def price = marketPrice + (priceChangeUnit * multiplier)
             1 * orderService.requestOrder({
                 it.market == market && it.orderPosition == OrderPosition.ASK \
                           && it.price == price && it.volume == askInflationVolume
@@ -87,7 +89,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         }).collect(Collectors.toList())
 
         def madeBidPrices = priceUnitMultipliersForBidOrdersShouldBeMade.stream().map({ multiplier ->
-            def price = marketPrice + priceChangeUnit * multiplier
+            def price = marketPrice - priceChangeUnit * multiplier
             1 * orderService.requestOrder({
                 it.market == market && it.orderPosition == OrderPosition.BID \
                           && it.price == price && it.volume == bidInflationVolume
@@ -98,7 +100,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         }).collect(Collectors.toList())
 
         def cancelledAskedPrices = priceUnitMultipliersForAskOrdersShouldBeCanceled.stream().map({ int multiplier ->
-            def price = marketPrice - (priceChangeUnit * multiplier)
+            def price = marketPrice + (priceChangeUnit * multiplier)
             1 * orderService.cancelOrder({
                 it.market == market && it.orderPosition == OrderPosition.ASK  \
                          && it.price == price
@@ -109,7 +111,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         }).collect(Collectors.toList())
 
         def cancelledBiddenPrices = priceUnitMultipliersForBidOrdersShouldBeCanceled.stream().map({ int multiplier ->
-            def price = marketPrice + priceChangeUnit * multiplier
+            def price = marketPrice - priceChangeUnit * multiplier
             1 * orderService.cancelOrder({
                 it.market == market && it.orderPosition == OrderPosition.BID  \
                          && it.price == price
@@ -122,11 +124,6 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         expect:
         StepVerifier.create(sut.inflateTrades(inflateRequest))
                 .assertNext({
-                    it.getCreatedAskOrderPrices() == madeAskedPrices \
-                       && it.getCreatedBidOrderPrices() == madeBidPrices \
-                       && it.getCancelledAskOrderPrices() == cancelledAskedPrices \
-                       && it.getCancelledBidOrderPrices() == cancelledBiddenPrices
-
                     println("Case: " + comment)
                     println("Ask Orders should be made" + madeAskedPrices)
                     println("Ask Orders actually made: " + it.createdAskOrderPrices)
@@ -140,6 +137,12 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
                     println("Bid Orders should be cancelled" + cancelledBiddenPrices)
                     println("Bid Orders actually cancelled" + it.cancelledBidOrderPrices)
+
+                    it.getCreatedAskOrderPrices() == madeAskedPrices \
+                        && it.getCreatedBidOrderPrices() == madeBidPrices \
+                        && it.getCancelledAskOrderPrices() == cancelledAskedPrices \
+                        && it.getCancelledBidOrderPrices() == cancelledBiddenPrices
+
                 })
                 .verifyComplete()
 
@@ -159,6 +162,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 [123, 124, 125, 126, 127, 128],
                 [123, 124, 125, 126, 127, 128],
                 [123, 124, 125, 126, 127, 128],
+                [123, 0, 125, 126, 127, 128, 129, 130, 131, 132],
 
         ]
         bidVolumeForTradeWindow << [
@@ -175,6 +179,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 [201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211],
                 [201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211],
                 [201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211],
+                [201, 202, 0, 204, 205, 206, 207, 208, 209, 210, 211],
         ]
 
         askedOrderVolumes << [
@@ -191,6 +196,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 [0, 0, 0, 126, 127, 128],
                 [123, 124, 125, 126, 127, 128],
                 [],
+                [123, 124, 125, 126, 127, 128, 129, 130, 131, 132],
         ]
         biddenOrderVolumes << [
                 [],
@@ -205,67 +211,72 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 [201, 202, 203, 204, 205, 206],
                 [0, 0, 0, 0, 0, 0, 0, 0, 0, 210, 211],
                 [201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211],
-                []
+                [],
+                [201, 202, 0, 204, 205, 206, 207, 208, 209, 210, 211],
         ]
         priceUnitMultipliersForAskOrdersShouldBeMade << [
                 [1, 2, 3, 4, 5, 6, 7, 8],
-                [6, 7],
-                [6, 7],
-                [6, 7],
+                [7, 8],
+                [7, 8],
+                [7, 8],
                 [],
                 [],
                 [],
                 [],
                 [],
                 [],
-                [6, 7],
-                [6, 7],
-                [6, 7],
+                [7, 8],
+                [7, 8],
+                [7, 8],
+                [2],
         ]
         priceUnitMultipliersForBidOrdersShouldBeMade << [
-                [1, 2, 3, 4, 5, 6, 7, 8, 9],
-                [7, 8, 9],
-                [7, 8, 9],
-                [7, 8, 9],
+                [0, 1, 2, 3, 4, 5, 6, 7, 8],
+                [6, 7, 8],
+                [6, 7, 8],
+                [6, 7, 8],
                 [],
                 [],
                 [],
-                [7, 8, 9],
-                [7, 8, 9],
-                [7, 8, 9],
+                [6, 7, 8],
+                [6, 7, 8],
+                [6, 7, 8],
                 [],
                 [],
-                []
+                [],
+                [2],
         ]
         priceUnitMultipliersForAskOrdersShouldBeCanceled << [
                 [],
                 [],
                 [],
                 [],
-                [8, 9],
-                [8, 9],
+                [10],
+                [10],
                 [],
-                [8, 9],
-                [8, 9],
+                [10],
+                [10],
                 [],
                 [],
                 [],
-                []
+                [],
+                [10],
         ]
         priceUnitMultipliersForBidOrdersShouldBeCanceled << [
                 [],
                 [],
                 [],
                 [],
-                [10, 11],
-                [10, 11],
+                [10],
+                [10],
                 [],
                 [],
                 [],
                 [],
-                [10, 11],
-                [10, 11],
-                []
+                [10],
+                [10],
+                [],
+                [10],
         ]
         comment << [
                 "trade window is empty on first start",
@@ -281,6 +292,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 "ask count less and bid count over than objective",
                 "ask count less and bid count over than objective and all orders are automatic orders",
                 "ask count less and bid count over than objective without no automatic orders",
+                "both trade window count larger than objective count but there's some missed price",
         ]
 
     }
@@ -291,7 +303,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                     volumes[index] != 0
                 })
                 .map({ index ->
-                    def priceMultiplier = orderPosition == OrderPosition.BID ? index + 1 : -index
+                    def priceMultiplier = orderPosition == OrderPosition.BID ? -index : index + 1
                     def volume = volumes[index]
 
                     BigDecimal price = marketPrice + priceChangeUnit * priceMultiplier
@@ -306,7 +318,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                     volumes[index] != 0
                 })
                 .map({ index ->
-                    def priceMultiplier = orderPosition == OrderPosition.BID ? index + 1 : -index
+                    def priceMultiplier = orderPosition == OrderPosition.BID ? -index : index + 1
                     def volume = volumes[index]
                     BigDecimal price = marketPrice + priceChangeUnit * priceMultiplier
                     return new Order("${index}", market, orderPosition, price, volume)
