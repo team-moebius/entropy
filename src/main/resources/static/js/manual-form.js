@@ -1,19 +1,7 @@
 function startManualOrder(orderPosition) {
-    const formData = serializeForm('manual-form')
+    const formData = serializeForm(`manual-${orderPosition}-form`);
 
-    const prefixForForm = `manual-${orderPosition}`
-
-    const formDataForOrderPosition = {}
-
-    for (const [key, value] of Object.entries(formData)) {
-        if(key.startsWith(prefixForForm)){
-            formDataForOrderPosition[key] = value;
-        }
-    }
-
-    console.log(formDataForOrderPosition)
-
-    requestApi('post', '/manual-order', formDataForOrderPosition)
+    requestApi('post', '/manual-order', formData)
         .then((response) => {
             if (response.statusText === 'OK') {
                 window.alert("Manual Order started successfully!");

@@ -266,90 +266,104 @@
     </div>
 </form>
 
-<form class="container-lg" id="manual-form">
+<div class="container-lg" id="manual-form">
     <div class="row manual-trade-header">
         <div class="col col-lg-12">수동 매매 설정</div>
     </div>
-    <div class="row trade-item">
-        <div class="col-sm-3 col"><label class="col-form-label" for="manual-sell-volume-range-from"><span
-                class="color-sell">매도</span> 현재가 주문 설정</label></div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-sell-volume-range-from" name="manual-sell-volume-range-from" type="number">
+    <form id="manual-sell-form">
+        <div class="row trade-item">
+            <div class="col-sm-3 col"><label class="col-form-label" for="manual-sell-volume-range-from"><span
+                    class="color-sell">매도</span> 현재가 주문 설정</label></div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-sell-volume-range-from" name="manual-volume-range-from"
+                           type="number">
+                </div>
+            </div>
+            <div class="col splitter">
+                <span>-</span>
+            </div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-sell-volume-range-to" name="manual-volume-range-to"
+                           type="number">
+                    <span class="input-group-text">GTAX</span>
+                </div>
             </div>
         </div>
-        <div class="col splitter">
-            <span>-</span>
-        </div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-sell-volume-range-to" name="manual-sell-volume-range-to" type="number">
-                <span class="input-group-text">GTAX</span>
+        <div class="row trade-item">
+            <div class="col-sm-3 col"><label class="col-form-label" for="manual-sell-volume-division-from"><span
+                    class="color-sell">매도</span> 분할 수</label></div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-sell-volume-division-from" name="manual-volume-division-from"
+                           type="number">
+                </div>
+            </div>
+            <div class="col splitter">
+                <span>-</span>
+            </div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-sell-volume-division-to" name="manual-volume-division-to"
+                           type="number">
+                    <span class="input-group-text">회</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row trade-item">
-        <div class="col-sm-3 col"><label class="col-form-label" for="manual-sell-volume-division-from"><span
-                class="color-sell">매도</span> 분할 수</label></div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-sell-volume-division-from" name="manual-sell-volume-division-from" type="number">
-            </div>
-        </div>
-        <div class="col splitter">
-            <span>-</span>
-        </div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-sell-volume-division-to" name="manual-sell-volume-division-to" type="number">
-                <span class="input-group-text">회</span>
-            </div>
-        </div>
-    </div>
+        <input name="order-position" type="hidden" value="SELL">
+    </form>
 
-    <div class="row trade-item">
-        <div class="col-sm-3 col"><label class="col-form-label" for="manual-buy-volume-range-from"><span
-                class="color-buy">매도</span> 현재가 주문 설정</label></div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-buy-volume-range-from" name="manual-buy-volume-range-from" type="number">
+    <form id="manual-buy-form">
+        <div class="row trade-item">
+            <div class="col-sm-3 col"><label class="col-form-label" for="manual-buy-volume-range-from"><span
+                    class="color-buy">매수</span> 현재가 주문 설정</label></div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-buy-volume-range-from" name="manual-volume-range-from"
+                           type="number">
+                </div>
+            </div>
+            <div class="col splitter">
+                <span>-</span>
+            </div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-buy-volume-range-to" name="manual-volume-range-to"
+                           type="number">
+                    <span class="input-group-text">GTAX</span>
+                </div>
             </div>
         </div>
-        <div class="col splitter">
-            <span>-</span>
-        </div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-buy-volume-range-to" name="manual-buy-volume-range-to" type="number">
-                <span class="input-group-text">GTAX</span>
+        <div class="row trade-item">
+            <div class="col-sm-3 col"><label class="col-form-label" for="manual-buy-volume-division-from"><span
+                    class="color-buy">매수</span> 분할 수</label></div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-buy-volume-division-from" name="manual-volume-division-from"
+                           type="number">
+                </div>
+            </div>
+            <div class="col splitter">
+                <span>-</span>
+            </div>
+            <div class="col col-md">
+                <div class="input-group">
+                    <input class="form-control" id="manual-buy-volume-division-to" name="manual-volume-division-to"
+                           type="number">
+                    <span class="input-group-text">회</span>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row trade-item">
-        <div class="col-sm-3 col"><label class="col-form-label" for="manual-buy-volume-division-from"><span
-                class="color-buy">매수</span> 분할 수</label></div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-buy-volume-division-from" name="manual-buy-volume-division-from" type="number">
-            </div>
-        </div>
-        <div class="col splitter">
-            <span>-</span>
-        </div>
-        <div class="col col-md">
-            <div class="input-group">
-                <input class="form-control" id="manual-buy-volume-division-to" name="manual-buy-volume-division-to" type="number">
-                <span class="input-group-text">회</span>
-            </div>
-        </div>
-    </div>
+        <input name="order-position" type="hidden" value="BUY">
+    </form>
     <div class="row trade-item">
         <button class="border-color-sell btn" id="btn-manual-sell-start" type="button">시장 매도 하기</button>
     </div>
     <div class="row trade-item">
         <button class="border-color-buy btn" id="btn-manual-buy-start" type="button">시장 매수 하기</button>
     </div>
-</form>
+</div>
 <script crossorigin="anonymous"
         integrity="sha384-ygbV9kiqUc6oa4msXn9868pTtWMgiQaeYH7/t7LECLbyPA2x65Kgf80OJFdroafW"
         src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
