@@ -101,6 +101,7 @@ public class BobooExchangeService implements ExchangeService<
 				.doOnNext(bobooOrderBookDto -> log
 					.info("[Boboo] Succeeded in subscribing order book. [{}]", bobooOrderBookDto))
 				.doOnNext(tradeWindowEventListener::onTradeWindowChange)
+				.doOnTerminate(() -> getAndLogOrderBook(symbol))
 				.then())
 			.subscribe();
 	}
