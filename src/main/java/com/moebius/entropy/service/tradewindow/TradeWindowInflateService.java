@@ -1,39 +1,42 @@
 package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.domain.Exchange;
+import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflateRequest;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.inflate.InflationResult;
-import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
-import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.domain.trade.TradeWindow;
-import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.repository.InflationConfigRepository;
+import com.moebius.entropy.service.order.OrderService;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import javax.annotation.PostConstruct;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TradeWindowInflateService {
+
+    private static final int START_FROM_MARKET_PRICE = 0;
+    private static final int START_FROM_NEXT_PRICE = 1;
 
     private final TradeWindowQueryService tradeWindowQueryService;
     private final InflationConfigRepository inflationConfigRepository;
@@ -41,8 +44,9 @@ public class TradeWindowInflateService {
     private final TradeWindowInflationVolumeResolver volumeResolver;
     private final BobooTradeWindowChangeEventListener windowChangeEventListener;
 
+    @SuppressWarnings("unused")
     @PostConstruct
-    public void onCreate(){
+    public void onCreate() {
         windowChangeEventListener.setTradeWindowInflateService(this);
         inflationConfigRepository.saveConfigFor(new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT), InflationConfig.builder()
             .askCount(20)
@@ -60,105 +64,80 @@ public class TradeWindowInflateService {
 
         return tradeWindowQueryService.fetchTradeWindow(market)
             .flatMap(tradeWindow -> {
-                Flux<Order> createdOrders = Mono.just(tradeWindow)
-                    .filter(window -> shouldInflateTrade(window, inflationConfig))
-                    .flatMapMany(window -> makeOrderInflation(window, market, inflationConfig))
-                    .switchIfEmpty(Flux.empty());
+                Flux<Order> createdOrders = generateRequiredOrderRequest(market, tradeWindow,
+                    inflationConfig)
+                    .subscribeOn(Schedulers.parallel())
+                    .flatMap(orderService::requestOrder);
 
-                Flux<Order> cancelledOrders = cancelPreviousOrders(tradeWindow, market,
-                    inflationConfig);
+                Flux<Order> cancelledOrders = cancelPreviousOrders(market, inflationConfig);
 
                 return collectResult(createdOrders, cancelledOrders);
             })
             .switchIfEmpty(Mono.empty());
     }
 
-    private boolean shouldInflateTrade(TradeWindow tradeWindow, InflationConfig inflationConfig) {
-        return inflationConfig.getBidCount() > tradeWindow.getBidPrices().size() ||
-            inflationConfig.getAskCount() > tradeWindow.getAskPrices().size();
-    }
-
-    private Flux<Order> makeOrderInflation(
-        TradeWindow tradeWindow, Market market, InflationConfig inflationConfig
+    private Flux<OrderRequest> generateRequiredOrderRequest(
+        Market market, TradeWindow window, InflationConfig inflationConfig
     ) {
-        BigDecimal fallbackStartPrice = tradeWindowQueryService.getMarketPrice(market);
 
-        Flux<Order> askOrders = makeOrdersWith(
-            market, OrderPosition.ASK, tradeWindow.getAskPrices(), fallbackStartPrice,
-            inflationConfig.getAskCount(), BigDecimal::subtract
+        Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
+            START_FROM_MARKET_PRICE, inflationConfig.getBidCount(), window.getBidPrices(), market,
+            OrderPosition.BID, BigDecimal::subtract
         );
 
-        Flux<Order> bidOrders = makeOrdersWith(
-            market, OrderPosition.BID, tradeWindow.getBidPrices(), fallbackStartPrice,
-            inflationConfig.getBidCount(), BigDecimal::add
+        Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
+            START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), window.getAskPrices(), market,
+            OrderPosition.ASK, BigDecimal::add
         );
-
-        return askOrders.concatWith(bidOrders);
+        return Flux.merge(bidRequestFlux, askRequestFlux);
     }
 
-    private Flux<Order> makeOrdersWith(
-        Market market, OrderPosition orderPosition, List<TradePrice> prices,
-        BigDecimal fallbackStartPrice,
-        int countObjective, BinaryOperator<BigDecimal> priceCalculationHandler
+    private Flux<OrderRequest> makeOrderRequestWith(
+        int startFrom, int count, List<TradePrice> prices, Market market,
+        OrderPosition orderPosition, BinaryOperator<BigDecimal> priceCalculationHandler
     ) {
+        BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-        int tradeWindowSize = prices.size();
-
-        BigDecimal startPrice = Optional.of(prices)
-            .filter(tradePrices -> !tradePrices.isEmpty())
-            .map(tradePrices -> tradePrices.get(prices.size() - 1))
+        Set<BigDecimal> priceSet = prices.stream()
             .map(TradePrice::getUnitPrice)
-            .orElse(fallbackStartPrice);
+            .collect(Collectors.toSet());
 
-        return Flux.fromIterable(
-            Optional.of(countObjective - tradeWindowSize)
-                .filter(askOrderInflationCount -> askOrderInflationCount > 0)
-                .map(askOrderInflationCount -> IntStream.rangeClosed(1, askOrderInflationCount)
-                    .mapToObj(BigDecimal::valueOf)
-                    .map(multiplier -> priceCalculationHandler
-                        .apply(startPrice, priceUnit.multiply(multiplier)))
-                    .collect(Collectors.toList())
-                )
-                .orElse(Collections.emptyList()))
+        return Flux.range(startFrom, count)
+            .map(BigDecimal::valueOf)
+            .map(multiplier -> priceCalculationHandler
+                .apply(marketPrice, priceUnit.multiply(multiplier)))
+            .filter(price -> !priceSet.contains(price))
             .map(price -> {
-                BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
+                BigDecimal inflationVolume = volumeResolver
+                    .getInflationVolume(market, orderPosition);
                 return new OrderRequest(market, orderPosition, price, inflationVolume);
-            })
-            .flatMap(orderService::requestOrder);
+            });
     }
 
 
-    private Flux<Order> cancelPreviousOrders(
-        TradeWindow tradeWindow, Market market, InflationConfig inflationConfig
-    ) {
-        int askCountObjective = inflationConfig.getAskCount();
-        Set<BigDecimal> cancellableAskPriceSet = Optional.ofNullable(tradeWindow.getAskPrices())
-            .filter(prices -> prices.size() > askCountObjective)
-            .map(prices -> prices.subList(askCountObjective, prices.size()))
-            .map(prices -> prices.stream()
-                .map(TradePrice::getUnitPrice)
-                .collect(Collectors.toSet())
-            )
-            .orElse(Collections.emptySet());
+    private Flux<Order> cancelPreviousOrders(Market market, InflationConfig inflationConfig) {
+        BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+        BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
-        int bidCountObjective = inflationConfig.getBidCount();
-        Set<BigDecimal> cancellableBidPriceSet = Optional.ofNullable(tradeWindow.getBidPrices())
-            .filter(prices -> prices.size() > bidCountObjective)
-            .map(prices -> prices.subList(bidCountObjective, prices.size()))
-            .map(prices -> prices.stream()
-                .map(TradePrice::getUnitPrice)
-                .collect(Collectors.toSet())
-            )
-            .orElse(Collections.emptySet());
+        BigDecimal maxAskPrice = marketPrice.add(
+            priceUnit
+                .multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
+        );
+
+        BigDecimal minBidPrice = marketPrice.subtract(
+            priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getBidCount()))
+        );
 
         return orderService.fetchAutomaticOrdersFor(market)
             .filter(order -> {
+                BigDecimal orderPrice = order.getPrice();
                 if (OrderPosition.ASK.equals(order.getOrderPosition())) {
-                    return cancellableAskPriceSet.contains(order.getPrice());
+                    return orderPrice.compareTo(maxAskPrice) > 0;
                 } else {
-                    return cancellableBidPriceSet.contains(order.getPrice());
+                    return orderPrice.compareTo(minBidPrice) < 0;
                 }
             })
+            .subscribeOn(Schedulers.parallel())
             .flatMap(orderService::cancelOrder);
     }
 
