@@ -1,7 +1,7 @@
 function startManualOrder(orderPosition) {
     const formData = serializeForm(`manual-${orderPosition}-form`);
 
-    requestApi('post', '/manual-order', formData)
+    requestApi('post', '/order/manual', formData)
         .then((response) => {
             if (response.statusText === 'OK') {
                 window.alert("Manual Order started successfully!");

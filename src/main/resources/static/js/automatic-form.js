@@ -1,6 +1,6 @@
 function startAutomaticOrder() {
     const formData = serializeForm('automatic-form')
-    requestApi('post', '/automatic-order', formData)
+    requestApi('post', '/order/automatic', formData)
         .then((response) => {
             if(response.statusText === 'OK'){
                 window.alert("Automatic Order started successfully!");
