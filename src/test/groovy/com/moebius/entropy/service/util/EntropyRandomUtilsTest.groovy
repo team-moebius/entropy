@@ -32,4 +32,29 @@ class EntropyRandomUtilsTest extends Specification {
 		result >= 3
 		result <= 10
 	}
+
+	def "Should get random slices"() {
+		when:
+		def result = entropyRandomUtils.getRandomSlices(BigDecimal.valueOf(VALUE), SLICE_NUMBER, DECIMAL_PLACES)
+
+		then:
+		result.size() == SLICE_NUMBER
+		result.forEach({
+			assert it > BigDecimal.ZERO
+			assert it < BigDecimal.valueOf(VALUE)
+			assert it.scale() == DECIMAL_PLACES
+		})
+
+		where:
+		VALUE   | SLICE_NUMBER | DECIMAL_PLACES
+		2500.0  | 3            | 2
+		2500.0  | 100          | 2
+		10000.0 | 100          | 2
+		10000.0 | 3            | 2
+		2500.0  | 3            | 0
+		2500.0  | 100          | 0
+		10000.0 | 100          | 0
+		10000.0 | 3            | 0
+
+	}
 }
