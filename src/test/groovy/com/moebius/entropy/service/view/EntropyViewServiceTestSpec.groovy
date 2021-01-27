@@ -43,7 +43,7 @@ class EntropyViewServiceTestSpec extends Specification {
         )
 
         expect:
-        StepVerifier.create(sut.startAutomaticOrder(orderForm))
+        StepVerifier.create(sut.startAutomaticOrder(market, orderForm))
                 .assertNext({ it.disposableId == disposableId })
                 .verifyComplete()
 

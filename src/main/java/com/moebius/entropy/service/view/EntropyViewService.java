@@ -1,10 +1,8 @@
 package com.moebius.entropy.service.view;
 
 import com.moebius.entropy.assembler.AutomaticOrderViewAssembler;
-import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
-import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.view.AutomaticOrderForm;
 import com.moebius.entropy.dto.view.AutomaticOrderResult;
 import com.moebius.entropy.repository.InflationConfigRepository;
@@ -17,13 +15,12 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class EntropyViewService {
-
-    private static final Market market = new Market(Exchange.BOBOO, "GTAX", TradeCurrency.USDT);
     private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
     private final BobooDividedDummyOrderService dividedDummyOrderService;
     private final InflationConfigRepository inflationConfigRepository;
 
-    public Mono<AutomaticOrderResult> startAutomaticOrder(AutomaticOrderForm automaticOrderForm) {
+    public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
+        AutomaticOrderForm automaticOrderForm) {
         InflationConfig inflationConfig = automaticOrderViewAssembler
             .assembleInflationConfig(automaticOrderForm);
 
