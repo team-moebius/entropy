@@ -46,7 +46,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def market = new Market(exchange, symbol, TradeCurrency.USDT)
     def inflateRequest = new InflateRequest(market)
     def inflationConfig = InflationConfig.builder()
-            .askCount(8).bidCount(9)
+            .askCount(8).bidCount(9).enable(true)
             .build()
 
 

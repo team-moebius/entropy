@@ -19,6 +19,7 @@ public class AutomaticOrderViewAssembler {
             .bidCount(Math.toIntExact(automaticOrderForm.getBuyInflationCount()))
             .askMinVolume(automaticOrderForm.getSellVolumeRangeFrom())
             .askMaxVolume(automaticOrderForm.getSellVolumeRangeTo())
+            .enable(true)
             .build();
     }
 

@@ -6,6 +6,7 @@ import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationConfig
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.order.DividedDummyOrderDto
+import com.moebius.entropy.dto.view.AutomaticOrderCancelForm
 import com.moebius.entropy.dto.view.AutomaticOrderForm
 import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.repository.InflationConfigRepository
@@ -49,5 +50,24 @@ class EntropyViewServiceTestSpec extends Specification {
 
 
         //TBD unimplemented services
+    }
+
+    def "Should cancel ongoing automatic orders"() {
+        given:
+        def cancelForm = Mock(AutomaticOrderCancelForm)
+        cancelForm.getMarket() >> market
+        cancelForm.getDisposableId() >> disposableId
+        1 * inflationConfigRepository.getConfigFor(market) >> InflationConfig.builder()
+                .enable(true)
+                .build()
+        1 * inflationConfigRepository.saveConfigFor(market, { it.enable == false })
+        1 * dividedDummyOrderService.stopDividedDummyOrders(disposableId) >> Mono.just(ResponseEntity.ok(disposableId))
+
+        expect:
+        StepVerifier.create(sut.cancelAutomaticOrder(cancelForm))
+                .assertNext({
+                    it.cancelledDisposableId == disposableId && it.inflationCancelled
+                })
+                .verifyComplete()
     }
 }
