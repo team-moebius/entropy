@@ -46,17 +46,17 @@ public class BobooDividedDummyOrderService {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
-		InflationConfig inflationConfig = dividedDummyOrderDto.getInflationConfig();
 		MarketDto market = dividedDummyOrderDto.getMarket();
+		InflationConfig inflationConfig = dividedDummyOrderDto.getInflationConfig();
 
-		if (inflationConfig == null || market == null) {
+		if (market == null || inflationConfig == null) {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
-		// TODO : duration should be refined more.
+		// TODO : duration should be refined more to catch the proper period up for randomly defined order.
 		Disposable disposable = Flux.interval(Duration.ZERO, Duration.ofSeconds(15))
 			.subscribeOn(Schedulers.parallel())
-			.flatMap(tick -> executeDummyOrders(dividedDummyOrderDto, inflationConfig, market))
+			.flatMap(tick -> executeDummyOrders(dividedDummyOrderDto))
 			.subscribe();
 
 		String disposableId = market.getExchange() + "-" + market.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
@@ -64,8 +64,10 @@ public class BobooDividedDummyOrderService {
 		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
-	private Mono<Void> executeDummyOrders(DividedDummyOrderDto dividedDummyOrderDto, InflationConfig inflationConfig,
-		MarketDto market) {
+	private Mono<Void> executeDummyOrders(DividedDummyOrderDto dividedDummyOrderDto) {
+		MarketDto market = dividedDummyOrderDto.getMarket();
+		InflationConfig inflationConfig = dividedDummyOrderDto.getInflationConfig();
+
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market.toDomainEntity());
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 

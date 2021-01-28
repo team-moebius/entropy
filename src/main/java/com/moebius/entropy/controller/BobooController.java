@@ -6,8 +6,10 @@ import com.moebius.entropy.domain.order.TimeInForce;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
+import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
+import com.moebius.entropy.service.order.boboo.BobooRepeatMarketOrderService;
 import com.moebius.entropy.util.OrderIdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import java.util.Optional;
 public class BobooController {
 	private final BobooExchangeService bobooExchangeService;
 	private final BobooDividedDummyOrderService bobooDividedDummyOrderService;
+	private final BobooRepeatMarketOrderService bobooRepeatMarketOrderService;
 
 	/**
 	 * Sample request for testing
@@ -56,6 +59,10 @@ public class BobooController {
 		return bobooDividedDummyOrderService.stopDividedDummyOrders(disposableId);
 	}
 
+	@PostMapping("/repeat-market-order")
+	public Mono<ResponseEntity<?>> testRepeatMarketOrder(@RequestBody RepeatMarketOrderDto repeatMarketOrderDto) {
+
+	}
 	@PostMapping("/cancel-test-order")
 	public Flux<BobooCancelResponse> cancelAllOpenOrders(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto) {
 		return bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
