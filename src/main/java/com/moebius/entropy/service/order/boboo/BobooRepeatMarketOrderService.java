@@ -68,6 +68,6 @@ public class BobooRepeatMarketOrderService {
 	}
 
 	private Mono<Void> executeMarketOrders(RepeatMarketOrderDto repeatMarketOrderDto) {
-		return Mono.when(...)
+		return Mono.when()
 	}
 }
