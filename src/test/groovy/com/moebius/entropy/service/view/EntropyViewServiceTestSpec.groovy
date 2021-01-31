@@ -30,11 +30,11 @@ class EntropyViewServiceTestSpec extends Specification {
     def manualOrderMakerService = Mock(ManualOrderMakerService)
     def dividedDummyOrderService = Mock(BobooDividedDummyOrderService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
-    def orderService = Mock(BobooOrderService)
+    def bobooOrderService = Mock(BobooOrderService)
     //TBD for rest service
     def sut = new EntropyViewService(
             automaticOrderViewAssembler, dividedDummyOrderService, inflationConfigRepository,
-            manualOrderViewAssembler, manualOrderMakerService
+            bobooOrderService, manualOrderViewAssembler, manualOrderMakerService
     )
 
 
@@ -71,7 +71,7 @@ class EntropyViewServiceTestSpec extends Specification {
                 .enable(true)
                 .build()
         1 * inflationConfigRepository.saveConfigFor(market, { it.enable == false })
-        1 * orderService.stopOrder(disposableId) >> Mono.just(ResponseEntity.ok(disposableId))
+        1 * bobooOrderService.stopOrder(disposableId) >> Mono.just(ResponseEntity.ok(disposableId))
 
         expect:
         StepVerifier.create(sut.cancelAutomaticOrder(cancelForm))

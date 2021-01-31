@@ -10,6 +10,7 @@ import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
 import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponse
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
+import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
 import reactor.core.publisher.Mono
@@ -23,11 +24,12 @@ import spock.lang.Unroll
 class OrderServiceTestSpec extends Specification {
     def mockExchangeService = Mock(BobooExchangeService)
     def mockAssembler = Mock(BobooOrderExchangeAssembler)
+    def disposableOrderRepository = Mock(DisposableOrderRepository)
     def accessKey = "some_test_api_key"
     def secretKey = "some_test_secret_key"
 
     @Subject
-    OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, accessKey, secretKey)
+    OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, disposableOrderRepository, accessKey, secretKey)
 
     @Shared
     def symbol = "GTAX"

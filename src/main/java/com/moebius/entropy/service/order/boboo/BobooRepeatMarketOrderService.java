@@ -106,15 +106,16 @@ public class BobooRepeatMarketOrderService {
 			final Duration finalOrderDuration = orderDuration;
 			final OrderRequest finalOrderRequest = orderRequest;
 
-			orderService.requestOrderWithoutTracking(finalOrderRequest)
-				.doOnSuccess(order -> log.info(
+			Mono.just(finalOrderRequest)
+				.repeat(reorderCount - 1)
+				.flatMap(orderService::requestOrderWithoutTracking)
+				.delayElements(finalOrderDuration)
+				.doOnNext(order -> log.info(
 					"[RepeatMarketOrder] Succeeded in requesting market order. [orderRequest: {} | orderDuration : {}]",
 					finalOrderRequest,
 					finalOrderDuration.toMillis()))
 				.doOnError(throwable -> log.error("[RepeatMarketOrder] Failed to request market order. {}]",
 					((WebClientResponseException) throwable).getResponseBodyAsString()))
-				.repeat(reorderCount - 1)
-				.delayElements(finalOrderDuration)
 				.subscribe();
 		});
 	}
