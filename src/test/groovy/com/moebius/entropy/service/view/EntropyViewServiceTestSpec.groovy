@@ -13,6 +13,7 @@ import com.moebius.entropy.dto.view.AutomaticOrderCancelForm
 import com.moebius.entropy.dto.view.AutomaticOrderForm
 import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.dto.view.ManualOrderForm
+import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
@@ -31,10 +32,11 @@ class EntropyViewServiceTestSpec extends Specification {
     def dividedDummyOrderService = Mock(BobooDividedDummyOrderService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def bobooOrderService = Mock(BobooOrderService)
+    def disposableOrderRepository = Mock(DisposableOrderRepository)
     //TBD for rest service
     def sut = new EntropyViewService(
             automaticOrderViewAssembler, dividedDummyOrderService, inflationConfigRepository,
-            bobooOrderService, manualOrderViewAssembler, manualOrderMakerService
+            bobooOrderService, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository
     )
 
 
@@ -67,6 +69,7 @@ class EntropyViewServiceTestSpec extends Specification {
         def cancelForm = Mock(AutomaticOrderCancelForm)
         cancelForm.getMarket() >> market
         cancelForm.getDisposableId() >> disposableId
+        disposableOrderRepository.getAll() >> [disposableId]
         1 * inflationConfigRepository.getConfigFor(market) >> InflationConfig.builder()
                 .enable(true)
                 .build()
@@ -76,7 +79,7 @@ class EntropyViewServiceTestSpec extends Specification {
         expect:
         StepVerifier.create(sut.cancelAutomaticOrder(cancelForm))
                 .assertNext({
-                    it.cancelledDisposableId == disposableId && it.inflationCancelled
+                    it.cancelledDisposableIds[0] == disposableId && it.inflationCancelled
                 })
                 .verifyComplete()
     }

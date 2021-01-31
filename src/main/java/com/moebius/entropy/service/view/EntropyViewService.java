@@ -10,18 +10,19 @@ import com.moebius.entropy.dto.view.AutomaticOrderCancelResult;
 import com.moebius.entropy.dto.view.AutomaticOrderForm;
 import com.moebius.entropy.dto.view.AutomaticOrderResult;
 import com.moebius.entropy.dto.view.ManualOrderForm;
+import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
+import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.trade.manual.ManualOrderMakerService;
 import java.util.Objects;
-
-import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -34,6 +35,7 @@ public class EntropyViewService {
     private final BobooOrderService bobooOrderService;
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
     private final ManualOrderMakerService manualOrderMakerService;
+    private final DisposableOrderRepository disposableOrderRepository;
 
     public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
         @Valid AutomaticOrderForm automaticOrderForm) {
@@ -61,15 +63,14 @@ public class EntropyViewService {
             inflationConfigRepository.saveConfigFor(market, disabledConfig);
         }
 
-        String disposableId = cancelForm.getDisposableId();
-        return Mono.just(disposableId)
+        return Flux.fromIterable(disposableOrderRepository.getAll())
             .filter(StringUtils::isNotEmpty)
             .flatMap(bobooOrderService::stopOrder)
             .map(ResponseEntity::getBody)
             .map(Object::toString)
-            .filter(disposableId::equals)
-            .map(cancelledId -> AutomaticOrderCancelResult.builder()
-                .cancelledDisposableId(cancelledId)
+            .collectList()
+            .map(cancelledIds -> AutomaticOrderCancelResult.builder()
+                .cancelledDisposableIds(cancelledIds)
                 .inflationCancelled(inflationCancelled)
                 .build())
             .switchIfEmpty(Mono.just(AutomaticOrderCancelResult.builder()
