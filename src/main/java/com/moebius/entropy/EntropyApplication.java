@@ -1,13 +1,12 @@
 package com.moebius.entropy;
 
 import com.moebius.entropy.service.exchange.ExchangeService;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
-
-import java.util.List;
 
 @SpringBootApplication
 @RequiredArgsConstructor

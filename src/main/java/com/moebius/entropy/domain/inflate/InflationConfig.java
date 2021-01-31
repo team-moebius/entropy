@@ -19,7 +19,8 @@ public class InflationConfig {
     private BigDecimal askMaxVolume;
     private BigDecimal bidMinVolume;
     private BigDecimal bidMaxVolume;
-    private boolean enable = false;
+    @Builder.Default
+    private final boolean enable = false;
 
     public InflationConfig disable() {
         return InflationConfig.builder()
