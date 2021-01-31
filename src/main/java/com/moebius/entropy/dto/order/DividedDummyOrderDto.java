@@ -5,6 +5,9 @@ import com.moebius.entropy.domain.order.DummyOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import lombok.*;
 
+/**
+ * If we need to divide InflationConfig, DummyOrderConfig into each another dto for extension, let's change these fields to dto separately.
+ */
 @Getter
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

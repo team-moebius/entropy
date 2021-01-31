@@ -23,6 +23,10 @@ public class TradeWindowInflationVolumeResolver {
 	private final EntropyRandomUtils randomUtils;
 	private final static int decimalPosition = 2;
 
+	public BigDecimal getRandomMarketVolume(BigDecimal minVolume, BigDecimal maxVolume, int decimalPosition) {
+		return randomUtils.getRandomDecimal(minVolume.floatValue(), maxVolume.floatValue(), decimalPosition);
+	}
+
 	public BigDecimal getInflationVolume(Market market, OrderPosition orderPosition) {
 		return Optional.ofNullable(inflationConfigRepository.getConfigFor(market))
 			.map(inflationConfig -> getRandomVolume(inflationConfig, orderPosition))

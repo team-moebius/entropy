@@ -5,11 +5,14 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import com.moebius.entropy.service.order.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,13 +29,16 @@ public class BobooOrderService implements OrderService {
     private final Map<String, List<Order>> orderListForSymbol;
     private final Set<String> automaticOrderIds;
     private final ApiKeyDto apiKeyDto;
+    private final DisposableOrderRepository disposableOrderRepository;
 
     public BobooOrderService(BobooExchangeService exchangeService,
                              BobooOrderExchangeAssembler assembler,
+                             DisposableOrderRepository orderRepository,
                              @Value("${exchange.boboo.apikey.accessKey}") String accessKey,
                              @Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
+        this.disposableOrderRepository = orderRepository;
         orderListForSymbol = new ConcurrentHashMap<>();
         automaticOrderIds = new LinkedHashSet<>();
         apiKeyDto = ApiKeyDto.builder().accessKey(accessKey).secretKey(secretKey).build();
@@ -111,6 +117,14 @@ public class BobooOrderService implements OrderService {
                     return automaticOrderIds;
                 })
                 .map(Set::size);
+    }
+
+    public Mono<ResponseEntity<?>> stopOrder(String disposableId) {
+        Optional.ofNullable(disposableOrderRepository.get(disposableId))
+            .ifPresent(disposables -> disposables.forEach(Disposable::dispose));
+
+        log.info("[DummyOrder] Succeeded to stop dummy orders. [{}]", disposableId);
+        return Mono.just(ResponseEntity.ok(disposableId));
     }
 
     private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted){
