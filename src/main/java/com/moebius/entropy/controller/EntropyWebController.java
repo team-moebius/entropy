@@ -2,6 +2,7 @@ package com.moebius.entropy.controller;
 
 
 import com.moebius.entropy.domain.Exchange;
+import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.view.AutomaticOrderCancelForm;
@@ -57,8 +58,8 @@ public class EntropyWebController {
 
     @PostMapping("/order/manual")
     @ResponseBody
-    public ManualOrderForm requestAutomaticOrder(@Valid @RequestBody ManualOrderForm orderForm) {
-        log.info(orderForm.toString());
-        return orderForm;
+    public Mono<ManualOrderResult> requestAutomaticOrder(
+        @Valid @RequestBody ManualOrderForm orderForm) {
+        return viewService.requestManualOrder(market, orderForm);
     }
 }
