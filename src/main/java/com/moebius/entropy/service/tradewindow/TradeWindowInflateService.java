@@ -61,6 +61,9 @@ public class TradeWindowInflateService {
     public Mono<InflationResult> inflateTrades(InflateRequest inflateRequest) {
         Market market = inflateRequest.getMarket();
         InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(market);
+        if (!inflationConfig.isEnable()) {
+            return Mono.empty();
+        }
 
         return tradeWindowQueryService.fetchTradeWindow(market)
             .flatMap(tradeWindow -> {
