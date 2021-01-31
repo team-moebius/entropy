@@ -14,6 +14,8 @@ import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
 import com.moebius.entropy.service.trade.manual.ManualOrderMakerService;
 import java.util.Objects;
+
+import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +31,7 @@ public class EntropyViewService {
     private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
     private final BobooDividedDummyOrderService dividedDummyOrderService;
     private final InflationConfigRepository inflationConfigRepository;
+    private final BobooOrderService bobooOrderService;
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
     private final ManualOrderMakerService manualOrderMakerService;
 
@@ -61,7 +64,7 @@ public class EntropyViewService {
         String disposableId = cancelForm.getDisposableId();
         return Mono.just(disposableId)
             .filter(StringUtils::isNotEmpty)
-            .flatMap(dividedDummyOrderService::stopDividedDummyOrders)
+            .flatMap(bobooOrderService::stopOrder)
             .map(ResponseEntity::getBody)
             .map(Object::toString)
             .filter(disposableId::equals)

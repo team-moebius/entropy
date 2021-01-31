@@ -15,6 +15,7 @@ import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.dto.view.ManualOrderForm
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService
+import com.moebius.entropy.service.order.boboo.BobooOrderService
 import com.moebius.entropy.service.trade.manual.ManualOrderMakerService
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
@@ -29,6 +30,7 @@ class EntropyViewServiceTestSpec extends Specification {
     def manualOrderMakerService = Mock(ManualOrderMakerService)
     def dividedDummyOrderService = Mock(BobooDividedDummyOrderService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
+    def orderService = Mock(BobooOrderService)
     //TBD for rest service
     def sut = new EntropyViewService(
             automaticOrderViewAssembler, dividedDummyOrderService, inflationConfigRepository,
@@ -69,7 +71,7 @@ class EntropyViewServiceTestSpec extends Specification {
                 .enable(true)
                 .build()
         1 * inflationConfigRepository.saveConfigFor(market, { it.enable == false })
-        1 * dividedDummyOrderService.stopDividedDummyOrders(disposableId) >> Mono.just(ResponseEntity.ok(disposableId))
+        1 * orderService.stopOrder(disposableId) >> Mono.just(ResponseEntity.ok(disposableId))
 
         expect:
         StepVerifier.create(sut.cancelAutomaticOrder(cancelForm))

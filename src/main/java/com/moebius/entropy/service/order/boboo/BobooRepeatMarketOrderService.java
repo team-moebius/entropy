@@ -30,6 +30,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BobooRepeatMarketOrderService {
 	private static final String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
+	private static final int DEFAULT_DECIMAL_POSITION = 2;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -79,7 +80,6 @@ public class BobooRepeatMarketOrderService {
 
 			BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
 			BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-			BigDecimal volume = volumeResolver.getInflationVolume(market, orderPosition);
 
 			OrderRequest orderRequest = null;
 			int reorderCount = 0;
@@ -87,11 +87,17 @@ public class BobooRepeatMarketOrderService {
 
 			if (orderPosition == OrderPosition.ASK) {
 				RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
+				BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
+					DEFAULT_DECIMAL_POSITION);
+
 				orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
 				reorderCount = randomUtils.getRandomInteger(askOrderConfig.getMinReorderCount(), askOrderConfig.getMaxReorderCount());
 				orderDuration = Duration.ofMillis((long) (askOrderConfig.getPeriod() / reorderCount * 1000));
 			} else if (orderPosition == OrderPosition.BID) {
 				RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
+				BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
+					DEFAULT_DECIMAL_POSITION);
+
 				orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
 				reorderCount = randomUtils.getRandomInteger(bidOrderConfig.getMinReorderCount(), bidOrderConfig.getMaxReorderCount());
 				orderDuration = Duration.ofMillis((long) (bidOrderConfig.getPeriod() / reorderCount * 1000));
@@ -111,13 +117,5 @@ public class BobooRepeatMarketOrderService {
 				.delayElements(finalOrderDuration)
 				.subscribe();
 		});
-	}
-
-	private Mono<ResponseEntity<?>> stopMarketOrders(String disposableId) {
-		Optional.ofNullable(disposableOrderRepository.get(disposableId))
-			.ifPresent(disposables -> disposables.forEach(Disposable::dispose));
-
-		log.info("[RepeatMarketOrder] Succeeded to stop repeat market orders. [{}]", disposableId);
-		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 }
