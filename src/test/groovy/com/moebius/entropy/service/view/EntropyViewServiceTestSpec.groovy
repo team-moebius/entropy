@@ -1,7 +1,10 @@
 package com.moebius.entropy.service.view
 
 import com.moebius.entropy.assembler.AutomaticOrderViewAssembler
+import com.moebius.entropy.assembler.ManualOrderRequestAssembler
 import com.moebius.entropy.domain.Exchange
+import com.moebius.entropy.domain.ManualOrderMakingRequest
+import com.moebius.entropy.domain.ManualOrderResult
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationConfig
 import com.moebius.entropy.domain.trade.TradeCurrency
@@ -9,8 +12,10 @@ import com.moebius.entropy.dto.order.DividedDummyOrderDto
 import com.moebius.entropy.dto.view.AutomaticOrderCancelForm
 import com.moebius.entropy.dto.view.AutomaticOrderForm
 import com.moebius.entropy.dto.view.AutomaticOrderResult
+import com.moebius.entropy.dto.view.ManualOrderForm
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService
+import com.moebius.entropy.service.trade.manual.ManualOrderMakerService
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -20,11 +25,14 @@ class EntropyViewServiceTestSpec extends Specification {
     def market = new Market(Exchange.BOBOO, "GTAX", TradeCurrency.USDT)
     def disposableId = "test-disposable-id"
     def automaticOrderViewAssembler = Mock(AutomaticOrderViewAssembler)
+    def manualOrderViewAssembler = Mock(ManualOrderRequestAssembler)
+    def manualOrderMakerService = Mock(ManualOrderMakerService)
     def dividedDummyOrderService = Mock(BobooDividedDummyOrderService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
     //TBD for rest service
     def sut = new EntropyViewService(
-            automaticOrderViewAssembler, dividedDummyOrderService, inflationConfigRepository
+            automaticOrderViewAssembler, dividedDummyOrderService, inflationConfigRepository,
+            manualOrderViewAssembler, manualOrderMakerService
     )
 
 
@@ -68,6 +76,22 @@ class EntropyViewServiceTestSpec extends Specification {
                 .assertNext({
                     it.cancelledDisposableId == disposableId && it.inflationCancelled
                 })
+                .verifyComplete()
+    }
+
+    def "Should request manual order"() {
+        given:
+        def orderForm = Mock(ManualOrderForm)
+        def manualOrderRequest = Mock(ManualOrderMakingRequest)
+        def manualOrderResult = Mock(ManualOrderResult)
+        1 * manualOrderViewAssembler.assembleManualOrderRequest(market, orderForm) >> manualOrderRequest
+        1 * manualOrderMakerService.requestManualOrderMaking(manualOrderRequest) >> Mono.just(
+                manualOrderResult
+        )
+
+        expect:
+        StepVerifier.create(sut.requestManualOrder(market, orderForm))
+                .assertNext({ it instanceof ManualOrderResult })
                 .verifyComplete()
     }
 }

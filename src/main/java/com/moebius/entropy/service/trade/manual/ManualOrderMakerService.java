@@ -9,6 +9,10 @@ import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.repository.TradeWindowRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.util.EntropyRandomUtils;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -16,11 +20,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -32,8 +31,10 @@ public class ManualOrderMakerService {
     private final TradeWindowRepository tradeWindowRepository;
 
     public Mono<ManualOrderResult> requestManualOrderMaking(ManualOrderMakingRequest request) {
+        BigDecimal requestedVolume = getRandomRequestVolume(request);
         int division = randomUtil.getRandomInteger(request.getStartRange(), request.getEndRange());
-        List<BigDecimal> randomVolumes = randomUtil.getRandomSlices(request.getRequestedVolume(), division, decimalPosition);
+        List<BigDecimal> randomVolumes = randomUtil
+            .getRandomSlices(requestedVolume, division, decimalPosition);
 
         Market market = request.getMarket();
         BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
@@ -49,24 +50,30 @@ public class ManualOrderMakerService {
                 .flatMap(order -> {
                     if (order.getVolume().compareTo(BigDecimal.ZERO) > 0) {
                         return orderService.cancelOrder(order)
-                                .map(cancelledOrder -> Pair.of(order, cancelledOrder));
+                            .map(cancelledOrder -> Pair.of(order, cancelledOrder));
                     } else {
                         return Mono.just(Pair.of(order, null));
                     }
                 })
-                .collectList()
-                .map(this::makeResult);
+            .collectList()
+            .map(this::makeResult);
+    }
+
+    private BigDecimal getRandomRequestVolume(ManualOrderMakingRequest request) {
+        return randomUtil.getRandomDecimal(
+            request.getRequestedVolumeFrom().floatValue(),
+            request.getRequestedVolumeTo().floatValue(), decimalPosition);
     }
 
     private ManualOrderResult makeResult(List<Pair<Order, ?>> pairs) {
         List<Order> requestedOrders = pairs.stream()
-                .map(Pair::getLeft)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            .map(Pair::getLeft)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
 
         List<Order> cancelledOrders = pairs.stream()
-                .map(Pair::getRight)
-                .filter(Objects::nonNull)
+            .map(Pair::getRight)
+            .filter(Objects::nonNull)
                 .map(object -> (Order) object)
                 .collect(Collectors.toList());
 
