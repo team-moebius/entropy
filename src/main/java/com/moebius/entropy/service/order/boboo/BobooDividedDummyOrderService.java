@@ -84,14 +84,6 @@ public class BobooDividedDummyOrderService {
 		);
 	}
 
-	public Mono<ResponseEntity<?>> stopDividedDummyOrders(String disposableId) {
-		Optional.ofNullable(disposableOrderRepository.get(disposableId))
-			.ifPresent(disposables -> disposables.forEach(Disposable::dispose));
-
-		log.info("[DummyOrder] Succeeded to stop dummy orders. [{}]", disposableId);
-		return Mono.just(ResponseEntity.ok(disposableId));
-	}
-
 	private Mono<List<OrderRequest>> dividedDummyOrdersMono(DividedDummyOrderDto dividedDummyOrderDto, OrderPosition orderPosition,
 		BigDecimal price) {
 		return Mono.fromCallable(() -> {
