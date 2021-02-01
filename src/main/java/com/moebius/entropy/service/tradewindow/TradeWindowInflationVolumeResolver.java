@@ -21,7 +21,7 @@ import java.util.Optional;
 public class TradeWindowInflationVolumeResolver {
 	private final InflationConfigRepository inflationConfigRepository;
 	private final EntropyRandomUtils randomUtils;
-	private final static int decimalPosition = 2;
+	private final static int decimalPosition = 1;
 
 	public BigDecimal getRandomMarketVolume(BigDecimal minVolume, BigDecimal maxVolume, int decimalPosition) {
 		return randomUtils.getRandomDecimal(minVolume.floatValue(), maxVolume.floatValue(), decimalPosition);
@@ -65,7 +65,7 @@ public class TradeWindowInflationVolumeResolver {
 		int range = randomUtils.getRandomInteger(minDividedOrderCount, maxDividedOrderCount);
 
 		for (int i = range - 1; i > 0; --i) {
-			BigDecimal dividedVolume = randomUtils.getRandomDecimal(0.1f * i, inflationVolume.floatValue(), 2);
+			BigDecimal dividedVolume = randomUtils.getRandomDecimal(0.1f * i, inflationVolume.floatValue(), decimalPosition);
 			dividedVolumes.add(dividedVolume);
 			inflationVolume = inflationVolume.subtract(dividedVolume);
 		}
