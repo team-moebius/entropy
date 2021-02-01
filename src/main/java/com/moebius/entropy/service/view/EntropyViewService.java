@@ -10,11 +10,15 @@ import com.moebius.entropy.dto.view.AutomaticOrderCancelResult;
 import com.moebius.entropy.dto.view.AutomaticOrderForm;
 import com.moebius.entropy.dto.view.AutomaticOrderResult;
 import com.moebius.entropy.dto.view.ManualOrderForm;
+import com.moebius.entropy.dto.view.MarketPriceDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.trade.manual.ManualOrderMakerService;
+import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
+import com.moebius.entropy.util.SymbolUtil;
+import java.time.Duration;
 import java.util.Objects;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +40,7 @@ public class EntropyViewService {
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
     private final ManualOrderMakerService manualOrderMakerService;
     private final DisposableOrderRepository disposableOrderRepository;
+    private final TradeWindowQueryService tradeWindowQueryService;
 
     public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
         @Valid AutomaticOrderForm automaticOrderForm) {
@@ -83,5 +88,18 @@ public class EntropyViewService {
         return Mono.just(manualOrderForm)
             .map(form -> manualOrderRequestAssembler.assembleManualOrderRequest(market, form))
             .flatMap(manualOrderMakerService::requestManualOrderMaking);
+    }
+
+    public Flux<MarketPriceDto> receiveMarketPriceDto(Market market, Duration interval) {
+        return Flux.interval(interval)
+            .map(index -> tradeWindowQueryService.getMarketPrice(market))
+            .map(price -> MarketPriceDto.builder()
+                .price(price)
+                .symbol(SymbolUtil.stripCurrencyFromSymbol(market))
+                .exchange(market.getExchange())
+                .tradeCurrency(market.getTradeCurrency().name())
+                .priceUnit(market.getTradeCurrency().getPriceUnit())
+                .build());
+
     }
 }

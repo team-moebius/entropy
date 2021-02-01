@@ -18,10 +18,13 @@ import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
 import com.moebius.entropy.service.trade.manual.ManualOrderMakerService
+import com.moebius.entropy.service.tradewindow.TradeWindowQueryService
 import org.springframework.http.ResponseEntity
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import spock.lang.Specification
+
+import java.time.Duration
 
 class EntropyViewServiceTestSpec extends Specification {
     def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
@@ -33,10 +36,13 @@ class EntropyViewServiceTestSpec extends Specification {
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def bobooOrderService = Mock(BobooOrderService)
     def disposableOrderRepository = Mock(DisposableOrderRepository)
+    def tradeWindowQueryService = Mock(TradeWindowQueryService)
+
     //TBD for rest service
     def sut = new EntropyViewService(
             automaticOrderViewAssembler, dividedDummyOrderService, inflationConfigRepository,
-            bobooOrderService, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository
+            bobooOrderService, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository,
+            tradeWindowQueryService
     )
 
 
@@ -98,5 +104,43 @@ class EntropyViewServiceTestSpec extends Specification {
         StepVerifier.create(sut.requestManualOrder(market, orderForm))
                 .assertNext({ it instanceof ManualOrderResult })
                 .verifyComplete()
+    }
+
+    def "Should get serious of market prices"() {
+        given:
+        def intervalSeconds = 1
+        def prices = [
+                12.23, 123.32, 232.12, 123.63, 123.64, 123.53, 643.32, 6544.33, 23.21, 12.46
+        ]
+        tradeWindowQueryService.getMarketPrice(market) >>> prices
+
+        expect:
+        StepVerifier.withVirtualTime({ sut.receiveMarketPriceDto(market, Duration.ofSeconds(intervalSeconds)).take(3) })
+                .thenAwait(Duration.ofSeconds(intervalSeconds))
+                .assertNext({
+                    assert it.getExchange() == market.getExchange()
+                    assert it.getTradeCurrency() == market.getTradeCurrency().name()
+                    assert it.getPriceUnit() == market.getTradeCurrency().priceUnit
+                    assert it.getSymbol() == "GTAX"
+                    it.getPrice() == prices[0]
+                })
+                .thenAwait(Duration.ofSeconds(intervalSeconds))
+                .assertNext({
+                    assert it.getExchange() == market.getExchange()
+                    assert it.getTradeCurrency() == market.getTradeCurrency().name()
+                    assert it.getPriceUnit() == market.getTradeCurrency().priceUnit
+                    assert it.getSymbol() == "GTAX"
+                    it.getPrice() == prices[1]
+                })
+                .thenAwait(Duration.ofSeconds(intervalSeconds))
+                .assertNext({
+                    assert it.getExchange() == market.getExchange()
+                    assert it.getTradeCurrency() == market.getTradeCurrency().name()
+                    assert it.getPriceUnit() == market.getTradeCurrency().priceUnit
+                    assert it.getSymbol() == "GTAX"
+                    it.getPrice() == prices[2]
+                })
+                .verifyComplete()
+
     }
 }

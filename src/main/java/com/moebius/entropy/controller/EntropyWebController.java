@@ -10,10 +10,14 @@ import com.moebius.entropy.dto.view.AutomaticOrderCancelResult;
 import com.moebius.entropy.dto.view.AutomaticOrderForm;
 import com.moebius.entropy.dto.view.AutomaticOrderResult;
 import com.moebius.entropy.dto.view.ManualOrderForm;
+import com.moebius.entropy.dto.view.MarketPriceDto;
 import com.moebius.entropy.service.view.EntropyViewService;
+import java.time.Duration;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @SuppressWarnings("unused")
@@ -37,6 +42,16 @@ public class EntropyWebController {
     @GetMapping("/")
     public String index() {
         return "index";
+    }
+
+    @GetMapping(value = "/subscribe-market-prices", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @ResponseBody
+    public Flux<ServerSentEvent<MarketPriceDto>> getPriceStream() {
+        return viewService.receiveMarketPriceDto(market, Duration.ofSeconds(1L))
+            .map(marketPrice -> ServerSentEvent
+                .builder(marketPrice)
+                .build()
+            );
     }
 
     @PostMapping("/order/automatic")
