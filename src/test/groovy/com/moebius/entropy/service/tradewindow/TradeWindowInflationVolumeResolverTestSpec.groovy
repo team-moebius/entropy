@@ -18,7 +18,7 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def entropyRandomUtils = Mock(EntropyRandomUtils)
     def sut = new TradeWindowInflationVolumeResolver(inflationConfigRepository, entropyRandomUtils)
     @Shared
-    def symbol = "GTAX"
+    def symbol = "GTAXUSDT"
     @Shared
     def exchange = Exchange.BOBOO
     def market = new Market(exchange, symbol, TradeCurrency.USDT)

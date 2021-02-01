@@ -9,7 +9,7 @@ import spock.lang.Specification
 
 class ManualOrderRequestAssemblerTestSpec extends Specification {
     def sut = new ManualOrderRequestAssembler()
-    def market = new Market(Exchange.BOBOO, "GTAX", TradeCurrency.USDT)
+    def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
 
     def "Should assemble manual order request"() {
         given:

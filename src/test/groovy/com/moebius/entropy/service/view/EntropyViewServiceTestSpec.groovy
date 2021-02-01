@@ -24,7 +24,7 @@ import reactor.test.StepVerifier
 import spock.lang.Specification
 
 class EntropyViewServiceTestSpec extends Specification {
-    def market = new Market(Exchange.BOBOO, "GTAX", TradeCurrency.USDT)
+    def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
     def disposableId = "test-disposable-id"
     def automaticOrderViewAssembler = Mock(AutomaticOrderViewAssembler)
     def manualOrderViewAssembler = Mock(ManualOrderRequestAssembler)
