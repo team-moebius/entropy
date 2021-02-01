@@ -25,9 +25,9 @@ class TradeWindowCommandServiceTestSpec extends Specification {
 
         where:
         exchange       | symbol | currency           | marketPrice | tradeWindow
-        Exchange.BOBOO | "GTAX" | TradeCurrency.USDT | 123.12      | new TradeWindow([], [])
+        Exchange.BOBOO | "GTAXUSDT" | TradeCurrency.USDT | 123.12 | new TradeWindow([], [])
         Exchange.BOBOO | "BTC"  | TradeCurrency.USDT | 1543.12     | new TradeWindow([], [])
-        Exchange.BOBOO | "GTAX" | TradeCurrency.KRW  | 123.12      | new TradeWindow([], [])
+        Exchange.BOBOO | "GTAXUSDT" | TradeCurrency.KRW  | 123.12 | new TradeWindow([], [])
         Exchange.BOBOO | "BTC"  | TradeCurrency.KRW  | 1543.12     | new TradeWindow([], [])
     }
 

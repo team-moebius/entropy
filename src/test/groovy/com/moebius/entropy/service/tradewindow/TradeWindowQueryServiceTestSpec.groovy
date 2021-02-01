@@ -16,7 +16,7 @@ class TradeWindowQueryServiceTestSpec extends Specification {
 
     def "test fetching tradeWindow and marketPrice"() {
         given:
-        def market = new Market(Exchange.BOBOO, "GTAX", TradeCurrency.USDT)
+        def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
         repository.getMarketPriceForSymbol(market) >> marketPrice
         repository.getTradeWindowForSymbol(market) >> tradeWindow
 

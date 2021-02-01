@@ -29,7 +29,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     @Shared
     def priceChangeUnit = TradeCurrency.USDT.getPriceUnit()
     @Shared
-    def symbol = "GTAX"
+    def symbol = "GTAXUSDT"
     @Shared
     def exchange = Exchange.BOBOO
     def tradeWindowService = Mock(TradeWindowQueryService)

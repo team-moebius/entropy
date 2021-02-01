@@ -7,7 +7,7 @@ import com.moebius.entropy.dto.view.AutomaticOrderForm
 import spock.lang.Specification
 
 class AutomaticOrderViewAssemblerTestSpec extends Specification {
-    def market = new Market(Exchange.BOBOO, "GTAX", TradeCurrency.USDT)
+    def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
     def sut = new AutomaticOrderViewAssembler()
 
     def "Assemble InflationConfig"() {

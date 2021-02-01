@@ -1,7 +1,8 @@
 package com.moebius.entropy.service.order
 
 import com.moebius.entropy.assembler.BobooOrderExchangeAssembler
-import com.moebius.entropy.domain.*
+import com.moebius.entropy.domain.Exchange
+import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.order.OrderRequest
@@ -32,7 +33,7 @@ class OrderServiceTestSpec extends Specification {
     OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, disposableOrderRepository, accessKey, secretKey)
 
     @Shared
-    def symbol = "GTAX"
+    def symbol = "GTAXUSDT"
     @Shared
     def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
     def price = BigDecimal.valueOf(11.11)
