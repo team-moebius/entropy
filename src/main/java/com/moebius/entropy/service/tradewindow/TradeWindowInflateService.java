@@ -48,14 +48,6 @@ public class TradeWindowInflateService {
     @PostConstruct
     public void onCreate() {
         windowChangeEventListener.setTradeWindowInflateService(this);
-        inflationConfigRepository.saveConfigFor(new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT), InflationConfig.builder()
-            .askCount(20)
-            .bidCount(20)
-            .askMinVolume(BigDecimal.valueOf(10.5))
-            .askMaxVolume(BigDecimal.valueOf(300.59))
-            .bidMinVolume(BigDecimal.valueOf(10.59))
-            .bidMaxVolume(BigDecimal.valueOf(200.38))
-            .build());
 }
 
     public Mono<InflationResult> inflateTrades(InflateRequest inflateRequest) {
