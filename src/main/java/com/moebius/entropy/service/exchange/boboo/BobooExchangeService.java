@@ -93,7 +93,6 @@ public class BobooExchangeService implements ExchangeService<
 	}
 
 	public void getAndLogOrderBook(String symbol) {
-		log.info("[Boboo] Start to subscribe order book. [{}]", symbol);
 		webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(
 				Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
