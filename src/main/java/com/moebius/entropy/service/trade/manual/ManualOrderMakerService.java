@@ -40,8 +40,8 @@ public class ManualOrderMakerService {
         BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
         OrderPosition orderPosition = request.getOrderPosition();
 
-        log.info("[ManualOrder] Started to request Order symbol:{}{}, position: {}, quantities:{}",
-                market.getSymbol(), market.getTradeCurrency(), orderPosition, randomVolumes);
+        log.info("[ManualOrder] Started to request Order symbol:{}, position: {}, quantities:{}",
+                market.getSymbol(), orderPosition, randomVolumes);
 
         return Flux.fromIterable(randomVolumes)
                 .map(volume -> new OrderRequest(market, orderPosition, marketPrice, volume))
