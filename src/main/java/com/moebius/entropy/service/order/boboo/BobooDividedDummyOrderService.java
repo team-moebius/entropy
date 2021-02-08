@@ -54,7 +54,7 @@ public class BobooDividedDummyOrderService {
 		}
 
 		// TODO : duration should be refined more to catch the proper period up for randomly defined order.
-		Disposable disposable = Flux.interval(Duration.ZERO, Duration.ofSeconds(15))
+		Disposable disposable = Flux.interval(Duration.ZERO, Duration.ofSeconds(70))
 			.subscribeOn(Schedulers.parallel())
 			.flatMap(tick -> dummyOrdersMono(dividedDummyOrderDto))
 			.subscribe();
