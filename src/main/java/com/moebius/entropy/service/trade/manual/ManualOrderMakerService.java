@@ -9,10 +9,6 @@ import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.repository.TradeWindowRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.util.EntropyRandomUtils;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,6 +16,11 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -47,9 +48,16 @@ public class ManualOrderMakerService {
                 .map(volume -> new OrderRequest(market, orderPosition, marketPrice, volume))
                 .subscribeOn(Schedulers.parallel())
                 .flatMap(orderService::requestManualOrder)
+                .onErrorContinue((throwable, orderRequest) -> log.warn(
+                        "[ManualOrder] Failed to request Order with {}", orderRequest, throwable
+                ))
                 .flatMap(order -> {
                     if (order.getVolume().compareTo(BigDecimal.ZERO) > 0) {
                         return orderService.cancelOrder(order)
+                                .onErrorResume((throwable) -> {
+                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}", order, throwable);
+                                    return Mono.empty();
+                                })
                             .map(cancelledOrder -> Pair.of(order, cancelledOrder));
                     } else {
                         return Mono.just(Pair.of(order, null));

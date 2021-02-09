@@ -1,6 +1,5 @@
 package com.moebius.entropy.service.tradewindow;
 
-import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflateRequest;
 import com.moebius.entropy.domain.inflate.InflationConfig;
@@ -8,27 +7,21 @@ import com.moebius.entropy.domain.inflate.InflationResult;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
-import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
+
+import javax.annotation.PostConstruct;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -60,9 +53,11 @@ public class TradeWindowInflateService {
         return tradeWindowQueryService.fetchTradeWindow(market)
             .flatMap(tradeWindow -> {
                 Flux<Order> createdOrders = generateRequiredOrderRequest(market, tradeWindow,
-                    inflationConfig)
-                    .subscribeOn(Schedulers.parallel())
-                    .flatMap(orderService::requestOrder);
+                        inflationConfig)
+                        .flatMap(orderService::requestOrder)
+                        .onErrorContinue((throwable, orderRequest) -> log.warn(
+                                "[TradeWindowInflation] Failed to request Order with {}", orderRequest, throwable
+                        ));
 
                 Flux<Order> cancelledOrders = cancelPreviousOrders(market, inflationConfig);
 
@@ -124,16 +119,18 @@ public class TradeWindowInflateService {
         );
 
         return orderService.fetchAutomaticOrdersFor(market)
-            .filter(order -> {
-                BigDecimal orderPrice = order.getPrice();
-                if (OrderPosition.ASK.equals(order.getOrderPosition())) {
-                    return orderPrice.compareTo(maxAskPrice) > 0;
-                } else {
-                    return orderPrice.compareTo(minBidPrice) < 0;
-                }
-            })
-            .subscribeOn(Schedulers.parallel())
-            .flatMap(orderService::cancelOrder);
+                .filter(order -> {
+                    BigDecimal orderPrice = order.getPrice();
+                    if (OrderPosition.ASK.equals(order.getOrderPosition())) {
+                        return orderPrice.compareTo(maxAskPrice) > 0;
+                    } else {
+                        return orderPrice.compareTo(minBidPrice) < 0;
+                    }
+                })
+                .flatMap(orderService::cancelOrder)
+                .onErrorContinue((throwable, order) -> log.warn(
+                        "[TradeWindowInflation] Failed to cancel Order {}", order, throwable
+                ));
     }
 
     private Mono<InflationResult> collectResult(Flux<Order> createdOrders,
