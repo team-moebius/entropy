@@ -5,6 +5,13 @@ spring:
     web-application-type: reactive
   thymeleaf:
     cache: false
+
+logging:
+  level:
+    root: INFO
+  file:
+    name: /var/log/entropy/app.log
+
 exchange:
   boboo:
     rest:
@@ -26,3 +33,8 @@ exchange:
       secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq # GTAX : QCzWtRLiuB1vyd1wrmcpZ7m2HywSzasGhQv0olXvUXxpezNhn9RQwFnW2nWYX6lH
     receiveTimeWindow: 5000
 
+reactor:
+  netty:
+    http:
+      server:
+        AccessLog: INFO
