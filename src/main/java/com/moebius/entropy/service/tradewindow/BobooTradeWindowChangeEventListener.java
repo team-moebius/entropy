@@ -28,7 +28,7 @@ public class BobooTradeWindowChangeEventListener {
             })
             .ifPresent(market -> {
                 InflateRequest inflateRequest = new InflateRequest(market);
-                tradeWindowInflateService.inflateTrades(inflateRequest);
+                tradeWindowInflateService.inflateTrades(inflateRequest).subscribe();
             });
     }
 

@@ -16,6 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.socket.client.WebSocketClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
 
@@ -94,10 +95,9 @@ public class BobooExchangeService implements ExchangeService<
 
 	public void getAndLogOrderBook(String symbol) {
 		webSocketClient.execute(URI.create(websocketUri),
-			session -> session.send(
-				Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
-				.thenMany(session.receive()
-					.map(bobooAssembler::assembleOrderBookDto))
+			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
+				.thenMany(session.receive().map(bobooAssembler::assembleOrderBookDto))
+				.publishOn(Schedulers.parallel())
 				.doOnNext(tradeWindowEventListener::onTradeWindowChange)
 				.doOnTerminate(() -> getAndLogOrderBook(symbol))
 				.then())
