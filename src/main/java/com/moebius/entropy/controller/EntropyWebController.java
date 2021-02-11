@@ -36,7 +36,7 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/")
 public class EntropyWebController {
 
-    private static final Market market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT);
+    private static final Market market = new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT);
     private final EntropyViewService viewService;
 
     @GetMapping("/")
