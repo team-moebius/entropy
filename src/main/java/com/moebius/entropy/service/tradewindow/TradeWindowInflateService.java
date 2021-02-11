@@ -54,7 +54,12 @@ public class TradeWindowInflateService {
             .flatMap(tradeWindow -> {
                 Flux<Order> createdOrders = generateRequiredOrderRequest(market, tradeWindow,
                         inflationConfig)
-                        .flatMap(orderService::requestOrder)
+                    .collectList()
+                    .doOnSuccess(orderRequests -> log.info("[TradeWindowInflation] Succeeded to create order requests. {}", orderRequests))
+                    .flatMapMany(Flux::fromIterable)
+                    .map(orderRequest -> new Order(null, orderRequest.getMarket(), orderRequest.getOrderPosition(), orderRequest.getPrice(), orderRequest.getVolume()))
+
+//                        .flatMap(orderService::requestOrder)
                         .onErrorContinue((throwable, orderRequest) -> log.warn(
                                 "[TradeWindowInflation] Failed to request Order with {}", orderRequest, throwable
                         ));

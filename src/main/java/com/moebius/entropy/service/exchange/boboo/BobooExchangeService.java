@@ -95,7 +95,6 @@ public class BobooExchangeService implements ExchangeService<
 
 	@Override
 	public void getAndUpdateByOrderBook(String symbol) {
-		log.info("[BobooExchange] Start to get order book and update {} order info (trade price, inflation status)", symbol);
 		webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive().map(bobooAssembler::assembleOrderBookDto))
