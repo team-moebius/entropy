@@ -1,13 +1,14 @@
 package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.assembler.TradeWindowAssembler;
-import com.moebius.entropy.domain.inflate.InflateRequest;
 import com.moebius.entropy.domain.Market;
+import com.moebius.entropy.domain.inflate.InflateRequest;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
-import java.math.BigDecimal;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.math.BigDecimal;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -24,7 +25,8 @@ public class BobooTradeWindowChangeEventListener {
                 BigDecimal marketPrice = assembler.extractMarketPrice(orderBookDto);
 
                 commandService.saveCurrentTradeWindow(market, marketPrice, tradeWindow);
-                return market; })
+                return market;
+            })
             .ifPresent(market -> {
                 InflateRequest request = new InflateRequest(market);
                 tradeWindowInflateService.inflateTrades(request).subscribe();
