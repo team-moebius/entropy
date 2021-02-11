@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -49,13 +50,13 @@ public class ManualOrderMakerService {
                 .subscribeOn(Schedulers.parallel())
                 .flatMap(orderService::requestManualOrder)
                 .onErrorContinue((throwable, orderRequest) -> log.warn(
-                        "[ManualOrder] Failed to request Order with {}", orderRequest, throwable
+                        "[ManualOrder] Failed to request Order with {}, {}", orderRequest, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable
                 ))
                 .flatMap(order -> {
                     if (order.getVolume().compareTo(BigDecimal.ZERO) > 0) {
                         return orderService.cancelOrder(order)
                                 .onErrorResume((throwable) -> {
-                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}", order, throwable);
+                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}, {}", order, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable);
                                     return Mono.empty();
                                 })
                             .map(cancelledOrder -> Pair.of(order, cancelledOrder));
