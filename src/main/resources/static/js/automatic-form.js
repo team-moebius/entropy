@@ -22,3 +22,8 @@ document.getElementById('btn-start-automatic-trade').addEventListener('click', f
     ev.preventDefault();
     startAutomaticOrder();
 })
+
+document.getElementById('btn-stop-automatic-trade').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    stopAutomaticOrder();
+})
