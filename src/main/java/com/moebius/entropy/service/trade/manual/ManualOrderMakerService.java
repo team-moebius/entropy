@@ -36,17 +36,21 @@ public class ManualOrderMakerService {
         BigDecimal requestedVolume = getRandomRequestVolume(request);
         int division = randomUtil.getRandomInteger(request.getStartRange(), request.getEndRange());
         List<BigDecimal> randomVolumes = randomUtil
-            .getRandomSlices(requestedVolume, division, decimalPosition);
+                .getRandomSlices(requestedVolume, division, decimalPosition);
 
         Market market = request.getMarket();
-        BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
         OrderPosition orderPosition = request.getOrderPosition();
+        BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
 
+        if (OrderPosition.ASK.equals(orderPosition)) {
+            marketPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
+        }
         log.info("[ManualOrder] Started to request Order symbol:{}, position: {}, quantities:{}",
                 market.getSymbol(), orderPosition, randomVolumes);
 
+        BigDecimal finalMarketPrice = marketPrice;
         return Flux.fromIterable(randomVolumes)
-                .map(volume -> new OrderRequest(market, orderPosition, marketPrice, volume))
+                .map(volume -> new OrderRequest(market, orderPosition, finalMarketPrice, volume))
                 .subscribeOn(Schedulers.parallel())
                 .flatMap(orderService::requestManualOrder)
                 .onErrorContinue((throwable, orderRequest) -> log.warn(
