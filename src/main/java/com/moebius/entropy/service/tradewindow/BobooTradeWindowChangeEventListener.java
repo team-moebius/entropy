@@ -17,18 +17,17 @@ public class BobooTradeWindowChangeEventListener {
     private final TradeWindowAssembler assembler;
     private TradeWindowInflateService tradeWindowInflateService;
 
-    public void onTradeWindowChange(BobooOrderBookDto orderBookDto) {
+    public void inflateOnTradeWindowChange(BobooOrderBookDto orderBookDto) {
         Optional.ofNullable(assembler.assembleTradeWindow(orderBookDto))
             .map(tradeWindow -> {
                 Market market = assembler.extractMarket(orderBookDto);
                 BigDecimal marketPrice = assembler.extractMarketPrice(orderBookDto);
 
                 commandService.saveCurrentTradeWindow(market, marketPrice, tradeWindow);
-                return market;
-            })
+                return market; })
             .ifPresent(market -> {
-                InflateRequest inflateRequest = new InflateRequest(market);
-                tradeWindowInflateService.inflateTrades(inflateRequest).subscribe();
+                InflateRequest request = new InflateRequest(market);
+                tradeWindowInflateService.inflateTrades(request).subscribe();
             });
     }
 

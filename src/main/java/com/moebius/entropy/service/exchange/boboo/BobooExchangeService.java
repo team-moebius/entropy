@@ -93,13 +93,15 @@ public class BobooExchangeService implements ExchangeService<
 				.bodyToMono(BobooOrderResponseDto.class);
 	}
 
-	public void getAndLogOrderBook(String symbol) {
+	@Override
+	public void getAndUpdateByOrderBook(String symbol) {
+		log.info("[BobooExchange] Start to get order book and update {} order info (trade price, inflation status)", symbol);
 		webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive().map(bobooAssembler::assembleOrderBookDto))
 				.publishOn(Schedulers.parallel())
-				.doOnNext(tradeWindowEventListener::onTradeWindowChange)
-				.doOnTerminate(() -> getAndLogOrderBook(symbol))
+				.doOnNext(tradeWindowEventListener::inflateOnTradeWindowChange)
+				.doOnTerminate(() -> getAndUpdateByOrderBook(symbol))
 				.then())
 			.subscribe();
 	}

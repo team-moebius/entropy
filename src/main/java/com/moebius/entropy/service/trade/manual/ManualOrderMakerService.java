@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ManualOrderMakerService {
-    private final static int decimalPosition = 1;
+    private final static int decimalPosition = 2;
     private final EntropyRandomUtils randomUtil;
     private final OrderService orderService;
     private final TradeWindowRepository tradeWindowRepository;

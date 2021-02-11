@@ -59,7 +59,7 @@ public class TradeWindowInflateService {
                                 "[TradeWindowInflation] Failed to request Order with {}", orderRequest, throwable
                         ));
 
-                Flux<Order> cancelledOrders = cancelPreviousOrders(market, inflationConfig);
+                Flux<Order> cancelledOrders = cancelInvalidOrders(market, inflationConfig);
 
                 return collectResult(createdOrders, cancelledOrders);
             })
@@ -105,7 +105,7 @@ public class TradeWindowInflateService {
     }
 
 
-    private Flux<Order> cancelPreviousOrders(Market market, InflationConfig inflationConfig) {
+    private Flux<Order> cancelInvalidOrders(Market market, InflationConfig inflationConfig) {
         BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 

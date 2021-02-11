@@ -29,6 +29,6 @@ class EntropyApplicationTestSpec extends Specification {
 		entropyApplication.onApplicationEvent(applicationReadyEvent)
 
 		then:
-		1 * bobooService.getAndLogOrderBook(_ as String)
+		1 * bobooService.getAndUpdateByOrderBook(_ as String)
 	}
 }
