@@ -5,29 +5,19 @@ import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.trade.TradeCurrency;
-import com.moebius.entropy.dto.view.AutomaticOrderCancelForm;
-import com.moebius.entropy.dto.view.AutomaticOrderCancelResult;
-import com.moebius.entropy.dto.view.AutomaticOrderForm;
-import com.moebius.entropy.dto.view.AutomaticOrderResult;
-import com.moebius.entropy.dto.view.ManualOrderForm;
-import com.moebius.entropy.dto.view.MarketPriceDto;
+import com.moebius.entropy.dto.view.*;
 import com.moebius.entropy.service.view.EntropyViewService;
-import java.time.Duration;
-import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import javax.validation.Valid;
+import java.time.Duration;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
@@ -64,11 +54,11 @@ public class EntropyWebController {
     @DeleteMapping("/order/automatic")
     @ResponseBody
     public Mono<AutomaticOrderCancelResult> cancelAutomaticOrder(
-        @RequestParam String disposableId) {
+            @RequestParam(defaultValue = "disposableId") String disposableId) {
         return viewService.cancelAutomaticOrder(AutomaticOrderCancelForm.builder()
-            .disposableId(disposableId)
-            .market(market)
-            .build());
+                .disposableId(disposableId)
+                .market(market)
+                .build());
     }
 
     @PostMapping("/order/manual")
