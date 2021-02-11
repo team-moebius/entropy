@@ -92,6 +92,10 @@ public class TradeWindowInflateService {
         OrderPosition orderPosition, BinaryOperator<BigDecimal> priceCalculationHandler
     ) {
         BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+        BigDecimal startPrice = OrderPosition.BID.equals(orderPosition)
+                ? marketPrice.subtract(market.getTradeCurrency().getPriceUnit())
+                : marketPrice;
+
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
         Set<Float> priceSet = prices.stream()
                 .map(TradePrice::getUnitPrice)
@@ -101,7 +105,7 @@ public class TradeWindowInflateService {
         return Flux.range(startFrom, count)
                 .map(BigDecimal::valueOf)
                 .map(multiplier -> priceCalculationHandler
-                        .apply(marketPrice, priceUnit.multiply(multiplier)))
+                        .apply(startPrice, priceUnit.multiply(multiplier)))
                 .filter(price -> !priceSet.contains(price.floatValue()))
             .map(price -> {
                 BigDecimal inflationVolume = volumeResolver
