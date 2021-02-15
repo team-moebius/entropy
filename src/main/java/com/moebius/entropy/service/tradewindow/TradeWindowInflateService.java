@@ -55,6 +55,7 @@ public class TradeWindowInflateService {
                 Flux<Order> createdOrders = generateRequiredOrderRequest(market, tradeWindow,
                         inflationConfig)
                         .flatMap(orderService::requestOrder)
+                        .doOnNext(order -> log.info("[TradeWindowInflation] Succeeded in requesting order for inflation. [{}]", order))
                         .onErrorContinue((throwable, orderRequest) -> log.warn(
                                 "[TradeWindowInflation] Failed to request Order with {}", orderRequest, throwable
                         ));

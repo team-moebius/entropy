@@ -3,8 +3,13 @@ function startManualOrder(orderPosition) {
 
     requestApi('post', '/order/manual', formData)
         .then((response) => {
+            const responseElement = document.getElementById("response-info");
+            const responseTextElement = document.getElementById("text-response");
+
             if (response.statusText === 'OK') {
-                window.alert("Manual Order started successfully!");
+                responseTextElement.textContent = "Manual Order started successfully!";
+                responseElement.style.display = "block";
+                setTimeout(function() {responseElement.style.display = "none";}, 5000);
             }
         })
         .catch(error => console.log(error));

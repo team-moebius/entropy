@@ -2,8 +2,13 @@ function startAutomaticOrder() {
     const formData = serializeForm('automatic-form')
     requestApi('post', '/order/automatic', formData)
         .then((response) => {
-            if(response.statusText === 'OK'){
-                window.alert("Automatic Order started successfully!");
+            const responseElement = document.getElementById("response-info");
+            const responseTextElement = document.getElementById("text-response");
+
+            if (response.statusText === 'OK'){
+                responseTextElement.textContent = "Automatic Order started successfully!";
+                responseElement.style.display = "block";
+                setTimeout(function() {responseElement.style.display = "none";}, 5000);
             }
         })
         .catch(error=>console.log(error));
@@ -11,8 +16,13 @@ function startAutomaticOrder() {
 function stopAutomaticOrder() {
     requestApi('delete', '/order/automatic')
         .then((response) => {
-            if(response.statusText === 'OK'){
-                window.alert("Automatic Order has been cancelled!");
+            const responseElement = document.getElementById("response-info");
+            const responseTextElement = document.getElementById("text-response");
+
+            if (response.statusText === 'OK'){
+              responseTextElement.textContent = "Automatic Order has been cancelled!";
+              responseElement.style.display = "block";
+              setTimeout(function() {responseElement.style.display = "none";}, 5000);
             }
         })
         .catch(error=>console.log(error));
