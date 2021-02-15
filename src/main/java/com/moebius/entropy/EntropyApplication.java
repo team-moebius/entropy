@@ -19,6 +19,6 @@ public class EntropyApplication implements ApplicationListener<ApplicationReadyE
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
-		exchangeServices.forEach(exchangeService -> exchangeService.getAndUpdateByOrderBook("ETHVUSDT"));
+		exchangeServices.forEach(exchangeService -> exchangeService.getAndUpdateByOrderBook("GTAXUSDT"));
 	}
 }
