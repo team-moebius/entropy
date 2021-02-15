@@ -79,7 +79,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
         def madeAskedPrices = priceUnitMultipliersForAskOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice + (priceChangeUnit * multiplier)
-            1 * orderService.requestOrder({
+            orderService.requestOrder({
                 it.market == market && it.orderPosition == OrderPosition.ASK \
                           && it.price == price && it.volume == askInflationVolume
             }) >> Mono.just(
@@ -90,7 +90,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
         def madeBidPrices = priceUnitMultipliersForBidOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice - priceChangeUnit * multiplier
-            1 * orderService.requestOrder({
+            orderService.requestOrder({
                 it.market == market && it.orderPosition == OrderPosition.BID \
                           && it.price == price && it.volume == bidInflationVolume
             }) >> Mono.just(
