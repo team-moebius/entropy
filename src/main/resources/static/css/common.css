@@ -18,6 +18,10 @@ body{
     padding-left: 0;
     padding-right: 0;
 }
+.response-info{
+    border: black 1px solid;
+    display: none;
+}
 .market-info{
     border-left: black 1px solid;
     border-right: black 1px solid;

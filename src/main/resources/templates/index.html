@@ -11,8 +11,13 @@
 </head>
 <body>
 <div class="container-lg">
+    <div class="row response-info border-color-response color-response" id="response-info">
+        <div class="col col-lg-12"><span id="text-response"></span></div>
+    </div>
+</div>
+<div class="container-lg">
     <div class="row market-info price">
-      <div class="col col-sm-3"><span id="text-symbol">GTAX</span></div>
+      <div class="col col-sm-3"><span class="text-symbol">GTAX</span></div>
       <div class="col col-md"><span id="text-price"></span></div>
     </div>
     <div class="row market-info currency-unit">
@@ -48,7 +53,7 @@
         <div class="col col-sm">
             <div class="input-group">
                 <input class="form-control" id="sell-volume-range-to" name="sell-volume-range-to" type="number">
-                <span class="input-group-text">GTAX</span>
+                <span class="input-group-text text-symbol">GTAX</span>
             </div>
         </div>
     </div>
@@ -166,7 +171,7 @@
         <div class="col col-md">
             <div class="input-group">
                 <input class="form-control" id="buy-volume-range-to" name="buy-volume-range-to" type="number">
-                <span class="input-group-text">GTAX</span>
+                <span class="input-group-text text-symbol">GTAX</span>
             </div>
         </div>
     </div>
@@ -287,7 +292,7 @@
                 <div class="input-group">
                     <input class="form-control" id="manual-sell-volume-range-to" name="manual-volume-range-to"
                            type="number">
-                    <span class="input-group-text">GTAX</span>
+                    <span class="input-group-text text-symbol">GTAX</span>
                 </div>
             </div>
         </div>
@@ -331,7 +336,7 @@
                 <div class="input-group">
                     <input class="form-control" id="manual-buy-volume-range-to" name="manual-volume-range-to"
                            type="number">
-                    <span class="input-group-text">GTAX</span>
+                    <span class="input-group-text text-symbol">GTAX</span>
                 </div>
             </div>
         </div>

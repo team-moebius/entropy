@@ -20,7 +20,7 @@ public class BobooOpenOrderRefreshService {
     private final BobooOrderService bobooOrderService;
     private final BobooOrderExchangeAssembler assembler;
     private final ApiKeyDto apiKeyDto;
-    private static final List<String> trackingSymbols = Collections.singletonList("GTAXUSDT");
+    private static final List<String> trackingSymbols = Collections.singletonList("ETHVUSDT");
 
     public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
                                         BobooOrderService bobooOrderService,

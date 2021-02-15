@@ -55,6 +55,7 @@ public class TradeWindowInflateService {
                 Flux<Order> createdOrders = generateRequiredOrderRequest(market, tradeWindow,
                         inflationConfig)
                         .flatMap(orderService::requestOrder)
+                        .doOnNext(order -> log.info("[TradeWindowInflation] Succeeded in requesting order for inflation. [{}]", order))
                         .onErrorContinue((throwable, orderRequest) -> log.warn(
                                 "[TradeWindowInflation] Failed to request Order with {}", orderRequest, throwable
                         ));
@@ -87,16 +88,21 @@ public class TradeWindowInflateService {
         OrderPosition orderPosition, BinaryOperator<BigDecimal> priceCalculationHandler
     ) {
         BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+        BigDecimal startPrice = OrderPosition.BID.equals(orderPosition)
+                ? marketPrice.subtract(market.getTradeCurrency().getPriceUnit())
+                : marketPrice;
+
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-        Set<BigDecimal> priceSet = prices.stream()
-            .map(TradePrice::getUnitPrice)
-            .collect(Collectors.toSet());
+        Set<Float> priceSet = prices.stream()
+                .map(TradePrice::getUnitPrice)
+                .map(BigDecimal::floatValue)
+                .collect(Collectors.toSet());
 
         return Flux.range(startFrom, count)
-            .map(BigDecimal::valueOf)
-            .map(multiplier -> priceCalculationHandler
-                .apply(marketPrice, priceUnit.multiply(multiplier)))
-            .filter(price -> !priceSet.contains(price))
+                .map(BigDecimal::valueOf)
+                .map(multiplier -> priceCalculationHandler
+                        .apply(startPrice, priceUnit.multiply(multiplier)))
+                .filter(price -> !priceSet.contains(price.floatValue()))
             .map(price -> {
                 BigDecimal inflationVolume = volumeResolver
                     .getInflationVolume(market, orderPosition);

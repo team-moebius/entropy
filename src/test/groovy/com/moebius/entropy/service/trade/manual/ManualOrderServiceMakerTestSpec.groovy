@@ -57,17 +57,18 @@ class ManualOrderServiceMakerTestSpec extends Specification {
         randomUtil.getRandomSlices(requestedVolume, selectedDivision, _) >> randomVolumes
         randomUtil.getRandomInteger(divisionRange[0], divisionRange[1]) >> selectedDivision
         tradeWindowRepository.getMarketPriceForSymbol(market) >> marketPrice
+        def requestedMarketPrice = OrderPosition.ASK == orderPosition ? marketPrice.subtract(market.tradeCurrency.priceUnit) : marketPrice
 
         (0..<selectedDivision).forEach({ index ->
             def volume = randomVolumes[index]
             def remainVolume = remainVolumes[index]
             orderService.requestManualOrder({
-                it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(marketPrice) && it.volume == volume
-            } as OrderRequest) >> Mono.just(new Order("$index", market, orderPosition, marketPrice, remainVolume))
+                it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(requestedMarketPrice) && it.volume == volume
+            } as OrderRequest) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
             if (remainVolume.doubleValue() > 0.0) {
                 orderService.cancelOrder({
-                    it.market == market && it.orderPosition == orderPosition && BigDecimal.valueOf(marketPrice) && it.volume == remainVolume
-                } as Order) >> Mono.just(new Order("$index", market, orderPosition, marketPrice, remainVolume))
+                    it.market == market && it.orderPosition == orderPosition && BigDecimal.valueOf(requestedMarketPrice) && it.volume == remainVolume
+                } as Order) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
             }
         })
         def request = ManualOrderMakingRequest.builder()
@@ -84,13 +85,14 @@ class ManualOrderServiceMakerTestSpec extends Specification {
                 .assertNext({
                     def requestedOrders = it.getRequestedOrders()
                     assert requestedOrders.size() == selectedDivision
+                    def expectedPrice = requestedMarketPrice
                     zipCollections(requestedOrders, remainVolumes).forEach({
                         def order = it.getLeft() as Order
                         def remainVolume = BigDecimal.valueOf(it.getRight() as float)
                         assert order.orderPosition == orderPosition
                         assert order.market == market
                         assert order.volume == remainVolume
-                        assert order.price == marketPrice
+                        assert order.price == expectedPrice
                     })
                     def cancelledOrders = it.getCancelledOrders()
                     assert cancelledOrders.size() == cancelledVolumes.size()
@@ -100,7 +102,7 @@ class ManualOrderServiceMakerTestSpec extends Specification {
                         assert order.orderPosition == orderPosition
                         assert order.market == market
                         assert order.volume == cancelledVolume
-                        assert order.price == marketPrice
+                        assert order.price == expectedPrice
                     })
                 })
                 .verifyComplete()

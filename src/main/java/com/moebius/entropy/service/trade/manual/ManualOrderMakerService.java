@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ManualOrderMakerService {
-    private final static int decimalPosition = 2;
+    private final static int decimalPosition = 1;
     private final EntropyRandomUtils randomUtil;
     private final OrderService orderService;
     private final TradeWindowRepository tradeWindowRepository;
@@ -35,27 +36,31 @@ public class ManualOrderMakerService {
         BigDecimal requestedVolume = getRandomRequestVolume(request);
         int division = randomUtil.getRandomInteger(request.getStartRange(), request.getEndRange());
         List<BigDecimal> randomVolumes = randomUtil
-            .getRandomSlices(requestedVolume, division, decimalPosition);
+                .getRandomSlices(requestedVolume, division, decimalPosition);
 
         Market market = request.getMarket();
-        BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
         OrderPosition orderPosition = request.getOrderPosition();
+        BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
 
+        if (OrderPosition.ASK.equals(orderPosition)) {
+            marketPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
+        }
         log.info("[ManualOrder] Started to request Order symbol:{}, position: {}, quantities:{}",
                 market.getSymbol(), orderPosition, randomVolumes);
 
+        BigDecimal finalMarketPrice = marketPrice;
         return Flux.fromIterable(randomVolumes)
-                .map(volume -> new OrderRequest(market, orderPosition, marketPrice, volume))
+                .map(volume -> new OrderRequest(market, orderPosition, finalMarketPrice, volume))
                 .subscribeOn(Schedulers.parallel())
                 .flatMap(orderService::requestManualOrder)
                 .onErrorContinue((throwable, orderRequest) -> log.warn(
-                        "[ManualOrder] Failed to request Order with {}", orderRequest, throwable
+                        "[ManualOrder] Failed to request Order with {}, {}", orderRequest, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable
                 ))
                 .flatMap(order -> {
                     if (order.getVolume().compareTo(BigDecimal.ZERO) > 0) {
                         return orderService.cancelOrder(order)
                                 .onErrorResume((throwable) -> {
-                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}", order, throwable);
+                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}, {}", order, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable);
                                     return Mono.empty();
                                 })
                             .map(cancelledOrder -> Pair.of(order, cancelledOrder));
