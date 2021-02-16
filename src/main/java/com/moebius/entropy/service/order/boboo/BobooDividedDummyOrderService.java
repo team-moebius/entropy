@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
 	private static final String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
-	private static final long DEFAULT_DELAY = 500;
+	private static final long DEFAULT_DELAY = 300;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -53,7 +53,9 @@ public class BobooDividedDummyOrderService {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
-		Disposable disposable = Flux.interval(Duration.ZERO, getDuration(dividedDummyOrderDto))
+		Duration period = getDuration(dividedDummyOrderDto);
+		log.info("[DummyOrder] Divided dummy orders are executed every {} millis.", period.toMillis());
+		Disposable disposable = Flux.interval(Duration.ZERO, period)
 			.subscribeOn(Schedulers.parallel())
 			.flatMap(tick -> dummyOrderRequestsMono(dividedDummyOrderDto))
 			.subscribe();
