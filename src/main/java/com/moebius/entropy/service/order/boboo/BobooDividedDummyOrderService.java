@@ -67,9 +67,9 @@ public class BobooDividedDummyOrderService {
 
 	private Duration getDuration(DividedDummyOrderDto dividedDummyOrderDto) {
 		Duration askOrderDuration = Duration.ofMillis((long) (dividedDummyOrderDto.getInflationConfig().getAskCount() *
-			(dividedDummyOrderDto.getAskOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getAskOrderConfig().getMaxReorderCount() * DEFAULT_DELAY)));
+			(dividedDummyOrderDto.getAskOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getAskOrderConfig().getMaxReorderCount() * DEFAULT_DELAY / 2)));
 		Duration bidOrderDuration = Duration.ofMillis((long) (dividedDummyOrderDto.getInflationConfig().getBidCount() *
-			(dividedDummyOrderDto.getBidOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getBidOrderConfig().getMaxReorderCount() * DEFAULT_DELAY)));
+			(dividedDummyOrderDto.getBidOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getBidOrderConfig().getMaxReorderCount() * DEFAULT_DELAY / 2)));
 
 		return askOrderDuration.compareTo(bidOrderDuration) > 0 ? askOrderDuration : bidOrderDuration;
 	}
