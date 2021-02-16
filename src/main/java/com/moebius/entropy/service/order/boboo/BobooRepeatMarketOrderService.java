@@ -23,14 +23,13 @@ import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Optional;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BobooRepeatMarketOrderService {
 	private static final String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
-	private static final int DEFAULT_DECIMAL_POSITION = 2;
+	private static final int DECIMAL_POSITION = 1;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -88,7 +87,7 @@ public class BobooRepeatMarketOrderService {
 			if (orderPosition == OrderPosition.ASK) {
 				RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
 				BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
-					DEFAULT_DECIMAL_POSITION);
+					DECIMAL_POSITION);
 
 				orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
 				reorderCount = randomUtils.getRandomInteger(askOrderConfig.getMinReorderCount(), askOrderConfig.getMaxReorderCount());
@@ -96,7 +95,7 @@ public class BobooRepeatMarketOrderService {
 			} else if (orderPosition == OrderPosition.BID) {
 				RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
 				BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
-					DEFAULT_DECIMAL_POSITION);
+					DECIMAL_POSITION);
 
 				orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
 				reorderCount = randomUtils.getRandomInteger(bidOrderConfig.getMinReorderCount(), bidOrderConfig.getMaxReorderCount());

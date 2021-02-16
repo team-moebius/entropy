@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ManualOrderMakerService {
-    private final static int decimalPosition = 1;
+    private final static int DECIMAL_POSITION = 1;
     private final EntropyRandomUtils randomUtil;
     private final OrderService orderService;
     private final TradeWindowRepository tradeWindowRepository;
@@ -36,7 +36,7 @@ public class ManualOrderMakerService {
         BigDecimal requestedVolume = getRandomRequestVolume(request);
         int division = randomUtil.getRandomInteger(request.getStartRange(), request.getEndRange());
         List<BigDecimal> randomVolumes = randomUtil
-                .getRandomSlices(requestedVolume, division, decimalPosition);
+                .getRandomSlices(requestedVolume, division, DECIMAL_POSITION);
 
         Market market = request.getMarket();
         OrderPosition orderPosition = request.getOrderPosition();
@@ -75,7 +75,7 @@ public class ManualOrderMakerService {
     private BigDecimal getRandomRequestVolume(ManualOrderMakingRequest request) {
         return randomUtil.getRandomDecimal(
             request.getRequestedVolumeFrom().floatValue(),
-            request.getRequestedVolumeTo().floatValue(), decimalPosition);
+            request.getRequestedVolumeTo().floatValue(), DECIMAL_POSITION);
     }
 
     private ManualOrderResult makeResult(List<Pair<Order, ?>> pairs) {
