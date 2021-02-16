@@ -25,7 +25,6 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,6 +33,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
 	private static final String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
+	private static final long DEFAULT_DELAY = 500;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -53,10 +53,9 @@ public class BobooDividedDummyOrderService {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
-		// TODO : duration should be refined more to catch the proper period up for randomly defined order.
-		Disposable disposable = Flux.interval(Duration.ZERO, Duration.ofSeconds(70))
+		Disposable disposable = Flux.interval(Duration.ZERO, getDuration(dividedDummyOrderDto))
 			.subscribeOn(Schedulers.parallel())
-			.flatMap(tick -> dummyOrdersMono(dividedDummyOrderDto))
+			.flatMap(tick -> dummyOrderRequestsMono(dividedDummyOrderDto))
 			.subscribe();
 
 		String disposableId = market.getExchange() + "-" + market.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
@@ -64,7 +63,16 @@ public class BobooDividedDummyOrderService {
 		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
-	private Mono<Void> dummyOrdersMono(DividedDummyOrderDto dividedDummyOrderDto) {
+	private Duration getDuration(DividedDummyOrderDto dividedDummyOrderDto) {
+		Duration askOrderDuration = Duration.ofMillis((long) (dividedDummyOrderDto.getInflationConfig().getAskCount() *
+			(dividedDummyOrderDto.getAskOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getAskOrderConfig().getMaxReorderCount() * DEFAULT_DELAY)));
+		Duration bidOrderDuration = Duration.ofMillis((long) (dividedDummyOrderDto.getInflationConfig().getBidCount() *
+			(dividedDummyOrderDto.getBidOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getBidOrderConfig().getMaxReorderCount() * DEFAULT_DELAY)));
+
+		return askOrderDuration.compareTo(bidOrderDuration) > 0 ? askOrderDuration : bidOrderDuration;
+	}
+
+	private Mono<Void> dummyOrderRequestsMono(DividedDummyOrderDto dividedDummyOrderDto) {
 		MarketDto market = dividedDummyOrderDto.getMarket();
 		InflationConfig inflationConfig = dividedDummyOrderDto.getInflationConfig();
 
@@ -74,19 +82,19 @@ public class BobooDividedDummyOrderService {
 		return Mono.when(Flux.fromStream(IntStream.range(0, inflationConfig.getAskCount())
 				.mapToObj(BigDecimal::valueOf)
 				.map(multiplier -> marketPrice.add(priceUnit.multiply(multiplier))))
-				.delayElements(Duration.ofMillis(500))
-				.flatMap(price -> dividedDummyOrdersMono(dividedDummyOrderDto, OrderPosition.ASK, price)),
+				.delayElements(Duration.ofMillis(DEFAULT_DELAY))
+				.flatMap(price -> dividedDummyOrderRequestsMono(dividedDummyOrderDto, OrderPosition.ASK, price)),
 			Flux.fromStream(IntStream.rangeClosed(1, inflationConfig.getBidCount())
 				.mapToObj(BigDecimal::valueOf)
 				.map(multiplier -> marketPrice.subtract(priceUnit.multiply(multiplier))))
-				.delayElements(Duration.ofMillis(500))
-				.flatMap(price -> dividedDummyOrdersMono(dividedDummyOrderDto, OrderPosition.BID, price))
+				.delayElements(Duration.ofMillis(DEFAULT_DELAY))
+				.flatMap(price -> dividedDummyOrderRequestsMono(dividedDummyOrderDto, OrderPosition.BID, price))
 		);
 	}
 
-	private Mono<List<OrderRequest>> dividedDummyOrdersMono(DividedDummyOrderDto dividedDummyOrderDto, OrderPosition orderPosition,
+	private Mono<Void> dividedDummyOrderRequestsMono(DividedDummyOrderDto dividedDummyOrderDto, OrderPosition orderPosition,
 		BigDecimal price) {
-		return Mono.fromCallable(() -> {
+		return Mono.fromRunnable(() -> {
 			MarketDto marketDto = dividedDummyOrderDto.getMarket();
 			Market market = marketDto.toDomainEntity();
 
@@ -125,7 +133,7 @@ public class BobooDividedDummyOrderService {
 							finalOrderDuration.toMillis()))
 						.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. {}]",
 							((WebClientResponseException) throwable).getResponseBodyAsString()))
-						.delayElement(orderDuration)
+						.delayElement(Duration.ofMillis(DEFAULT_DELAY))
 						.flatMap(orderService::cancelOrderWithoutTracking)
 						.doOnSuccess(order -> log.info(
 							"[DummyOrder] Succeeded to cancel dummy order. [order: {} | reorderCount : {} | orderDuration : {}]",
@@ -136,10 +144,13 @@ public class BobooDividedDummyOrderService {
 							((WebClientResponseException) throwable).getResponseBodyAsString()))
 						.subscribe();
 				}
-				Thread.sleep(Duration.ofMillis(500).toMillis());
-			}
 
-			return orderRequests;
+				try {
+					Thread.sleep(orderDuration.toMillis());
+				} catch (InterruptedException e) {
+					log.warn("[DummyOrder] Exception occurred during waiting default delay after single cycle of requests", e);
+				}
+			}
 		});
 	}
 }

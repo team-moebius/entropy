@@ -10,4 +10,4 @@ RUN ./gradlew clean bootJar
 FROM openjdk:14-jdk-slim
 ENV ARTIFACT_PATH=build/libs/*.jar
 COPY --from=build $ARTIFACT_PATH app.jar
-ENTRYPOINT ["java","-Dspring.profiles.active=prod","-Dreactor.netty.http.server.accessLogEnabled=true","-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005","-jar","app.jar"]
+ENTRYPOINT ["java","-Dspring.profiles.active=prod","-Duser.timezone=Asia/Seoul","-Dreactor.netty.http.server.accessLogEnabled=true","-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=*:5005","-jar","app.jar"]
