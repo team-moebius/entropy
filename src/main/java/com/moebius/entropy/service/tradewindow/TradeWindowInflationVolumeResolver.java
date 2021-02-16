@@ -65,7 +65,7 @@ public class TradeWindowInflationVolumeResolver {
 		int range = randomUtils.getRandomInteger(minDividedOrderCount, maxDividedOrderCount);
 
 		for (int i = range - 1; i > 0; --i) {
-			BigDecimal dividedVolume = randomUtils.getRandomDecimal(0.1f * i, inflationVolume.floatValue(), decimalPosition);
+			BigDecimal dividedVolume = randomUtils.getRandomDecimal(1f * i, inflationVolume.floatValue(), decimalPosition);
 			dividedVolumes.add(dividedVolume);
 			inflationVolume = inflationVolume.subtract(dividedVolume);
 		}
