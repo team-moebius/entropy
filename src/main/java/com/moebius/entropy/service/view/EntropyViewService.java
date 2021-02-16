@@ -15,6 +15,7 @@ import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
+import com.moebius.entropy.service.order.boboo.BobooRepeatMarketOrderService;
 import com.moebius.entropy.service.trade.manual.ManualOrderMakerService;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.SymbolUtil;
@@ -35,6 +36,7 @@ public class EntropyViewService {
 
     private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
     private final BobooDividedDummyOrderService dividedDummyOrderService;
+    private final BobooRepeatMarketOrderService repeatMarketOrderService;
     private final InflationConfigRepository inflationConfigRepository;
     private final BobooOrderService bobooOrderService;
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
@@ -49,11 +51,16 @@ public class EntropyViewService {
 
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
-        return Mono.just(automaticOrderForm)
-            .map(form -> automaticOrderViewAssembler.assembleDivideDummyOrder(market, form))
-            .flatMap(dividedDummyOrderService::executeDividedDummyOrders)
-            .map(HttpEntity::getBody)
-            .map(String::valueOf)
+        return Mono.zip(
+            Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
+            Mono.just(automaticOrderViewAssembler.assembleRepeatMarketOrder(market, automaticOrderForm)))
+            .flatMapMany(tuple -> Flux.merge(dividedDummyOrderService.executeDividedDummyOrders(tuple.getT1())
+                .map(HttpEntity::getBody)
+                .map(String::valueOf),
+            repeatMarketOrderService.executeRepeatMarketOrders(tuple.getT2())
+                .map(HttpEntity::getBody)
+                .map(String::valueOf)))
+            .collectList()
             .map(automaticOrderViewAssembler::assembleAutomaticOrderResult);
     }
 

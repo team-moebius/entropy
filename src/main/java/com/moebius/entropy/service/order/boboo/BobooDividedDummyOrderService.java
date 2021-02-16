@@ -53,7 +53,7 @@ public class BobooDividedDummyOrderService {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
-		Duration period = getDuration(dividedDummyOrderDto);
+		Duration period = getPeriod(dividedDummyOrderDto);
 		log.info("[DummyOrder] Divided dummy orders are executed every {} millis.", period.toMillis());
 		Disposable disposable = Flux.interval(Duration.ZERO, period)
 			.subscribeOn(Schedulers.parallel())
@@ -65,7 +65,7 @@ public class BobooDividedDummyOrderService {
 		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
-	private Duration getDuration(DividedDummyOrderDto dividedDummyOrderDto) {
+	private Duration getPeriod(DividedDummyOrderDto dividedDummyOrderDto) {
 		Duration askOrderDuration = Duration.ofMillis((long) (dividedDummyOrderDto.getInflationConfig().getAskCount() *
 			(dividedDummyOrderDto.getAskOrderConfig().getPeriod() * 1000 + dividedDummyOrderDto.getAskOrderConfig().getMaxReorderCount() * DEFAULT_DELAY / 2)));
 		Duration bidOrderDuration = Duration.ofMillis((long) (dividedDummyOrderDto.getInflationConfig().getBidCount() *

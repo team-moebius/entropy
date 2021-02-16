@@ -48,7 +48,7 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
                 .askMaxVolume(askMaxVolume)
                 .askMinVolume(askMinVolume)
                 .build()
-        1 * entropyRandomUtils.getRandomDecimal(desiredMinVolume.toFloat(), desiredMaxVolume.toFloat(), 2) >> randomlyPickedVolume
+        1 * entropyRandomUtils.getRandomDecimal(desiredMinVolume.toFloat(), desiredMaxVolume.toFloat(), _) >> randomlyPickedVolume
         resolvedVolume == randomlyPickedVolume
 
         where:
@@ -83,9 +83,9 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
             }
         }
         1 * entropyRandomUtils.getRandomInteger(1, 5) >> 3
-        1 * entropyRandomUtils.getRandomDecimal(10, 1000, 2) >> BigDecimal.valueOf(500)
-        1 * entropyRandomUtils.getRandomDecimal(0.2f, _, 2) >> BigDecimal.valueOf(50)
-        1 * entropyRandomUtils.getRandomDecimal(0.1f, _, 2) >> BigDecimal.valueOf(100)
+        1 * entropyRandomUtils.getRandomDecimal(10, 1000, _) >> BigDecimal.valueOf(500)
+        1 * entropyRandomUtils.getRandomDecimal(2f, _, _) >> BigDecimal.valueOf(50)
+        1 * entropyRandomUtils.getRandomDecimal(1f, _, _) >> BigDecimal.valueOf(100)
 
         when:
         def result = sut.getDividedVolume(dividedDummyOrderDto, ORDER_POSITION)
