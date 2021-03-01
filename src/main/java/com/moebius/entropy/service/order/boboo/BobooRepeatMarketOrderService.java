@@ -29,7 +29,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class BobooRepeatMarketOrderService {
 	private static final String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
-	private static final int DECIMAL_POSITION = 1;
+	private static final int DECIMAL_POSITION = 2;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
