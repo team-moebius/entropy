@@ -1,20 +1,20 @@
 .color-buy{
-    color: #74BBBE;
+    color: #70ad47;
 }
 .border-color-buy{
-    border-color: #74BBBE;
+    border-color: #70ad47;
 }
 .bg-color-buy{
-    background-color: #74BBBE;
+    background-color: #e2f0d9;
 }
 .color-sell{
-    color: #F7683A;
+    color: #ec7d31;
 }
 .border-color-sell{
-    border-color: #F7683A;
+    border-color: #ec7d31;
 }
 .bg-color-sell{
-    background-color: #F7683A;
+    background-color: #fbe4d6;
 }
 .border-color-response{
     border-color: green;

@@ -84,12 +84,12 @@ class AutomaticOrderViewAssemblerTestSpec extends Specification {
 
     def "Assemble AutomaticOrderResult"() {
         given:
-        def disposableId = "Test disposable Id"
+        def disposableIds = ["test-disposable-id", "test-disposable-id2"]
 
         when:
-        def result = sut.assembleAutomaticOrderResult(disposableId)
+        def result = sut.assembleAutomaticOrderResult(disposableIds)
 
         then:
-        result.disposableId == disposableId
+        result.disposableIds == disposableIds
     }
 }

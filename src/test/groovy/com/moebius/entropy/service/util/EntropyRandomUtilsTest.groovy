@@ -14,14 +14,14 @@ class EntropyRandomUtilsTest extends Specification {
 
 		then:
 		result instanceof BigDecimal
-		result >= 1.2345
+		result >= EXPECTED_MINIMUM
 		result <= 3.1452
 		result.scale() == EXPECTED_DECIMAL_PLACES
 
 		where:
-		DECIMAL_PLACES | EXPECTED_DECIMAL_PLACES
-		2              | 2
-		0              | 0
+		DECIMAL_PLACES || EXPECTED_MINIMUM | EXPECTED_DECIMAL_PLACES
+		2              || 1.23             | 2
+		0              || 1                | 0
 	}
 
 	def "Should get random integer"() {

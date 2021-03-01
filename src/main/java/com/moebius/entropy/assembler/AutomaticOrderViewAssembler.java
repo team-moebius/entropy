@@ -3,11 +3,15 @@ package com.moebius.entropy.assembler;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.order.DummyOrderConfig;
+import com.moebius.entropy.domain.order.RepeatMarketOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
+import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.view.AutomaticOrderForm;
 import com.moebius.entropy.dto.view.AutomaticOrderResult;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 @Component
 public class AutomaticOrderViewAssembler {
@@ -25,9 +29,7 @@ public class AutomaticOrderViewAssembler {
             .build();
     }
 
-    public DividedDummyOrderDto assembleDivideDummyOrder(
-        Market market, AutomaticOrderForm automaticOrderForm
-    ) {
+    public DividedDummyOrderDto assembleDivideDummyOrder(Market market, AutomaticOrderForm automaticOrderForm) {
         return DividedDummyOrderDto.builder()
             .market(assembleMarketDto(market))
             .inflationConfig(assembleInflationConfig(automaticOrderForm))
@@ -48,6 +50,26 @@ public class AutomaticOrderViewAssembler {
             .build();
     }
 
+    public RepeatMarketOrderDto assembleRepeatMarketOrder(Market market, AutomaticOrderForm automaticOrderForm) {
+        return RepeatMarketOrderDto.builder()
+            .market(assembleMarketDto(market))
+            .askOrderConfig(RepeatMarketOrderConfig.builder()
+                .minVolume(automaticOrderForm.getAutoSellMarketPriceVolumeFrom())
+                .maxVolume(automaticOrderForm.getAutoSellMarketPriceVolumeTo())
+                .period(automaticOrderForm.getAutoSellMarketPriceInterval().floatValue())
+                .minReorderCount(Math.toIntExact(automaticOrderForm.getAutoSellMarketPriceTimeFrom()))
+                .maxReorderCount(Math.toIntExact(automaticOrderForm.getAutoSellMarketPriceTimeTo()))
+                .build())
+            .bidOrderConfig(RepeatMarketOrderConfig.builder()
+                .minVolume(automaticOrderForm.getAutoBuyMarketPriceVolumeFrom())
+                .maxVolume(automaticOrderForm.getAutoBuyMarketPriceVolumeTo())
+                .period(automaticOrderForm.getAutoBuyMarketPriceInterval().floatValue())
+                .minReorderCount(Math.toIntExact(automaticOrderForm.getAutoBuyMarketPriceTimeFrom()))
+                .maxReorderCount(Math.toIntExact(automaticOrderForm.getAutoBuyMarketPriceTimeTo()))
+                .build())
+            .build();
+    }
+
     private MarketDto assembleMarketDto(Market market) {
         return MarketDto.builder()
             .exchange(market.getExchange())
@@ -56,9 +78,9 @@ public class AutomaticOrderViewAssembler {
             .build();
     }
 
-    public AutomaticOrderResult assembleAutomaticOrderResult(String disposableId) {
+    public AutomaticOrderResult assembleAutomaticOrderResult(List<String> disposableIds) {
         return AutomaticOrderResult.builder()
-            .disposableId(disposableId)
+            .disposableIds(disposableIds)
             .build();
     }
 }

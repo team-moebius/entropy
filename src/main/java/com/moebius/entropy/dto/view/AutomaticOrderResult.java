@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Builder
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class AutomaticOrderResult {
 
-    private String disposableId;
+    private List<String> disposableIds;
 
 }
