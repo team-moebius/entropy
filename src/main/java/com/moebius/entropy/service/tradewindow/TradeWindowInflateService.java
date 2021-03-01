@@ -72,20 +72,20 @@ public class TradeWindowInflateService {
     ) {
 
         Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
-            START_FROM_MARKET_PRICE, inflationConfig.getBidCount(), window.getBidPrices(), market,
-            OrderPosition.BID, BigDecimal::subtract
-        );
+            START_FROM_MARKET_PRICE, inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market,
+            OrderPosition.BID, BigDecimal::subtract,
+            window.getBidPrices());
 
         Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
-            START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), window.getAskPrices(), market,
-            OrderPosition.ASK, BigDecimal::add
-        );
+            START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market,
+            OrderPosition.ASK, BigDecimal::add,
+            window.getAskPrices());
         return Flux.merge(bidRequestFlux, askRequestFlux);
     }
 
     private Flux<OrderRequest> makeOrderRequestWith(
-        int startFrom, int count, List<TradePrice> prices, Market market,
-        OrderPosition orderPosition, BinaryOperator<BigDecimal> priceCalculationHandler
+        int startFrom, int count, BigDecimal minimumVolume, Market market, OrderPosition orderPosition, BinaryOperator<BigDecimal> priceCalculationHandler,
+        List<TradePrice> prices
     ) {
         BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
         BigDecimal startPrice = OrderPosition.BID.equals(orderPosition)
@@ -93,16 +93,14 @@ public class TradeWindowInflateService {
                 : marketPrice;
 
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-        Set<Float> priceSet = prices.stream()
-                .map(TradePrice::getUnitPrice)
-                .map(BigDecimal::floatValue)
-                .collect(Collectors.toSet());
+        Map<Float, Float> priceVolumeMap = prices.stream()
+            .collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue()));
 
         return Flux.range(startFrom, count)
                 .map(BigDecimal::valueOf)
                 .map(multiplier -> priceCalculationHandler
                         .apply(startPrice, priceUnit.multiply(multiplier)))
-                .filter(price -> !priceSet.contains(price.floatValue()))
+                .filter(price -> !priceVolumeMap.containsKey(price.floatValue()) || priceVolumeMap.get(price.floatValue()) < minimumVolume.floatValue())
             .map(price -> {
                 BigDecimal inflationVolume = volumeResolver
                     .getInflationVolume(market, orderPosition);
