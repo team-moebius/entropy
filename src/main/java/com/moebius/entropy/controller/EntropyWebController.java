@@ -26,7 +26,7 @@ import java.time.Duration;
 @RequestMapping("/")
 public class EntropyWebController {
 
-    private static final Market market = new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT);
+    private static final Market market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT);
     private final EntropyViewService viewService;
 
     @GetMapping("/")

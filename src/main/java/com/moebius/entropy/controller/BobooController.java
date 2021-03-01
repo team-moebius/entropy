@@ -37,7 +37,7 @@ public class BobooController {
 	/**
 	 * Sample request for testing
 	 *
-	 * POST /boboo/open-orders?symbol=GTAXUSDT HTTP/1.1
+	 * POST /boboo/open-orders?symbol=GTAX2USDT HTTP/1.1
 	 * Host: 127.0.0.1:8080
 	 * Content-Type: application/json
 	 *
