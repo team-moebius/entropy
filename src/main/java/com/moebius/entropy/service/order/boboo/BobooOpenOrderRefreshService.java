@@ -39,7 +39,7 @@ public class BobooOpenOrderRefreshService {
     public void refreshOpenOrderFromExchange(){
         log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
         Flux.fromIterable(trackingSymbols)
-                .flatMap(symbol-> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
+                .flatMap(symbol -> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
                             .map(assembler::convertExchangeOrder)
                             .collectList()
                             .map(bobooOrderService::updateOrders)

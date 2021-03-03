@@ -60,8 +60,8 @@ public class BobooRepeatMarketOrderService {
 			.flatMap(tick -> executeMarketOrders(repeatMarketOrderDto, OrderPosition.BID))
 			.subscribe();
 
-		String askOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "ASK" + DISPOSABLE_ID_POSTFIX;
-		String bidOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "BID" + DISPOSABLE_ID_POSTFIX;
+		String askOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "ASK-" + DISPOSABLE_ID_POSTFIX;
+		String bidOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "BID-" + DISPOSABLE_ID_POSTFIX;
 
 		disposableOrderRepository.set(askOrderDisposableId, askOrderDisposable);
 		disposableOrderRepository.set(bidOrderDisposableId, bidOrderDisposable);
