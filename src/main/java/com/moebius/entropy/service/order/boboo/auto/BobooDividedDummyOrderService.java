@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.order.boboo;
+package com.moebius.entropy.service.order.boboo.auto;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
@@ -8,6 +8,7 @@ import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
+import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.EntropyRandomUtils;

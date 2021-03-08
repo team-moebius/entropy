@@ -10,6 +10,7 @@ import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.repository.TradeWindowRepository
 import com.moebius.entropy.service.order.OrderService
+import com.moebius.entropy.service.order.boboo.ManualOrderMakerService
 import com.moebius.entropy.util.EntropyRandomUtils
 import org.apache.commons.lang3.tuple.Pair
 import reactor.core.publisher.Mono

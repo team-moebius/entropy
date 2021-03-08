@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.trade.manual;
+package com.moebius.entropy.service.order.boboo;
 
 import com.moebius.entropy.domain.ManualOrderMakingRequest;
 import com.moebius.entropy.domain.ManualOrderResult;

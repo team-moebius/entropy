@@ -1,8 +1,9 @@
-package com.moebius.entropy.service.order.boboo;
+package com.moebius.entropy.service.order.boboo.auto;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
+import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
