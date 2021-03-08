@@ -76,14 +76,14 @@ public class BobooOrderService implements OrderService {
 
     public Mono<Order> cancelOrder(Order order){
         return Optional.ofNullable(order)
-                .filter(requestedOrder->getAllOrdersForMarket(order.getMarket().getSymbol())
+                .filter(requestedOrder -> getAllOrdersForMarket(order.getMarket().getSymbol())
                         .stream()
                         .filter(Objects::nonNull)
                         .anyMatch(trackedOrder->trackedOrder.getOrderId().equals(order.getOrderId()))
                 )
                 .map(assembler::convertToCancelRequest)
                 .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
-                .map(cancelMono->cancelMono
+                .map(cancelMono -> cancelMono
                         .map(bobooCancelResponse -> order)
                         .doOnSuccess(this::releaseOrderFromTracking)
                 )

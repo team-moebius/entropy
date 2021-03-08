@@ -29,8 +29,8 @@ exchange:
       params:
         binary: false
     apikey:
-      accessKey: F79TPmXdh7KN3ICtllUYfan4hspMltBRme4ZqERnbQXermhajwUFX3xDUVweIJHv
-      secretKey: aXxqQwIDWYuMsMPkg91t5Q4OheT5ATchpHNpLeiLlNsertlyvIYKkZOmYSiOJwX4
+      accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO
+      secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq
     receiveTimeWindow: 5000
 
 reactor:
