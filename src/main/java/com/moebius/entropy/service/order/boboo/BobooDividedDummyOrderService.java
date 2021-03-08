@@ -32,8 +32,8 @@ import java.util.stream.IntStream;
 @Service
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
-	private static final String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
-	private static final long DEFAULT_DELAY = 300;
+	private final static String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
+	private final static long DEFAULT_DELAY = 300;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;

@@ -28,8 +28,8 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class BobooRepeatMarketOrderService {
-	private static final String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
-	private static final int DECIMAL_POSITION = 2;
+	private final static String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
+	private final static int DECIMAL_POSITION = 1;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;

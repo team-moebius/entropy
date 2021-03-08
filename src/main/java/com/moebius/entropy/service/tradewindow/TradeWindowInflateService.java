@@ -28,8 +28,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TradeWindowInflateService {
 
-    private static final int START_FROM_MARKET_PRICE = 0;
-    private static final int START_FROM_NEXT_PRICE = 1;
+    private final static int START_FROM_MARKET_PRICE = 0;
+    private final static int START_FROM_NEXT_PRICE = 1;
 
     private final TradeWindowQueryService tradeWindowQueryService;
     private final InflationConfigRepository inflationConfigRepository;

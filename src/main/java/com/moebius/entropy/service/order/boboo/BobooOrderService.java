@@ -123,7 +123,7 @@ public class BobooOrderService implements OrderService {
         Optional.ofNullable(disposableOrderRepository.get(disposableId))
             .ifPresent(disposables -> disposables.forEach(Disposable::dispose));
 
-        log.info("[DummyOrder] Succeeded to stop dummy orders. [{}]", disposableId);
+        log.info("Succeeded in stopping order service. [{}]", disposableId);
         return Mono.just(ResponseEntity.ok(disposableId));
     }
 

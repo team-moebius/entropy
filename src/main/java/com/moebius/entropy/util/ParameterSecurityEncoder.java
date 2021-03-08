@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ParameterSecurityEncoder {
-	private static final String SIGNATURE_HASH_ALGORITHM = "HmacSHA256";
-	private static final String QUERY_PARAMETER_FORMAT = "%s=%s";
-	private static final String QUERY_PARAMETER_SEPARATOR = "&";
+	private final static String SIGNATURE_HASH_ALGORITHM = "HmacSHA256";
+	private final static String QUERY_PARAMETER_FORMAT = "%s=%s";
+	private final static String QUERY_PARAMETER_SEPARATOR = "&";
 
 	public static String encodeParameters(MultiValueMap<String, String> queryParams,
 		MultiValueMap<String, String> bodyValues,
