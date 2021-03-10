@@ -49,6 +49,7 @@ public class EntropyViewService {
 
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
+        // FIXME : optimize orders is not working ...
         return optimizeOrderService.optimizeOrders(market)
             .then(Mono.zip(
                 Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
