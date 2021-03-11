@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -44,29 +46,34 @@ public class BobooOrderService implements OrderService {
         apiKeyDto = ApiKeyDto.builder().accessKey(accessKey).secretKey(secretKey).build();
     }
 
-    public Flux<Order> fetchAutomaticOrdersFor(Market market){
+    public Flux<Order> fetchAutomaticOrdersFor(Market market) {
         return fetchAllOrdersFor(market)
                 .filter(order -> automaticOrderIds.contains(order.getOrderId()));
     }
 
-    public Flux<Order> fetchManualOrdersFor(Market market){
+    public Flux<Order> fetchManualOrdersFor(Market market) {
         return fetchAllOrdersFor(market)
                 .filter(order -> !automaticOrderIds.contains(order.getOrderId()));
     }
 
-    public Flux<Order> fetchAllOrdersFor(Market market){
+    public Flux<Order> fetchAllOrdersFor(Market market) {
         return Flux.fromIterable(getAllOrdersForMarket(market.getSymbol()));
+    }
+
+    public Flux<Order> fetchOpenOrdersFor(Market market) {
+        return exchangeService.getOpenOrders(market.getSymbol(), apiKeyDto)
+            .map(assembler::convertExchangeOrder);
     }
 
     private List<Order> getAllOrdersForMarket(String symbol) {
         return orderListForSymbol.getOrDefault(symbol, Collections.emptyList());
     }
 
-    public Mono<Order> requestOrder(OrderRequest orderRequest){
+    public Mono<Order> requestOrder(OrderRequest orderRequest) {
         return requestOrderWith(orderRequest, this::trackOrderAsAutomaticOrder);
     }
 
-    public Mono<Order> requestManualOrder(OrderRequest orderRequest){
+    public Mono<Order> requestManualOrder(OrderRequest orderRequest) {
         return requestOrderWith(orderRequest, this::trackOrder);
     }
 
@@ -74,13 +81,8 @@ public class BobooOrderService implements OrderService {
         return requestOrderWith(orderRequest, order -> {});
     }
 
-    public Mono<Order> cancelOrder(Order order){
+    public Mono<Order> cancelOrder(Order order) {
         return Optional.ofNullable(order)
-                .filter(requestedOrder -> getAllOrdersForMarket(order.getMarket().getSymbol())
-                        .stream()
-                        .filter(Objects::nonNull)
-                        .anyMatch(trackedOrder->trackedOrder.getOrderId().equals(order.getOrderId()))
-                )
                 .map(assembler::convertToCancelRequest)
                 .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
                 .map(cancelMono -> cancelMono
@@ -154,8 +156,10 @@ public class BobooOrderService implements OrderService {
     private void releaseOrderFromTracking(Order order){
         automaticOrderIds.remove(order.getOrderId());
         orderListForSymbol.computeIfPresent(order.getMarket().getSymbol(), (symbol, orders) -> {
-            orders.removeIf(trackedOrder -> trackedOrder != null && trackedOrder.getOrderId().equals(order.getOrderId()));
-            return orders;
+            List<Order> nonNullOrders = orders.stream().filter(Objects::nonNull)
+                .collect(Collectors.toList());
+            nonNullOrders.removeIf(trackedOrder -> trackedOrder.getOrderId().equals(order.getOrderId()));
+            return nonNullOrders;
         });
         log.info("[OrderTrack] Succeeded in releasing order from tracking. [{}]", order);
     }

@@ -61,7 +61,7 @@ public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<Boboo
                         bobooOpenOrdersDto.getInternalId(),
                         SymbolUtil.marketFromSymbol(bobooOpenOrdersDto.getSymbol()),
                         OrderUtil.resolveFromOrderSide(bobooOpenOrdersDto.getOrderSide()),
-                        BigDecimal.valueOf(bobooOpenOrdersDto.getPrice()),
+                        bobooOpenOrdersDto.getPrice(),
                         calculateRemainVolume(bobooOpenOrdersDto.getOriginalQuantity(), bobooOpenOrdersDto.getExecutedQuantity())
                 ))
                 .orElse(null);

@@ -35,7 +35,6 @@ public class BobooOpenOrderRefreshService {
                 .build();
     }
 
-    @Scheduled(cron = "0 * * * * *")
     public void refreshOpenOrderFromExchange(){
         log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
         Flux.fromIterable(trackingSymbols)
