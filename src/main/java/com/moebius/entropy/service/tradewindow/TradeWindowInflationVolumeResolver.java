@@ -69,7 +69,12 @@ public class TradeWindowInflationVolumeResolver {
 			dividedVolumes.add(dividedVolume);
 			inflationVolume = inflationVolume.subtract(dividedVolume);
 		}
-		dividedVolumes.add(inflationVolume);
+
+		if (inflationVolume.compareTo(BigDecimal.ONE) < 0) {
+			dividedVolumes.add(BigDecimal.ONE);
+		} else {
+			dividedVolumes.add(inflationVolume);
+		}
 
 		return dividedVolumes;
 	}

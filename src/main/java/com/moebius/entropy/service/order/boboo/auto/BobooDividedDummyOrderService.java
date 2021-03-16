@@ -118,8 +118,7 @@ public class BobooDividedDummyOrderService {
 			.delayElement(Duration.ofMillis(delay))
 			.flatMap(orderService::cancelOrderWithoutTracking)
 			.doOnError(throwable -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()))
-			.retry(3);
+				((WebClientResponseException) throwable).getResponseBodyAsString()));
 	}
 
 	private long getDividedDelay(DividedDummyOrderDto dto, OrderPosition orderPosition) {

@@ -110,10 +110,6 @@ public class BobooRepeatMarketOrderService {
 				.repeat(reorderCount - 1)
 				.flatMap(orderService::requestOrderWithoutTracking)
 				.delayElements(finalOrderDuration)
-				.doOnNext(order -> log.info(
-					"[RepeatMarketOrder] Succeeded in requesting market order. [orderRequest: {} | orderDuration : {}]",
-					finalOrderRequest,
-					finalOrderDuration.toMillis()))
 				.doOnError(throwable -> log.error("[RepeatMarketOrder] Failed to request market order. {}]",
 					((WebClientResponseException) throwable).getResponseBodyAsString()))
 				.subscribe();
