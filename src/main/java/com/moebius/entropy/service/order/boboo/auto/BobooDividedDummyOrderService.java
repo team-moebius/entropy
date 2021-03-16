@@ -20,10 +20,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.SynchronousSink;
-import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +35,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
-	private final static long DEFAULT_DELAY = 300;
+	private final static long DEFAULT_DELAY = 1000L;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -59,10 +58,15 @@ public class BobooDividedDummyOrderService {
 		Map<Float, OrderPosition> priceToPositions = getPriceToPositions(inflationConfig, marketDto);
 		List<Disposable> disposables = priceToPositions.entrySet().stream()
 			.map(entry -> getDividedOrderRequestsFlux(dividedDummyOrderDto, entry.getKey(), entry.getValue()))
-			.map(orderRequestFlux -> orderRequestFlux
-				.subscribeOn(Schedulers.parallel())
-				.flatMap(orderRequest -> requestDummyOrder(orderRequest, getDividedDelay(dividedDummyOrderDto, orderRequest.getOrderPosition())))
-				.subscribe())
+			.map(orderRequestFlux -> {
+				try {
+					Thread.sleep(DEFAULT_DELAY);
+				} catch (InterruptedException e) {
+					log.error("Failed when waiting for subscribing dummy orders.", e);
+				}
+				return orderRequestFlux
+					.flatMap(orderRequest -> requestAndCancelDummyOrder(orderRequest, getDividedDelay(dividedDummyOrderDto, orderRequest.getOrderPosition())))
+					.subscribe(); })
 			.collect(Collectors.toList());
 
 		String disposableId = marketDto.getExchange() + "-" + marketDto.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
@@ -89,20 +93,27 @@ public class BobooDividedDummyOrderService {
 	}
 
 	private Flux<OrderRequest> getDividedOrderRequestsFlux(DividedDummyOrderDto dto, float price, OrderPosition orderPosition) {
-		return Flux.generate((SynchronousSink<OrderRequest> sink) ->
-			volumeResolver.getDividedVolume(dto, orderPosition)
-				// FIXME : change this sink to single one from multiple one in repeat form
-				.forEach(volume -> sink.next(new OrderRequest(dto.getMarket().toDomainEntity(), orderPosition, BigDecimal.valueOf(price), volume))))
-			.delayElements(Duration.ofMillis(DEFAULT_DELAY));
+		DummyOrderConfig dummyOrderConfig;
+
+		if (orderPosition == OrderPosition.ASK) {
+			dummyOrderConfig = dto.getAskOrderConfig();
+		} else {
+			dummyOrderConfig = dto.getBidOrderConfig();
+		}
+
+		return Flux.interval(Duration.ZERO, Duration.ofMillis((long) dummyOrderConfig.getPeriod() * 1000))
+			.flatMap(tick -> Flux.fromStream(volumeResolver.getDividedVolume(dto, orderPosition).stream()
+				.map(volume -> new OrderRequest(dto.getMarket().toDomainEntity(), orderPosition,
+					BigDecimal.valueOf(price).setScale(2, RoundingMode.HALF_UP), volume))));
 	}
 
-	private Mono<Order> requestDummyOrder(OrderRequest orderRequest, long delay) {
+	private Mono<Order> requestAndCancelDummyOrder(OrderRequest orderRequest, long delay) {
 		return orderService.requestOrderWithoutTracking(orderRequest)
-			.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. {}]",
+			.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElement(Duration.ofMillis(delay))
 			.flatMap(orderService::cancelOrderWithoutTracking)
-			.doOnError(throwable -> log.error("[DummyOrder] Failed to cancel dummy order. {}]",
+			.doOnError(throwable -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString()));
 	}
 
