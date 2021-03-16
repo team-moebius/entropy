@@ -8,9 +8,9 @@ import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
-import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
+import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.order.boboo.BobooRepeatMarketOrderService;
+import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService;
 import com.moebius.entropy.util.OrderIdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class BobooController {
 	/**
 	 * Sample request for testing
 	 *
-	 * POST /boboo/open-orders?symbol=GTAXUSDT HTTP/1.1
+	 * POST /boboo/open-orders?symbol=GTAX2USDT HTTP/1.1
 	 * Host: 127.0.0.1:8080
 	 * Content-Type: application/json
 	 *

@@ -29,8 +29,8 @@ exchange:
       params:
         binary: false
     apikey:
-      accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO # GTAX : ulty827N2vakJap9OdAAejTe7VwykXxUplXSbPGhkLq5r5ImeXACdcr3pZhl6inF
-      secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq # GTAX : QCzWtRLiuB1vyd1wrmcpZ7m2HywSzasGhQv0olXvUXxpezNhn9RQwFnW2nWYX6lH
+      accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO
+      secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq
     receiveTimeWindow: 5000
 
 reactor:

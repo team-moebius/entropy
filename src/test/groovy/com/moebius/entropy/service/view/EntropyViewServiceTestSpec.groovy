@@ -16,10 +16,10 @@ import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.dto.view.ManualOrderForm
 import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.repository.InflationConfigRepository
-import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService
+import com.moebius.entropy.service.order.boboo.ManualOrderMakerService
+import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
-import com.moebius.entropy.service.order.boboo.BobooRepeatMarketOrderService
-import com.moebius.entropy.service.trade.manual.ManualOrderMakerService
+import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService
 import org.apache.commons.collections4.CollectionUtils
 import org.springframework.http.ResponseEntity

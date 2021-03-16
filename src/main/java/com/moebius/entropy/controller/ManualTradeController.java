@@ -3,7 +3,7 @@ package com.moebius.entropy.controller;
 import com.moebius.entropy.assembler.ManualOrderAssembler;
 import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.dto.order.ManualOrderRequestDto;
-import com.moebius.entropy.service.trade.manual.ManualOrderMakerService;
+import com.moebius.entropy.service.order.boboo.ManualOrderMakerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;

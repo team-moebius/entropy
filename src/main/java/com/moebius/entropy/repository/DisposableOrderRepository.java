@@ -31,4 +31,12 @@ public class DisposableOrderRepository {
 	public List<String> getAll() {
 		return new ArrayList<>(disposableOrders.keySet());
 	}
+
+	public void setAll(String disposableId, List<Disposable> disposables) {
+		List<Disposable> fetchedDisposables = disposableOrders.getOrDefault(disposableId, new ArrayList<>());
+		fetchedDisposables.addAll(disposables);
+
+		disposableOrders.put(disposableId, fetchedDisposables);
+		log.info("[DisposableOrder] Succeeded in setting disposable orders info. [{}]", disposableId);
+	}
 }

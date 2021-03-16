@@ -5,23 +5,16 @@ import com.moebius.entropy.assembler.ManualOrderRequestAssembler;
 import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
-import com.moebius.entropy.dto.view.AutomaticOrderCancelForm;
-import com.moebius.entropy.dto.view.AutomaticOrderCancelResult;
-import com.moebius.entropy.dto.view.AutomaticOrderForm;
-import com.moebius.entropy.dto.view.AutomaticOrderResult;
-import com.moebius.entropy.dto.view.ManualOrderForm;
-import com.moebius.entropy.dto.view.MarketPriceDto;
+import com.moebius.entropy.dto.view.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
-import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService;
+import com.moebius.entropy.service.order.boboo.ManualOrderMakerService;
+import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService;
+import com.moebius.entropy.service.order.boboo.auto.BobooOptimizeOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.order.boboo.BobooRepeatMarketOrderService;
-import com.moebius.entropy.service.trade.manual.ManualOrderMakerService;
+import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.SymbolUtil;
-import java.time.Duration;
-import java.util.Objects;
-import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
@@ -30,6 +23,10 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.validation.Valid;
+import java.time.Duration;
+import java.util.Objects;
+
 @Service
 @RequiredArgsConstructor
 public class EntropyViewService {
@@ -37,6 +34,7 @@ public class EntropyViewService {
     private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
     private final BobooDividedDummyOrderService dividedDummyOrderService;
     private final BobooRepeatMarketOrderService repeatMarketOrderService;
+    private final BobooOptimizeOrderService optimizeOrderService;
     private final InflationConfigRepository inflationConfigRepository;
     private final BobooOrderService bobooOrderService;
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
@@ -51,17 +49,18 @@ public class EntropyViewService {
 
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
-        return Mono.zip(
-            Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
-            Mono.just(automaticOrderViewAssembler.assembleRepeatMarketOrder(market, automaticOrderForm)))
-            .flatMapMany(tuple -> Flux.merge(dividedDummyOrderService.executeDividedDummyOrders(tuple.getT1())
-                .map(HttpEntity::getBody)
-                .map(String::valueOf),
-            repeatMarketOrderService.executeRepeatMarketOrders(tuple.getT2())
-                .map(HttpEntity::getBody)
-                .map(String::valueOf)))
-            .collectList()
-            .map(automaticOrderViewAssembler::assembleAutomaticOrderResult);
+        return optimizeOrderService.optimizeOrders(market)
+            .then(Mono.zip(
+                Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
+                Mono.just(automaticOrderViewAssembler.assembleRepeatMarketOrder(market, automaticOrderForm)))
+                .flatMapMany(tuple -> Flux.merge(dividedDummyOrderService.executeDividedDummyOrders(tuple.getT1())
+                        .map(HttpEntity::getBody)
+                        .map(String::valueOf),
+                    repeatMarketOrderService.executeRepeatMarketOrders(tuple.getT2())
+                        .map(HttpEntity::getBody)
+                        .map(String::valueOf)))
+                .collectList()
+                .map(automaticOrderViewAssembler::assembleAutomaticOrderResult));
     }
 
     public Mono<AutomaticOrderCancelResult> cancelAutomaticOrder(

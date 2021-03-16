@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.order.boboo;
+package com.moebius.entropy.service.order.boboo.auto;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.OrderPosition;
@@ -8,6 +8,7 @@ import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderResponseDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
+import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.EntropyRandomUtils;
@@ -28,8 +29,8 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class BobooRepeatMarketOrderService {
-	private static final String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
-	private static final int DECIMAL_POSITION = 1;
+	private final static String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
+	private final static int DECIMAL_POSITION = 1;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -60,8 +61,8 @@ public class BobooRepeatMarketOrderService {
 			.flatMap(tick -> executeMarketOrders(repeatMarketOrderDto, OrderPosition.BID))
 			.subscribe();
 
-		String askOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "ASK" + DISPOSABLE_ID_POSTFIX;
-		String bidOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "BID" + DISPOSABLE_ID_POSTFIX;
+		String askOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "ASK-" + DISPOSABLE_ID_POSTFIX;
+		String bidOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "BID-" + DISPOSABLE_ID_POSTFIX;
 
 		disposableOrderRepository.set(askOrderDisposableId, askOrderDisposable);
 		disposableOrderRepository.set(bidOrderDisposableId, bidOrderDisposable);
