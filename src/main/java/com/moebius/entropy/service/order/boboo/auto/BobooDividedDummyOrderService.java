@@ -113,13 +113,13 @@ public class BobooDividedDummyOrderService {
 	private Mono<Order> requestAndCancelDummyOrder(OrderRequest orderRequest, long delay) {
 		log.info("[DummyOrder] Start to request and cancel dummy order. [{}]", orderRequest);
 		return orderService.requestOrderWithoutTracking(orderRequest)
-			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to request dummy order. [order : {} / reason : {}]",
-				order, ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. [{}]",
+				((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElement(Duration.ofMillis(delay))
 			.flatMap(orderService::cancelOrderWithoutTracking)
-			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [order : {} / reason : {}]",
-				order, ((WebClientResponseException) throwable).getResponseBodyAsString()));
-
+			.doOnError(throwable -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]",
+				((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.retry(3);
 	}
 
 	private long getDividedDelay(DividedDummyOrderDto dto, OrderPosition orderPosition) {
