@@ -66,8 +66,10 @@ public class BobooDividedDummyOrderService {
 				}
 				return orderRequestFlux
 					.delayElements(Duration.ofMillis(DEFAULT_DELAY))
-					.flatMap(orderRequest -> requestAndCancelDummyOrder(orderRequest, getDividedDelay(dividedDummyOrderDto, orderRequest.getOrderPosition())))
-					.subscribe(); })
+					.flatMap(orderRequest -> requestAndCancelDummyOrder(orderRequest,
+						getDividedDelay(dividedDummyOrderDto, orderRequest.getOrderPosition())))
+					.subscribe();
+			})
 			.collect(Collectors.toList());
 
 		String disposableId = marketDto.getExchange() + "-" + marketDto.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
@@ -111,13 +113,13 @@ public class BobooDividedDummyOrderService {
 	private Mono<Order> requestAndCancelDummyOrder(OrderRequest orderRequest, long delay) {
 		log.info("[DummyOrder] Start to request and cancel dummy order. [{}]", orderRequest);
 		return orderService.requestOrderWithoutTracking(orderRequest)
-			.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to request dummy order. [order : {} / reason : {}]",
+				order, ((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElement(Duration.ofMillis(delay))
 			.flatMap(orderService::cancelOrderWithoutTracking)
-			.doOnError(throwable -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()))
-			.retry(3);
+			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [order : {} / reason : {}]",
+				order, ((WebClientResponseException) throwable).getResponseBodyAsString()));
+
 	}
 
 	private long getDividedDelay(DividedDummyOrderDto dto, OrderPosition orderPosition) {
