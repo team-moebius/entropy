@@ -65,6 +65,7 @@ public class BobooDividedDummyOrderService {
 					log.error("Failed when waiting for subscribing dummy orders.", e);
 				}
 				return orderRequestFlux
+					.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 					.flatMap(orderRequest -> requestAndCancelDummyOrder(orderRequest, getDividedDelay(dividedDummyOrderDto, orderRequest.getOrderPosition())))
 					.subscribe(); })
 			.collect(Collectors.toList());
@@ -108,6 +109,7 @@ public class BobooDividedDummyOrderService {
 	}
 
 	private Mono<Order> requestAndCancelDummyOrder(OrderRequest orderRequest, long delay) {
+		log.info("[DummyOrder] Start to request and cancel dummy order. [{}]", orderRequest);
 		return orderService.requestOrderWithoutTracking(orderRequest)
 			.doOnError(throwable -> log.error("[DummyOrder] Failed to request dummy order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString()))
