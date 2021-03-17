@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString
 public class RepeatMarketOrderDto {
 	private MarketDto market;
 	private RepeatMarketOrderConfig askOrderConfig;

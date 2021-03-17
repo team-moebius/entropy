@@ -56,18 +56,7 @@ public class ManualOrderMakerService {
                 .onErrorContinue((throwable, orderRequest) -> log.warn(
                         "[ManualOrder] Failed to request Order with {}, {}", orderRequest, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable
                 ))
-                .flatMap(order -> {
-                    if (order.getVolume().compareTo(BigDecimal.ZERO) > 0) {
-                        return orderService.cancelOrder(order)
-                                .onErrorResume((throwable) -> {
-                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}, {}", order, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable);
-                                    return Mono.empty();
-                                })
-                            .map(cancelledOrder -> Pair.of(order, cancelledOrder));
-                    } else {
-                        return Mono.just(Pair.of(order, null));
-                    }
-                })
+                .flatMap(order -> Mono.just(Pair.of(order, null)))
             .collectList()
             .map(this::makeResult);
     }
@@ -78,7 +67,7 @@ public class ManualOrderMakerService {
             request.getRequestedVolumeTo().floatValue(), DECIMAL_POSITION);
     }
 
-    private ManualOrderResult makeResult(List<Pair<Order, ?>> pairs) {
+    private ManualOrderResult makeResult(List<Pair<Order, Object>> pairs) {
         List<Order> requestedOrders = pairs.stream()
             .map(Pair::getLeft)
             .filter(Objects::nonNull)

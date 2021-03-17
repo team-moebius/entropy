@@ -67,6 +67,7 @@ public class BobooRepeatMarketOrderService {
 		disposableOrderRepository.set(askOrderDisposableId, askOrderDisposable);
 		disposableOrderRepository.set(bidOrderDisposableId, bidOrderDisposable);
 
+		log.info("[RepeatMarketOrder] Started to repeat market order. [{}]", repeatMarketOrderDto);
 		return Mono.just(ResponseEntity.ok(RepeatMarketOrderResponseDto.builder()
 			.askOrderDisposableId(askOrderDisposableId)
 			.bidOrderDisposableId(bidOrderDisposableId)

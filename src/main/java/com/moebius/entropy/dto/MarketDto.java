@@ -9,6 +9,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString
 public class MarketDto {
 	private Exchange exchange;
 	private String symbol;
