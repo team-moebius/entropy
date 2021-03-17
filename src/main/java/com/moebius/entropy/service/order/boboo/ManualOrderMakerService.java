@@ -45,7 +45,7 @@ public class ManualOrderMakerService {
         if (OrderPosition.ASK.equals(orderPosition)) {
             marketPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
         }
-        log.info("[ManualOrder] Started to request Order symbol:{}, position: {}, quantities:{}",
+        log.info("[ManualOrder] Started to request Order [symbol={}, position={}, quantities={}]",
                 market.getSymbol(), orderPosition, randomVolumes);
 
         BigDecimal finalMarketPrice = marketPrice;
