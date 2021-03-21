@@ -95,14 +95,13 @@ public class BobooExchangeService implements ExchangeService<
 
 	@Override
 	public void inflateOrdersByOrderBook(String symbol) {
-		log.info("[Boboo] Start to inflate {} orders by current order book.", symbol);
 		webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive().map(bobooAssembler::assembleOrderBookDto))
 				.publishOn(Schedulers.parallel())
 				.doOnNext(tradeWindowEventListener::inflateOrdersOnTradeWindowChange)
-				.then()
-				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol)))
+				.then())
+			.doOnTerminate(() -> inflateOrdersByOrderBook(symbol))
 			.subscribe();
 	}
 }
