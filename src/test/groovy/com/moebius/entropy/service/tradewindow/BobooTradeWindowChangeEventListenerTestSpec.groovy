@@ -3,13 +3,11 @@ package com.moebius.entropy.service.tradewindow
 import com.moebius.entropy.assembler.TradeWindowAssembler
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
-import com.moebius.entropy.domain.inflate.InflateRequest
 import com.moebius.entropy.domain.inflate.InflationResult
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradeWindow
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
 import reactor.core.publisher.Mono
-import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -36,11 +34,11 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
         assembler.extractMarketPrice(orderBook) >> marketPrice
 
         when:
-        sut.inflateOnTradeWindowChange(orderBook)
+        sut.inflateOrdersOnTradeWindowChange(orderBook)
 
         then:
         1 * commandService.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
-        1 * inflateService.inflateTrades({ it.market == market }) >> Mono.just(Stub(InflationResult))
+        1 * inflateService.inflateOrders({ it.market == market }) >> Mono.just(Stub(InflationResult))
     }
 
     def "On failed to change on trade window"() {
@@ -53,10 +51,10 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
         assembler.extractMarketPrice(orderBook) >> marketPrice
 
         when:
-        sut.inflateOnTradeWindowChange(orderBook)
+        sut.inflateOrdersOnTradeWindowChange(orderBook)
 
         then:
         0 * commandService.saveCurrentTradeWindow(_, _, _)
-        0 * inflateService.inflateTrades(_)
+        0 * inflateService.inflateOrders(_)
     }
 }

@@ -122,7 +122,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         }).collect(Collectors.toList())
 
         expect:
-        StepVerifier.create(sut.inflateTrades(inflateRequest))
+        StepVerifier.create(sut.inflateOrders(inflateRequest))
                 .assertNext({
                     println("Case: " + comment)
                     println("Ask Orders should be made" + madeAskedPrices)

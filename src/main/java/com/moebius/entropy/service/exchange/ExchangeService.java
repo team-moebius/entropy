@@ -8,5 +8,5 @@ public interface ExchangeService<CANCEL_REQ, CANCEL_RES, ORDER_REQ, ORDER_RES, O
 	Flux<ORDERS> getOpenOrders(String symbol, ApiKeyDto apiKey);
 	Mono<CANCEL_RES> cancelOrder(CANCEL_REQ cancelRequest, ApiKeyDto apiKey);
 	Mono<ORDER_RES> requestOrder(ORDER_REQ orderRequest, ApiKeyDto apiKey);
-	void getAndUpdateByOrderBook(String symbol);
+	void inflateOrdersByOrderBook(String symbol);
 }

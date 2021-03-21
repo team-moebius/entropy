@@ -9,6 +9,7 @@ import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import com.moebius.entropy.service.order.OrderService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -85,8 +86,7 @@ public class BobooOrderService implements OrderService {
                 .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
                 .map(cancelMono -> cancelMono
                         .map(bobooCancelResponse -> order)
-                        .doOnSuccess(this::releaseOrderFromTracking)
-                )
+                        .doOnSuccess(this::releaseOrderFromTracking))
                 .orElse(Mono.empty());
     }
 
@@ -154,10 +154,10 @@ public class BobooOrderService implements OrderService {
     private void releaseOrderFromTracking(Order order){
         automaticOrderIds.remove(order.getOrderId());
         orderListForSymbol.computeIfPresent(order.getMarket().getSymbol(), (symbol, orders) -> {
-            List<Order> nonNullOrders = orders.stream().filter(Objects::nonNull)
-                .collect(Collectors.toList());
-            nonNullOrders.removeIf(trackedOrder -> trackedOrder.getOrderId().equals(order.getOrderId()));
-            return nonNullOrders;
+            if (CollectionUtils.isNotEmpty(orders)) {
+                orders.removeIf(trackedOrder -> trackedOrder.getOrderId().equals(order.getOrderId()));
+            }
+            return orders;
         });
         log.info("[OrderTrack] Succeeded in releasing order from tracking. [{}]", order);
     }

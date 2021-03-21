@@ -34,8 +34,7 @@ public class BobooOptimizeOrderService {
 			.filter(order -> order.getPrice().compareTo(marketPrice) == 0 || order.getPrice().compareTo(highestBidPrice) == 0)
 			.flatMap(order -> orderService.requestOrder(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
 				volumeResolver.getInflationVolume(market, order.getOrderPosition()))))
-			.doOnError(throwable -> log.error("[OptimizeOrder] Failed to cancel existent order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.doOnError(throwable -> log.error("[OptimizeOrder] Failed to cancel existent order.", throwable))
 			.retry(3);
 	}
 }
