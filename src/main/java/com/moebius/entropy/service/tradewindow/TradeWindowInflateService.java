@@ -62,7 +62,8 @@ public class TradeWindowInflateService {
 				Flux<Order> cancelledOrders = cancelInvalidOrders(market, inflationConfig);
 
 				return collectResult(createdOrders, cancelledOrders);
-			});
+			})
+			.onErrorContinue((throwable, inflationResult) -> log.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
 	}
 
 	private Flux<OrderRequest> generateRequiredOrderRequest(
