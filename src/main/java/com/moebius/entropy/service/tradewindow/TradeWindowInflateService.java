@@ -16,11 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.*;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
@@ -54,22 +52,15 @@ public class TradeWindowInflateService {
 
 		return tradeWindowQueryService.fetchTradeWindow(market)
 			.flatMap(tradeWindow -> {
-				Flux<Order> createdOrders = generateRequiredOrderRequest(market, tradeWindow, inflationConfig)
-					.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Start to request order for inflation. [{}]", orderRequest))
-					.flatMap(orderService::requestOrder)
-					.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
-
+				Flux<Order> requestedOrders = requestRequiredOrders(market, tradeWindow, inflationConfig);
 				Flux<Order> cancelledOrders = cancelInvalidOrders(market, inflationConfig);
 
-				return collectResult(createdOrders, cancelledOrders);
+				return collectResult(requestedOrders, cancelledOrders);
 			})
 			.onErrorContinue((throwable, inflationResult) -> log.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
 	}
 
-	private Flux<OrderRequest> generateRequiredOrderRequest(
-		Market market, TradeWindow window, InflationConfig inflationConfig
-	) {
-
+	private Flux<Order> requestRequiredOrders(Market market, TradeWindow window, InflationConfig inflationConfig) {
 		Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
 			START_FROM_MARKET_PRICE, inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market,
 			OrderPosition.BID, BigDecimal::subtract,
@@ -79,7 +70,11 @@ public class TradeWindowInflateService {
 			START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market,
 			OrderPosition.ASK, BigDecimal::add,
 			window.getAskPrices());
-		return Flux.merge(bidRequestFlux, askRequestFlux);
+
+		return Flux.merge(bidRequestFlux, askRequestFlux)
+			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Start to request order for inflation. [{}]", orderRequest))
+			.flatMap(orderService::requestOrder)
+			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
 	}
 
 	private Flux<OrderRequest> makeOrderRequestWith(
