@@ -21,10 +21,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
-	private final static long DEFAULT_DELAY = 1000L;
+	private final static int DEFAULT_DELAY = 300;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -56,14 +56,14 @@ public class BobooDividedDummyOrderService {
 		}
 
 		Disposable disposable = getDummyOrderRequestsPeriodicFlux(dividedDummyOrderDto)
-			.subscribeOn(Schedulers.parallel())
 			.subscribe(dummyOrderRequests -> dummyOrderRequests.forEach(dummyOrderRequest -> {
 				try {
 					Thread.sleep(DEFAULT_DELAY);
 				} catch (InterruptedException e) {
-					log.error("Failed when waiting for subscribing dummy orders.", e);
+					log.warn("Canceled the subscription and interrupted requesting / canceling dummy orders.");
 				}
-				requestAndCancelDummyOrder(dummyOrderRequest).subscribe();
+				requestAndCancelDummyOrder(dummyOrderRequest)
+					.subscribe();
 			}));
 
 		String disposableId = marketDto.getExchange() + "-" + marketDto.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
@@ -75,7 +75,12 @@ public class BobooDividedDummyOrderService {
 		Duration totalDuration = getTotalDuration(dto);
 
 		return Flux.interval(Duration.ZERO, totalDuration)
-			.map(tick -> getDummyOrderRequests(dto));
+			.map(tick -> {
+				List<DummyOrderRequest> dummyOrderRequests = getDummyOrderRequests(dto);
+				Collections.shuffle(dummyOrderRequests);
+
+				return dummyOrderRequests;
+			});
 	}
 
 	private Duration getTotalDuration(DividedDummyOrderDto dto) {
@@ -83,8 +88,10 @@ public class BobooDividedDummyOrderService {
 		DummyOrderConfig askOrderConfig = dto.getAskOrderConfig();
 		DummyOrderConfig bidOrderConfig = dto.getBidOrderConfig();
 
-		return Duration.ofMillis((long) (Math.max(askOrderConfig.getPeriod(), bidOrderConfig.getPeriod()) + (inflationConfig.getAskCount()
-			+ inflationConfig.getBidCount())) * DEFAULT_DELAY);
+		return Duration.ofMillis(
+			(long) (askOrderConfig.getPeriod() * inflationConfig.getAskCount() +
+				bidOrderConfig.getPeriod() * inflationConfig.getBidCount()) +
+				DEFAULT_DELAY * (inflationConfig.getAskCount() + inflationConfig.getBidCount()) / 2);
 	}
 
 	private List<DummyOrderRequest> getDummyOrderRequests(DividedDummyOrderDto dto) {
@@ -141,21 +148,19 @@ public class BobooDividedDummyOrderService {
 			reorderCount = 1;
 		}
 
-		return Duration.ofMillis((long) dummyOrderConfig.getPeriod() * 500 / reorderCount);
+		return Duration.ofMillis((long) dummyOrderConfig.getPeriod() * 1000 / reorderCount);
 	}
 
 	private Flux<Order> requestAndCancelDummyOrder(DummyOrderRequest dummyOrderRequest) {
 		return Flux.range(0, dummyOrderRequest.getReorderCount())
 			.flatMapIterable(count -> dummyOrderRequest.getOrderRequests())
 			.flatMap(orderService::requestOrderWithoutTracking)
-			.doOnNext(order -> log.info("[DummyOrder] Succeeded to request dummy order. [{}]", order))
 			.doOnError(throwable -> log.warn("[DummyOrder] Failed to request dummy order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElements(dummyOrderRequest.getDelay())
 			.flatMap(orderService::cancelOrderWithoutTracking)
-			.delayElements(dummyOrderRequest.getDelay())
-			.doOnNext(order -> log.info("[DummyOrder] Succeeded to cancel dummy order. [{}]", order))
 			.doOnError(throwable -> log.warn("[DummyOrder] Failed to cancel dummy order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()));
+				((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.doOnComplete(() -> log.info("[DummyOrder] Completed to request & cancel dummy orders. [{}]", dummyOrderRequest));
 	}
 }
