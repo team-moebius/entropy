@@ -43,21 +43,22 @@ public class TradeWindowInflateService {
 		windowChangeEventListener.setTradeWindowInflateService(this);
 	}
 
-	public Mono<InflationResult> inflateOrders(InflateRequest inflateRequest) {
+	public Flux<Order> inflateOrders(InflateRequest inflateRequest) {
 		Market market = inflateRequest.getMarket();
 		InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(market);
 		if (!inflationConfig.isEnable()) {
-			return Mono.empty();
+			log.warn("[TradeWindowInflation] There is no enabled inflation config for [{}].", inflateRequest.getMarket());
+			return Flux.empty();
 		}
 
 		return tradeWindowQueryService.fetchTradeWindow(market)
-			.flatMap(tradeWindow -> {
-				Flux<Order> requestedOrders = requestRequiredOrders(market, tradeWindow, inflationConfig);
-				Flux<Order> cancelledOrders = cancelInvalidOrders(market, inflationConfig);
+			.flatMapMany(tradeWindow -> {
+				Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow, inflationConfig);
+				Flux<Order> cancelOrderFlux = cancelInvalidOrders(market, inflationConfig);
 
-				return collectResult(requestedOrders, cancelledOrders);
+				return Flux.merge(requestOrderFlux, cancelOrderFlux);
 			})
-			.onErrorContinue((throwable, inflationResult) -> log.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
+			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to collect order result. [{}]", order, throwable));
 	}
 
 	private Flux<Order> requestRequiredOrders(Market market, TradeWindow window, InflationConfig inflationConfig) {
@@ -72,9 +73,9 @@ public class TradeWindowInflateService {
 			window.getAskPrices());
 
 		return Flux.merge(bidRequestFlux, askRequestFlux)
-			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Start to request order for inflation. [{}]", orderRequest))
+			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order requests for inflation. [{}]", orderRequest))
 			.flatMap(orderService::requestOrder)
-			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
+			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to request order. [{}]", order, throwable));
 	}
 
 	private Flux<OrderRequest> makeOrderRequestWith(
@@ -110,8 +111,7 @@ public class TradeWindowInflateService {
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
 		BigDecimal maxAskPrice = marketPrice.add(
-			priceUnit
-				.multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
+			priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
 		);
 
 		BigDecimal minBidPrice = marketPrice.subtract(
@@ -127,33 +127,8 @@ public class TradeWindowInflateService {
 					return orderPrice.compareTo(minBidPrice) < 0;
 				}
 			})
+			.doOnNext(order -> log.info("[TradeWindowInflation] Create order cancellations for inflation. [{}]", order))
 			.flatMap(orderService::cancelOrder)
 			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
-	}
-
-	private Mono<InflationResult> collectResult(Flux<Order> createdOrders,
-		Flux<Order> cancelledOrders) {
-		return Mono.zip(
-			createdOrders.collectMultimap(Order::getOrderPosition, Order::getPrice),
-			cancelledOrders.collectMultimap(Order::getOrderPosition, Order::getPrice)
-		).map(resultsTuple -> {
-			Map<OrderPosition, Collection<BigDecimal>> createdOrderByType = resultsTuple.getT1();
-			Map<OrderPosition, Collection<BigDecimal>> cancelledOrderByType = resultsTuple.getT2();
-			return new InflationResult(
-				getPrices(createdOrderByType, OrderPosition.ASK),
-				getPrices(createdOrderByType, OrderPosition.BID),
-				getPrices(cancelledOrderByType, OrderPosition.ASK),
-				getPrices(cancelledOrderByType, OrderPosition.BID)
-			);
-		});
-	}
-
-	private List<BigDecimal> getPrices(
-		Map<OrderPosition, Collection<BigDecimal>> pricesByType, OrderPosition orderPosition
-	) {
-		return new ArrayList<>(
-			pricesByType.getOrDefault(orderPosition, Collections.emptyList())
-		);
-
 	}
 }

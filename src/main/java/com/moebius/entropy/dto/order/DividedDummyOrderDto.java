@@ -1,7 +1,7 @@
 package com.moebius.entropy.dto.order;
 
 import com.moebius.entropy.domain.inflate.InflationConfig;
-import com.moebius.entropy.domain.order.DummyOrderConfig;
+import com.moebius.entropy.domain.order.config.DummyOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import lombok.*;
 

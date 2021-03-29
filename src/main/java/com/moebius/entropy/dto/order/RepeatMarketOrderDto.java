@@ -1,6 +1,6 @@
 package com.moebius.entropy.dto.order;
 
-import com.moebius.entropy.domain.order.RepeatMarketOrderConfig;
+import com.moebius.entropy.domain.order.config.RepeatMarketOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import lombok.*;
 

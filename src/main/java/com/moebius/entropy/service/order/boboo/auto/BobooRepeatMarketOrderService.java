@@ -1,9 +1,10 @@
 package com.moebius.entropy.service.order.boboo.auto;
 
 import com.moebius.entropy.domain.Market;
+import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
-import com.moebius.entropy.domain.order.RepeatMarketOrderConfig;
+import com.moebius.entropy.domain.order.config.RepeatMarketOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderResponseDto;
@@ -11,12 +12,10 @@ import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
-import com.moebius.entropy.util.EntropyRandomUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -36,7 +35,6 @@ public class BobooRepeatMarketOrderService {
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowInflationVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
-	private final EntropyRandomUtils randomUtils;
 
 	public Mono<ResponseEntity<?>> executeRepeatMarketOrders(RepeatMarketOrderDto repeatMarketOrderDto) {
 		if (repeatMarketOrderDto == null) {
@@ -53,12 +51,12 @@ public class BobooRepeatMarketOrderService {
 
 		Disposable askOrderDisposable = Flux.interval(Duration.ZERO, Duration.ofMillis((long) askOrderConfig.getPeriod() * 1000L))
 			.subscribeOn(Schedulers.parallel())
-			.flatMap(tick -> executeMarketOrders(repeatMarketOrderDto, OrderPosition.ASK))
+			.flatMap(tick -> getMarketOrderMono(repeatMarketOrderDto, OrderPosition.ASK))
 			.subscribe();
 
 		Disposable bidOrderDisposable = Flux.interval(Duration.ZERO, Duration.ofMillis((long) bidOrderConfig.getPeriod() * 1000L))
 			.subscribeOn(Schedulers.parallel())
-			.flatMap(tick -> executeMarketOrders(repeatMarketOrderDto, OrderPosition.BID))
+			.flatMap(tick -> getMarketOrderMono(repeatMarketOrderDto, OrderPosition.BID))
 			.subscribe();
 
 		String askOrderDisposableId = market.getExchange() + "-" + market.getSymbol() + "-" + "ASK-" + DISPOSABLE_ID_POSTFIX;
@@ -67,53 +65,42 @@ public class BobooRepeatMarketOrderService {
 		disposableOrderRepository.set(askOrderDisposableId, askOrderDisposable);
 		disposableOrderRepository.set(bidOrderDisposableId, bidOrderDisposable);
 
-		log.info("[RepeatMarketOrder] Started to repeat market order. [{}]", repeatMarketOrderDto);
 		return Mono.just(ResponseEntity.ok(RepeatMarketOrderResponseDto.builder()
 			.askOrderDisposableId(askOrderDisposableId)
 			.bidOrderDisposableId(bidOrderDisposableId)
 			.build()));
 	}
 
-	private Mono<Void> executeMarketOrders(RepeatMarketOrderDto repeatMarketOrderDto, OrderPosition orderPosition) {
-		return Mono.fromRunnable(() -> {
-			MarketDto marketDto = repeatMarketOrderDto.getMarket();
-			Market market = marketDto.toDomainEntity();
+	private Mono<Order> getMarketOrderMono(RepeatMarketOrderDto repeatMarketOrderDto, OrderPosition orderPosition) {
+		MarketDto marketDto = repeatMarketOrderDto.getMarket();
+		Market market = marketDto.toDomainEntity();
 
-			BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
-			BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
+		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
-			OrderRequest orderRequest = null;
-			int reorderCount = 0;
-			Duration orderDuration = Duration.ZERO;
+		OrderRequest orderRequest = null;
 
-			if (orderPosition == OrderPosition.ASK) {
-				RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
-				BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
-					DECIMAL_POSITION);
+		if (orderPosition == OrderPosition.ASK) {
+			RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
+			BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
+				DECIMAL_POSITION);
 
-				orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
-				reorderCount = randomUtils.getRandomInteger(askOrderConfig.getMinReorderCount(), askOrderConfig.getMaxReorderCount());
-				orderDuration = Duration.ofMillis((long) (askOrderConfig.getPeriod() / reorderCount * 1000));
-			} else if (orderPosition == OrderPosition.BID) {
-				RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
-				BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
-					DECIMAL_POSITION);
+			orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
+		} else if (orderPosition == OrderPosition.BID) {
+			RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
+			BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
+				DECIMAL_POSITION);
 
-				orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
-				reorderCount = randomUtils.getRandomInteger(bidOrderConfig.getMinReorderCount(), bidOrderConfig.getMaxReorderCount());
-				orderDuration = Duration.ofMillis((long) (bidOrderConfig.getPeriod() / reorderCount * 1000));
-			}
+			orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
+		}
 
-			final Duration finalOrderDuration = orderDuration;
-			final OrderRequest finalOrderRequest = orderRequest;
+		if (orderRequest == null) {
+			return Mono.empty();
+		}
 
-			Mono.just(finalOrderRequest)
-				.repeat(reorderCount - 1)
-				.flatMap(orderService::requestOrderWithoutTracking)
-				.delayElements(finalOrderDuration)
-				.doOnError(throwable -> log.error("[RepeatMarketOrder] Failed to request market order. {}]",
-					((WebClientResponseException) throwable).getResponseBodyAsString()))
-				.subscribe();
-		});
+		return Mono.just(orderRequest)
+			.flatMap(orderService::requestOrderWithoutTracking)
+			.doOnNext(order -> log.info("[RepeatMarketOrder] Create repeated market order request. [{}]", order))
+			.doOnError(throwable -> log.error("[RepeatMarketOrder] Failed to request market order.", throwable));
 	}
 }

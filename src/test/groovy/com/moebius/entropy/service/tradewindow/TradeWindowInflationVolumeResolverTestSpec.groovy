@@ -3,7 +3,7 @@ package com.moebius.entropy.service.tradewindow
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationConfig
-import com.moebius.entropy.domain.order.DummyOrderConfig
+import com.moebius.entropy.domain.order.config.DummyOrderConfig
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.order.DividedDummyOrderDto
