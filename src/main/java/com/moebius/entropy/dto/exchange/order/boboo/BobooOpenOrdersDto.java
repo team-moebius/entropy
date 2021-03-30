@@ -1,11 +1,14 @@
 package com.moebius.entropy.dto.exchange.order.boboo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.moebius.entropy.domain.order.OrderSide;
 import com.moebius.entropy.domain.order.OrderStatus;
 import com.moebius.entropy.domain.order.OrderType;
 import lombok.*;
+
+import java.math.BigDecimal;
 
 @Getter
 @Builder
@@ -17,7 +20,8 @@ public class BobooOpenOrdersDto {
 	@JsonProperty("clientOrderId")
 	private String id;
 	private String symbol;
-	private float price;
+	@JsonFormat(shape = JsonFormat.Shape.STRING)
+	private BigDecimal price;
 	@JsonProperty("origQty")
 	private float originalQuantity;
 	@JsonProperty("executedQty")

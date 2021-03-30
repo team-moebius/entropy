@@ -1,4 +1,4 @@
-package com.moebius.entropy.domain.order;
+package com.moebius.entropy.domain.order.config;
 
 import lombok.*;
 

@@ -1,4 +1,4 @@
-package com.moebius.entropy.domain.order;
+package com.moebius.entropy.domain.order.config;
 
 import lombok.*;
 
@@ -8,6 +8,7 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString
 public class RepeatMarketOrderConfig {
 	private BigDecimal minVolume;
 	private BigDecimal maxVolume;

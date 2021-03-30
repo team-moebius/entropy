@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.trade.manual;
+package com.moebius.entropy.service.order.boboo;
 
 import com.moebius.entropy.domain.ManualOrderMakingRequest;
 import com.moebius.entropy.domain.ManualOrderResult;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ManualOrderMakerService {
-    private final static int DECIMAL_POSITION = 2;
+    private final static int DECIMAL_POSITION = 1;
     private final EntropyRandomUtils randomUtil;
     private final OrderService orderService;
     private final TradeWindowRepository tradeWindowRepository;
@@ -45,7 +45,7 @@ public class ManualOrderMakerService {
         if (OrderPosition.ASK.equals(orderPosition)) {
             marketPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
         }
-        log.info("[ManualOrder] Started to request Order symbol:{}, position: {}, quantities:{}",
+        log.info("[ManualOrder] Started to request Order [symbol={}, position={}, quantities={}]",
                 market.getSymbol(), orderPosition, randomVolumes);
 
         BigDecimal finalMarketPrice = marketPrice;
@@ -56,18 +56,7 @@ public class ManualOrderMakerService {
                 .onErrorContinue((throwable, orderRequest) -> log.warn(
                         "[ManualOrder] Failed to request Order with {}, {}", orderRequest, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable
                 ))
-                .flatMap(order -> {
-                    if (order.getVolume().compareTo(BigDecimal.ZERO) > 0) {
-                        return orderService.cancelOrder(order)
-                                .onErrorResume((throwable) -> {
-                                    log.warn("[TradeWindowInflation] Failed to cancel Order {}, {}", order, ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable);
-                                    return Mono.empty();
-                                })
-                            .map(cancelledOrder -> Pair.of(order, cancelledOrder));
-                    } else {
-                        return Mono.just(Pair.of(order, null));
-                    }
-                })
+                .flatMap(order -> Mono.just(Pair.of(order, null)))
             .collectList()
             .map(this::makeResult);
     }
@@ -78,7 +67,7 @@ public class ManualOrderMakerService {
             request.getRequestedVolumeTo().floatValue(), DECIMAL_POSITION);
     }
 
-    private ManualOrderResult makeResult(List<Pair<Order, ?>> pairs) {
+    private ManualOrderResult makeResult(List<Pair<Order, Object>> pairs) {
         List<Order> requestedOrders = pairs.stream()
             .map(Pair::getLeft)
             .filter(Objects::nonNull)

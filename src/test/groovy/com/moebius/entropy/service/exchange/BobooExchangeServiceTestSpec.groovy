@@ -61,7 +61,7 @@ class BobooExchangeServiceTestSpec extends Specification {
     def "Should get and log order book"() {
         when:
         bobooService.websocketUri = "wss://wsapi.boboo.vip/openapi/quote/ws/v1"
-        bobooService.getAndUpdateByOrderBook("GTAXUSDT")
+        bobooService.inflateOrdersByOrderBook("GTAXUSDT")
 
         then:
         1 * webSocketClient.execute(_ as URI, _ as WebSocketHandler) >> Mono.empty()

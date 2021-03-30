@@ -1,6 +1,6 @@
 package com.moebius.entropy.dto.order;
 
-import com.moebius.entropy.domain.order.RepeatMarketOrderConfig;
+import com.moebius.entropy.domain.order.config.RepeatMarketOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import lombok.*;
 
@@ -11,6 +11,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
+@ToString
 public class RepeatMarketOrderDto {
 	private MarketDto market;
 	private RepeatMarketOrderConfig askOrderConfig;

@@ -16,10 +16,11 @@ import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.dto.view.ManualOrderForm
 import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.repository.InflationConfigRepository
-import com.moebius.entropy.service.order.boboo.BobooDividedDummyOrderService
+import com.moebius.entropy.service.order.boboo.ManualOrderMakerService
+import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
-import com.moebius.entropy.service.order.boboo.BobooRepeatMarketOrderService
-import com.moebius.entropy.service.trade.manual.ManualOrderMakerService
+import com.moebius.entropy.service.order.boboo.auto.BobooOptimizeOrderService
+import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService
 import org.apache.commons.collections4.CollectionUtils
 import org.springframework.http.ResponseEntity
@@ -37,6 +38,7 @@ class EntropyViewServiceTestSpec extends Specification {
 	def manualOrderMakerService = Mock(ManualOrderMakerService)
 	def dividedDummyOrderService = Mock(BobooDividedDummyOrderService)
 	def repeatMarketOrderService = Mock(BobooRepeatMarketOrderService)
+	def optimizeOrderService = Mock(BobooOptimizeOrderService)
 	def inflationConfigRepository = Mock(InflationConfigRepository)
 	def bobooOrderService = Mock(BobooOrderService)
 	def disposableOrderRepository = Mock(DisposableOrderRepository)
@@ -44,9 +46,8 @@ class EntropyViewServiceTestSpec extends Specification {
 
 	//TBD for rest service
 	def sut = new EntropyViewService(
-			automaticOrderViewAssembler, dividedDummyOrderService, repeatMarketOrderService, inflationConfigRepository,
-			bobooOrderService, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository,
-			tradeWindowQueryService
+			automaticOrderViewAssembler, dividedDummyOrderService, repeatMarketOrderService, optimizeOrderService, inflationConfigRepository,
+			bobooOrderService, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository, tradeWindowQueryService
 	)
 
 

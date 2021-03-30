@@ -2,7 +2,7 @@ package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
-import com.moebius.entropy.domain.order.DummyOrderConfig;
+import com.moebius.entropy.domain.order.config.DummyOrderConfig;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.repository.InflationConfigRepository;
@@ -21,7 +21,7 @@ import java.util.Optional;
 public class TradeWindowInflationVolumeResolver {
 	private final InflationConfigRepository inflationConfigRepository;
 	private final EntropyRandomUtils randomUtils;
-	private final static int DECIMAL_POSITION = 2;
+	private final static int DECIMAL_POSITION = 1;
 
 	public BigDecimal getRandomMarketVolume(BigDecimal minVolume, BigDecimal maxVolume, int decimalPosition) {
 		return randomUtils.getRandomDecimal(minVolume.floatValue(), maxVolume.floatValue(), decimalPosition);
@@ -69,7 +69,12 @@ public class TradeWindowInflationVolumeResolver {
 			dividedVolumes.add(dividedVolume);
 			inflationVolume = inflationVolume.subtract(dividedVolume);
 		}
-		dividedVolumes.add(inflationVolume);
+
+		if (inflationVolume.compareTo(BigDecimal.ONE) < 0) {
+			dividedVolumes.add(BigDecimal.ONE);
+		} else {
+			dividedVolumes.add(inflationVolume);
+		}
 
 		return dividedVolumes;
 	}

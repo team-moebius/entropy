@@ -2,8 +2,8 @@ package com.moebius.entropy.assembler;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
-import com.moebius.entropy.domain.order.DummyOrderConfig;
-import com.moebius.entropy.domain.order.RepeatMarketOrderConfig;
+import com.moebius.entropy.domain.order.config.DummyOrderConfig;
+import com.moebius.entropy.domain.order.config.RepeatMarketOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;

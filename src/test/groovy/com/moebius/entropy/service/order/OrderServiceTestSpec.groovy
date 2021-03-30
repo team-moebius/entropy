@@ -134,7 +134,7 @@ class OrderServiceTestSpec extends Specification {
         0 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled)
 
         expect:
-        StepVerifier.create(sut.cancelOrder(orderShouldBeCancelled))
+        StepVerifier.create(sut.cancelOrderWithoutTracking(orderShouldBeCancelled))
                 .verifyComplete()
 
         where:

@@ -20,7 +20,7 @@ public class BobooOpenOrderRefreshService {
     private final BobooOrderService bobooOrderService;
     private final BobooOrderExchangeAssembler assembler;
     private final ApiKeyDto apiKeyDto;
-    private static final List<String> trackingSymbols = Collections.singletonList("GTAX2USDT");
+    private final static List<String> trackingSymbols = Collections.singletonList("ETHVUSDT");
 
     public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
                                         BobooOrderService bobooOrderService,
@@ -35,7 +35,6 @@ public class BobooOpenOrderRefreshService {
                 .build();
     }
 
-    @Scheduled(cron = "0 * * * * *")
     public void refreshOpenOrderFromExchange(){
         log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
         Flux.fromIterable(trackingSymbols)

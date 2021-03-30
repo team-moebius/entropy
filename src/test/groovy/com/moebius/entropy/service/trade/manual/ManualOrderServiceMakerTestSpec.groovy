@@ -10,6 +10,7 @@ import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.repository.TradeWindowRepository
 import com.moebius.entropy.service.order.OrderService
+import com.moebius.entropy.service.order.boboo.ManualOrderMakerService
 import com.moebius.entropy.util.EntropyRandomUtils
 import org.apache.commons.lang3.tuple.Pair
 import reactor.core.publisher.Mono
@@ -17,6 +18,7 @@ import reactor.test.StepVerifier
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
+import spock.lang.Unroll
 
 import java.util.stream.Collectors
 
@@ -35,6 +37,7 @@ class ManualOrderServiceMakerTestSpec extends Specification {
     def market = new Market(exchange, symbol, TradeCurrency.USDT)
 
 
+    @Unroll
     def "Make #orderPosition Order with given condition"() {
         given:
         def randomVolumes = randomValues.stream()

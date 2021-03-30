@@ -15,9 +15,7 @@ public class InflationConfigRepository {
 	public InflationConfig getConfigFor(Market market) {
 		String key = market.getSymbol();
 
-		return configMap.computeIfAbsent(key, s -> {
-			throw new RuntimeException("Inflation config is missing for market:" + key);
-		});
+		return configMap.getOrDefault(key, InflationConfig.builder().build());
 	}
 
 	public void saveConfigFor(Market market, InflationConfig inflationConfig) {

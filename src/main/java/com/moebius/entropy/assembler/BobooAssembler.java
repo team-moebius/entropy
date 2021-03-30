@@ -62,7 +62,7 @@ public class BobooAssembler {
 				.params(params)
 				.build());
 		} catch (JsonProcessingException e) {
-			log.warn("[Boboo] [Assemble] Failed to processing json.", e);
+			log.warn("[BobooAssemble] Failed to processing json.", e);
 			return EMPTY;
 		}
 	}
@@ -71,7 +71,7 @@ public class BobooAssembler {
 		try {
 			return objectMapper.readValue(message.getPayloadAsText(), BobooOrderBookDto.class);
 		} catch (JsonProcessingException e) {
-			log.warn("[Boboo] [Assemble] Failed to processing json.", e);
+			log.warn("[BobooAssemble] Failed to processing json.", e);
 			return null;
 		}
 	}

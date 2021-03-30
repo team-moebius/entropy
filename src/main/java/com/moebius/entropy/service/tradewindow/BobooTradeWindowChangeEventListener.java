@@ -18,7 +18,7 @@ public class BobooTradeWindowChangeEventListener {
     private final TradeWindowAssembler assembler;
     private TradeWindowInflateService tradeWindowInflateService;
 
-    public void inflateOnTradeWindowChange(BobooOrderBookDto orderBookDto) {
+    public void inflateOrdersOnTradeWindowChange(BobooOrderBookDto orderBookDto) {
         Optional.ofNullable(assembler.assembleTradeWindow(orderBookDto))
             .map(tradeWindow -> {
                 Market market = assembler.extractMarket(orderBookDto);
@@ -29,7 +29,7 @@ public class BobooTradeWindowChangeEventListener {
             })
             .ifPresent(market -> {
                 InflateRequest request = new InflateRequest(market);
-                tradeWindowInflateService.inflateTrades(request).subscribe();
+                tradeWindowInflateService.inflateOrders(request).subscribe();
             });
     }
 

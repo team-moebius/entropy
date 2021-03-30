@@ -3,11 +3,13 @@ package com.moebius.entropy;
 import com.moebius.entropy.service.exchange.ExchangeService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 
+@Slf4j
 @SpringBootApplication
 @RequiredArgsConstructor
 public class EntropyApplication implements ApplicationListener<ApplicationReadyEvent> {
@@ -19,6 +21,7 @@ public class EntropyApplication implements ApplicationListener<ApplicationReadyE
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
-		exchangeServices.forEach(exchangeService -> exchangeService.getAndUpdateByOrderBook("GTAX2USDT"));
+		log.info("[Entropy] Start to inflate ETHVUSDT orders by current order book.");
+		exchangeServices.forEach(exchangeService -> exchangeService.inflateOrdersByOrderBook("ETHVUSDT"));
 	}
 }
