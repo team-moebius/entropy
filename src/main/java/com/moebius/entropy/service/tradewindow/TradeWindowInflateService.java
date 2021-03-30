@@ -47,7 +47,6 @@ public class TradeWindowInflateService {
 		Market market = inflateRequest.getMarket();
 		InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(market);
 		if (!inflationConfig.isEnable()) {
-			log.warn("[TradeWindowInflation] There is no enabled inflation config for [{}].", inflateRequest.getMarket());
 			return Flux.empty();
 		}
 

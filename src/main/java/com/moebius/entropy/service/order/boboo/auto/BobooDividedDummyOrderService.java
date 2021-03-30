@@ -35,7 +35,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class BobooDividedDummyOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
-	private final static int DEFAULT_DELAY = 300;
+	private final static long DEFAULT_DELAY = 300L;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -55,43 +55,19 @@ public class BobooDividedDummyOrderService {
 			return Mono.just(ResponseEntity.badRequest().build());
 		}
 
-		Disposable disposable = getDummyOrderRequestsPeriodicFlux(dividedDummyOrderDto)
-			.subscribe(dummyOrderRequests -> dummyOrderRequests.forEach(dummyOrderRequest -> {
-				try {
-					Thread.sleep(DEFAULT_DELAY);
-				} catch (InterruptedException e) {
-					log.warn("Canceled the subscription and interrupted requesting / canceling dummy orders.");
-				}
-				requestAndCancelDummyOrder(dummyOrderRequest)
-					.subscribe();
-			}));
+		Disposable disposable = getDummyOrderRequestsRepeatFlux(dividedDummyOrderDto)
+			.flatMap(this::requestAndCancelDummyOrder)
+			.subscribe();
 
 		String disposableId = marketDto.getExchange() + "-" + marketDto.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
 		disposableOrderRepository.set(disposableId, disposable);
 		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
-	private Flux<List<DummyOrderRequest>> getDummyOrderRequestsPeriodicFlux(DividedDummyOrderDto dto) {
-		Duration totalDuration = getTotalDuration(dto);
-
-		return Flux.interval(Duration.ZERO, totalDuration)
-			.map(tick -> {
-				List<DummyOrderRequest> dummyOrderRequests = getDummyOrderRequests(dto);
-				Collections.shuffle(dummyOrderRequests);
-
-				return dummyOrderRequests;
-			});
-	}
-
-	private Duration getTotalDuration(DividedDummyOrderDto dto) {
-		InflationConfig inflationConfig = dto.getInflationConfig();
-		DummyOrderConfig askOrderConfig = dto.getAskOrderConfig();
-		DummyOrderConfig bidOrderConfig = dto.getBidOrderConfig();
-
-		return Duration.ofMillis(
-			(long) (askOrderConfig.getPeriod() * inflationConfig.getAskCount() +
-				bidOrderConfig.getPeriod() * inflationConfig.getBidCount()) +
-				DEFAULT_DELAY * (inflationConfig.getAskCount() + inflationConfig.getBidCount()) / 2);
+	private Flux<DummyOrderRequest> getDummyOrderRequestsRepeatFlux(DividedDummyOrderDto dto) {
+		return Flux.defer(() -> Flux.fromIterable(getDummyOrderRequests(dto))
+			.delayElements(Duration.ofMillis(DEFAULT_DELAY)))
+			.repeat();
 	}
 
 	private List<DummyOrderRequest> getDummyOrderRequests(DividedDummyOrderDto dto) {
@@ -101,7 +77,7 @@ public class BobooDividedDummyOrderService {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(marketDto.toDomainEntity());
 		BigDecimal priceUnit = marketDto.getTradeCurrency().getPriceUnit();
 
-		return Stream.concat(IntStream.range(0, inflationConfig.getAskCount())
+		List<DummyOrderRequest> dummyOrderRequests = Stream.concat(IntStream.range(0, inflationConfig.getAskCount())
 				.mapToObj(BigDecimal::valueOf)
 				.map(multiplier -> marketPrice.add(priceUnit.multiply(multiplier)))
 				.map(price -> getDummyOrderRequest(dto, OrderPosition.ASK, price)),
@@ -110,6 +86,10 @@ public class BobooDividedDummyOrderService {
 				.map(multiplier -> marketPrice.subtract(priceUnit.multiply(multiplier)))
 				.map(price -> getDummyOrderRequest(dto, OrderPosition.BID, price)))
 			.collect(Collectors.toList());
+
+		Collections.shuffle(dummyOrderRequests);
+
+		return dummyOrderRequests;
 	}
 
 	private DummyOrderRequest getDummyOrderRequest(DividedDummyOrderDto dto, OrderPosition orderPosition, BigDecimal price) {
@@ -154,13 +134,14 @@ public class BobooDividedDummyOrderService {
 	private Flux<Order> requestAndCancelDummyOrder(DummyOrderRequest dummyOrderRequest) {
 		return Flux.range(0, dummyOrderRequest.getReorderCount())
 			.flatMapIterable(count -> dummyOrderRequest.getOrderRequests())
-			.flatMap(orderService::requestOrderWithoutTracking)
-			.doOnError(throwable -> log.warn("[DummyOrder] Failed to request dummy order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElements(dummyOrderRequest.getDelay())
+			.flatMap(orderService::requestOrderWithoutTracking)
+			.onErrorContinue((throwable, order) -> log.warn("[DummyOrder] Failed to request dummy order. [{} / {}]",
+				order, ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::cancelOrderWithoutTracking)
-			.doOnError(throwable -> log.warn("[DummyOrder] Failed to cancel dummy order. [{}]",
-				((WebClientResponseException) throwable).getResponseBodyAsString()))
-			.doOnComplete(() -> log.info("[DummyOrder] Completed to request & cancel dummy orders. [{}]", dummyOrderRequest));
+			.onErrorContinue((throwable, order) -> log.warn("[DummyOrder] Failed to cancel dummy order. [{} / {}]",
+				order, ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.doOnComplete(() -> log.info("[DummyOrder] Completed in requesting & cancelling dummy orders. [{}]", dummyOrderRequest));
 	}
 }
