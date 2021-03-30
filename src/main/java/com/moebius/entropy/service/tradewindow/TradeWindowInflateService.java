@@ -55,9 +55,9 @@ public class TradeWindowInflateService {
 				Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow, inflationConfig);
 				Flux<Order> cancelOrderFlux = cancelInvalidOrders(market, inflationConfig);
 
-				return Flux.merge(requestOrderFlux, cancelOrderFlux);
+				return Flux.concat(requestOrderFlux, cancelOrderFlux);
 			})
-			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to collect order result. [{}]", order, throwable));
+			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
 	}
 
 	private Flux<Order> requestRequiredOrders(Market market, TradeWindow window, InflationConfig inflationConfig) {
@@ -74,7 +74,7 @@ public class TradeWindowInflateService {
 		return Flux.merge(bidRequestFlux, askRequestFlux)
 			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order requests for inflation. [{}]", orderRequest))
 			.flatMap(orderService::requestOrder)
-			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to request order. [{}]", order, throwable));
+			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
 	}
 
 	private Flux<OrderRequest> makeOrderRequestWith(
@@ -128,6 +128,6 @@ public class TradeWindowInflateService {
 			})
 			.doOnNext(order -> log.info("[TradeWindowInflation] Create order cancellations for inflation. [{}]", order))
 			.flatMap(orderService::cancelOrder)
-			.onErrorContinue((throwable, order) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
+			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
 	}
 }
