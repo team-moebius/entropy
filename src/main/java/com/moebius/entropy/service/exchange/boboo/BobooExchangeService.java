@@ -98,15 +98,28 @@ public class BobooExchangeService implements ExchangeService<
 
 	@Override
 	public void inflateOrdersByOrderBook(String symbol) {
+		log.info("[BobooExchange] Start to inflate orders of {} by order book.", symbol);
 		webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive())
 				.subscribeOn(Schedulers.parallel())
 				.timeout(Duration.ofMillis(timeout))
 				.map(bobooAssembler::assembleOrderBookDto)
-				.doOnNext(tradeWindowEventListener::inflateOrdersOnTradeWindowChange)
-				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol))
-				.then())
+				.map(bobooOrderBookDto -> {
+					try {
+						tradeWindowEventListener.inflateOrdersOnTradeWindowChange(bobooOrderBookDto);
+					} catch (Exception e) {
+						log.error("[BobooExchange] Failed to inflate orders by order book. [{}]", bobooOrderBookDto, e);
+					}
+
+					return bobooOrderBookDto;
+				})
+				.then()
+				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol)))
+			.doOnError(throwable -> {
+				log.warn("[BobooExchange] Failed to execute websocket request.", throwable);
+				inflateOrdersByOrderBook(symbol);
+			})
 			.subscribe();
 	}
 }

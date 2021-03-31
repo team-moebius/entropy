@@ -21,7 +21,6 @@ public class EntropyApplication implements ApplicationListener<ApplicationReadyE
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
-		log.info("[Entropy] Start to inflate ETHVUSDT orders by current order book.");
 		exchangeServices.forEach(exchangeService -> exchangeService.inflateOrdersByOrderBook("ETHVUSDT"));
 	}
 }
