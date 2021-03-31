@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
+import java.time.Duration;
 
 @SuppressWarnings("unused")
 @Slf4j
@@ -41,6 +42,8 @@ public class BobooExchangeService implements ExchangeService<
 	private String requestOrderPath;
 	@Value("${exchange.boboo.rest.cancel-orders}")
 	private String cancelOrderPath;
+	@Value("${exchange.boboo.websocket.timeout}")
+	private long timeout;
 
 	private final WebClient webClient;
 	private final WebSocketClient webSocketClient;
@@ -97,11 +100,13 @@ public class BobooExchangeService implements ExchangeService<
 	public void inflateOrdersByOrderBook(String symbol) {
 		webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
-				.thenMany(session.receive().map(bobooAssembler::assembleOrderBookDto))
-				.publishOn(Schedulers.parallel())
+				.thenMany(session.receive())
+				.subscribeOn(Schedulers.parallel())
+				.timeout(Duration.ofMillis(timeout))
+				.map(bobooAssembler::assembleOrderBookDto)
 				.doOnNext(tradeWindowEventListener::inflateOrdersOnTradeWindowChange)
+				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol))
 				.then())
-			.doOnTerminate(() -> inflateOrdersByOrderBook(symbol))
 			.subscribe();
 	}
 }

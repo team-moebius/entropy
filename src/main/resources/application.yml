@@ -23,6 +23,7 @@ exchange:
       cancel-orders: /openapi/v1/order
     websocket:
       uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
+      timeout: 60000
     orderbook:
       topic: depth
       event: sub
