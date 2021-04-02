@@ -24,8 +24,7 @@ public class DisposableOrderRepository {
 		disposables.add(disposable);
 
 		disposableOrders.put(disposableId, disposables);
-		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{}]",
-			disposableId);
+		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{}]", disposableId);
 	}
 
 	public List<String> getAll() {
