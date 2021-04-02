@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.Disposable;
@@ -27,6 +30,11 @@ public class DisposableOrderRepository {
 		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{}]", disposableId);
 	}
 
+	public List<String> getKeysBy(Predicate<? super String> condition) {
+		return disposableOrders.keySet().stream()
+			.filter(condition)
+			.collect(Collectors.toList());
+	}
 	public List<String> getAll() {
 		return new ArrayList<>(disposableOrders.keySet());
 	}
