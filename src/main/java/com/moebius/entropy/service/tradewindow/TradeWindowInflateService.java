@@ -17,6 +17,7 @@ import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
@@ -29,6 +30,7 @@ public class TradeWindowInflateService {
 
 	private final static int START_FROM_MARKET_PRICE = 0;
 	private final static int START_FROM_NEXT_PRICE = 1;
+	private final static long DEFAULT_DELAY = 300L;
 
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final InflationConfigRepository inflationConfigRepository;
@@ -72,6 +74,7 @@ public class TradeWindowInflateService {
 
 		return Flux.merge(bidRequestFlux, askRequestFlux)
 			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order requests for inflation. [{}]", orderRequest))
+			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::requestOrder)
 			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
 	}
@@ -126,6 +129,7 @@ public class TradeWindowInflateService {
 				}
 			})
 			.doOnNext(order -> log.info("[TradeWindowInflation] Create order cancellations for inflation. [{}]", order))
+			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::cancelOrder)
 			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
 	}
