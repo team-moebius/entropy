@@ -109,7 +109,7 @@ public class BobooExchangeService implements ExchangeService<
 		Disposable disposable = webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive())
-				.subscribeOn(Schedulers.parallel())
+				.subscribeOn(Schedulers.single())
 				.timeout(Duration.ofMillis(timeout))
 				.map(bobooAssembler::assembleOrderBookDto)
 				.map(bobooOrderBookDto -> {
