@@ -74,7 +74,8 @@ public class EntropyViewService {
             inflationConfigRepository.saveConfigFor(market, disabledConfig);
         }
 
-        return Flux.fromIterable(disposableOrderRepository.getKeysBy(disposableId -> !disposableId.contains("INFLATION")))
+        return Flux.fromIterable(disposableOrderRepository.getKeysBy(disposableId -> !disposableId.contains("INFLATION") &&
+                disposableId.contains(market.getSymbol())))
             .filter(StringUtils::isNotEmpty)
             .flatMap(bobooOrderService::stopOrder)
             .map(ResponseEntity::getBody)
