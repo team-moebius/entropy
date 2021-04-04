@@ -18,10 +18,10 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def entropyRandomUtils = Mock(EntropyRandomUtils)
     def sut = new TradeWindowInflationVolumeResolver(inflationConfigRepository, entropyRandomUtils)
     @Shared
-    def symbol = "GTAXUSDT"
+    def symbol = "GTAX2USDT"
     @Shared
     def exchange = Exchange.BOBOO
-    def market = new Market(exchange, symbol, TradeCurrency.USDT)
+    def market = new Market(exchange, symbol, TradeCurrency.USDT, 1)
 
     def "Should get Random volume from configuration"() {
         given:

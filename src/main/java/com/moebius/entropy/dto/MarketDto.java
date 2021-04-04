@@ -14,8 +14,9 @@ public class MarketDto {
 	private Exchange exchange;
 	private String symbol;
 	private TradeCurrency tradeCurrency;
+	private int decimalPosition;
 
 	public Market toDomainEntity() {
-		return new Market(exchange, symbol, tradeCurrency);
+		return new Market(exchange, symbol, tradeCurrency, decimalPosition);
 	}
 }
