@@ -13,6 +13,7 @@ import com.moebius.entropy.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
@@ -73,7 +74,7 @@ public class TradeWindowInflateService {
 		return Flux.merge(bidRequestFlux, askRequestFlux)
 			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order requests for inflation. [{}]", orderRequest))
 			.flatMap(orderService::requestOrder)
-			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
+			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable));
 	}
 
 	private Flux<OrderRequest> makeOrderRequestWith(
@@ -127,6 +128,6 @@ public class TradeWindowInflateService {
 			})
 			.doOnNext(order -> log.info("[TradeWindowInflation] Create order cancellations for inflation. [{}]", order))
 			.flatMap(orderService::cancelOrder)
-			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
+			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString(), throwable));
 	}
 }

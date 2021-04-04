@@ -109,23 +109,17 @@ public class BobooExchangeService implements ExchangeService<
 		Disposable disposable = webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive())
-				.subscribeOn(Schedulers.single())
-				.timeout(Duration.ofMillis(timeout))
+				.timeout(Duration.ofMillis(timeout), Schedulers.single())
 				.map(bobooAssembler::assembleOrderBookDto)
-				.map(bobooOrderBookDto -> {
-					try {
-						tradeWindowEventListener.inflateOrdersOnTradeWindowChange(bobooOrderBookDto);
-					} catch (Exception e) {
-						log.error("[BobooExchange] Failed to inflate orders by order book. [{}]", bobooOrderBookDto, e);
-					}
-					return bobooOrderBookDto;
-				})
+				.doOnNext(tradeWindowEventListener::inflateOrdersOnTradeWindowChange)
 				.then()
 				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol)))
 			.doOnError(throwable -> {
-				log.warn("[BobooExchange] Failed to execute websocket request.", throwable);
+				log.error("[BobooExchange] Failed to execute websocket request.", throwable);
 				inflateOrdersByOrderBook(symbol);
-			}).subscribe();
+			})
+			.subscribeOn(Schedulers.single())
+			.subscribe();
 
 		disposableOrderRepository.set(String.format(ORDER_INFLATION_DISPOSABLE_ID_FORMAT, symbol), disposable);
 	}

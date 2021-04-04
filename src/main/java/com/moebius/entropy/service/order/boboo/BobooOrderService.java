@@ -85,8 +85,8 @@ public class BobooOrderService implements OrderService {
                 .map(assembler::convertToCancelRequest)
                 .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
                 .map(cancelMono -> cancelMono
-                        .map(bobooCancelResponse -> order)
-                        .doOnSuccess(this::releaseOrderFromTracking))
+                    .map(bobooCancelResponse -> order)
+                    .doOnTerminate(() -> releaseOrderFromTracking(order)))
                 .orElse(Mono.empty());
     }
 

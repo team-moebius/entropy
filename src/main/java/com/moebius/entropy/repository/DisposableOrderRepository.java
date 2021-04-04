@@ -23,11 +23,14 @@ public class DisposableOrderRepository {
 
 	public void set(String disposableId, Disposable disposable) {
 		List<Disposable> disposables = disposableOrders
-			.getOrDefault(disposableId, new ArrayList<>());
+			.getOrDefault(disposableId, new ArrayList<>())
+			.stream()
+			.filter(item -> !item.isDisposed())
+			.collect(Collectors.toList());
 		disposables.add(disposable);
 
 		disposableOrders.put(disposableId, disposables);
-		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{}]", disposableId);
+		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{} / {}]", disposableId, disposables);
 	}
 
 	public List<String> getKeysBy(Predicate<? super String> condition) {
@@ -35,6 +38,7 @@ public class DisposableOrderRepository {
 			.filter(condition)
 			.collect(Collectors.toList());
 	}
+
 	public List<String> getAll() {
 		return new ArrayList<>(disposableOrders.keySet());
 	}
