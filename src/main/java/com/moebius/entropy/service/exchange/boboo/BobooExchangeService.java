@@ -3,6 +3,7 @@ package com.moebius.entropy.service.exchange.boboo;
 import com.moebius.entropy.assembler.BobooAssembler;
 import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
+import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.ExchangeService;
 import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +15,13 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.socket.client.WebSocketClient;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.net.URI;
+import java.time.Duration;
 
 @SuppressWarnings("unused")
 @Slf4j
@@ -41,11 +44,15 @@ public class BobooExchangeService implements ExchangeService<
 	private String requestOrderPath;
 	@Value("${exchange.boboo.rest.cancel-orders}")
 	private String cancelOrderPath;
+	@Value("${exchange.boboo.websocket.timeout}")
+	private long timeout;
 
+	private final static String ORDER_INFLATION_DISPOSABLE_ID_FORMAT = "BOBOO-%s-ORDER-INFLATION";
 	private final WebClient webClient;
 	private final WebSocketClient webSocketClient;
 	private final BobooAssembler bobooAssembler;
 	private final BobooTradeWindowChangeEventListener tradeWindowEventListener;
+	private final DisposableOrderRepository disposableOrderRepository;
 
 	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKeyDto apiKey) {
 		return webClient.get()
@@ -95,13 +102,22 @@ public class BobooExchangeService implements ExchangeService<
 
 	@Override
 	public void inflateOrdersByOrderBook(String symbol) {
-		webSocketClient.execute(URI.create(websocketUri),
+		log.info("[BobooExchange] Start to inflate orders of {} by order book.", symbol);
+		disposableOrderRepository.get(String.format(ORDER_INFLATION_DISPOSABLE_ID_FORMAT, symbol))
+			.forEach(Disposable::dispose);
+
+		Disposable disposable = webSocketClient.execute(URI.create(websocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
-				.thenMany(session.receive().map(bobooAssembler::assembleOrderBookDto))
-				.publishOn(Schedulers.parallel())
+				.thenMany(session.receive())
+				.subscribeOn(Schedulers.single())
+				.timeout(Duration.ofMillis(timeout), Schedulers.single())
+				.map(bobooAssembler::assembleOrderBookDto)
 				.doOnNext(tradeWindowEventListener::inflateOrdersOnTradeWindowChange)
-				.then())
-			.doOnTerminate(() -> inflateOrdersByOrderBook(symbol))
+				.then()
+				.doOnError(exception -> log.error("[BobooExchange] Failed to inflate orders of {} by order book.", symbol, exception))
+				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol)))
 			.subscribe();
+
+		disposableOrderRepository.set(String.format(ORDER_INFLATION_DISPOSABLE_ID_FORMAT, symbol), disposable);
 	}
 }

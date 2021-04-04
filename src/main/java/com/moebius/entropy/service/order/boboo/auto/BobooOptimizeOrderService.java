@@ -20,8 +20,8 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class BobooOptimizeOrderService {
 	private final static long DEFAULT_DELAY = 300L;
-	private final TradeWindowQueryService tradeWindowQueryService;
 	private final BobooOrderService orderService;
+	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowInflationVolumeResolver volumeResolver;
 
 	public Flux<Order> optimizeOrders(Market market) {
@@ -30,10 +30,11 @@ public class BobooOptimizeOrderService {
 
 		return orderService.fetchOpenOrdersFor(market)
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
-			.flatMap(orderService::cancelOrder)
+			.flatMap(orderService::cancelOrderWithoutTracking)
 			.filter(order -> order.getPrice().compareTo(marketPrice) == 0 || order.getPrice().compareTo(highestBidPrice) == 0)
-			.flatMap(order -> orderService.requestOrder(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
+			.flatMap(order -> orderService.requestOrderWithoutTracking(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
 				volumeResolver.getInflationVolume(market, order.getOrderPosition()))))
-			.onErrorContinue((throwable, order) -> log.warn("[OptimizeOrder] Failed to cancel existent order. [{}]", order, throwable));
+			.onErrorContinue((throwable, o) -> log.warn("[OptimizeOrder] Failed to cancel existent order. [{}]",
+				((WebClientResponseException) throwable).getResponseBodyAsString(), throwable));
 	}
 }

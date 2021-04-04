@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import reactor.core.Disposable;
@@ -20,12 +23,20 @@ public class DisposableOrderRepository {
 
 	public void set(String disposableId, Disposable disposable) {
 		List<Disposable> disposables = disposableOrders
-			.getOrDefault(disposableId, new ArrayList<>());
+			.getOrDefault(disposableId, new ArrayList<>())
+			.stream()
+			.filter(item -> !item.isDisposed())
+			.collect(Collectors.toList());
 		disposables.add(disposable);
 
 		disposableOrders.put(disposableId, disposables);
-		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{}]",
-			disposableId);
+		log.info("[DisposableOrder] Succeeded in setting disposable order info. [{} / {}]", disposableId, disposables);
+	}
+
+	public List<String> getKeysBy(Predicate<? super String> condition) {
+		return disposableOrders.keySet().stream()
+			.filter(condition)
+			.collect(Collectors.toList());
 	}
 
 	public List<String> getAll() {

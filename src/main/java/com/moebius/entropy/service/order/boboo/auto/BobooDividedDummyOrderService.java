@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -56,6 +57,7 @@ public class BobooDividedDummyOrderService {
 		}
 
 		Disposable disposable = getDummyOrderRequestsRepeatFlux(dividedDummyOrderDto)
+			.subscribeOn(Schedulers.parallel())
 			.flatMap(this::requestAndCancelDummyOrder)
 			.subscribe();
 
@@ -136,12 +138,10 @@ public class BobooDividedDummyOrderService {
 			.flatMapIterable(count -> dummyOrderRequest.getOrderRequests())
 			.delayElements(dummyOrderRequest.getDelay())
 			.flatMap(orderService::requestOrderWithoutTracking)
-			.onErrorContinue((throwable, order) -> log.warn("[DummyOrder] Failed to request dummy order. [{} / {}]",
-				order, ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to request dummy order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::cancelOrderWithoutTracking)
-			.onErrorContinue((throwable, order) -> log.warn("[DummyOrder] Failed to cancel dummy order. [{} / {}]",
-				order, ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.doOnComplete(() -> log.info("[DummyOrder] Completed in requesting & cancelling dummy orders. [{}]", dummyOrderRequest));
 	}
 }
