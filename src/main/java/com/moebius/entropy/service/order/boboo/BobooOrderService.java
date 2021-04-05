@@ -155,6 +155,7 @@ public class BobooOrderService implements OrderService {
         automaticOrderIds.remove(order.getOrderId());
         orderListForSymbol.computeIfPresent(order.getMarket().getSymbol(), (symbol, orders) -> {
             if (CollectionUtils.isNotEmpty(orders)) {
+                log.info("[OrderTrack] to-be released orders id : {}", orders.stream().map(Order::getOrderId).collect(Collectors.toList()));
                 orders.removeIf(trackedOrder -> trackedOrder.getOrderId().equals(order.getOrderId()));
             }
             return orders;
