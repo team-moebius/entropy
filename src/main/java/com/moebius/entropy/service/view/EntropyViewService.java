@@ -44,8 +44,7 @@ public class EntropyViewService {
 
     public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
         @Valid AutomaticOrderForm automaticOrderForm) {
-        var inflationConfig = automaticOrderViewAssembler
-            .assembleInflationConfig(automaticOrderForm);
+        InflationConfig inflationConfig = automaticOrderViewAssembler.assembleInflationConfig(automaticOrderForm);
 
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
@@ -65,11 +64,11 @@ public class EntropyViewService {
 
     public Mono<AutomaticOrderCancelResult> cancelAutomaticOrder(
         AutomaticOrderCancelForm cancelForm) {
-        var market = cancelForm.getMarket();
+        Market market = cancelForm.getMarket();
         boolean inflationCancelled = Objects.nonNull(market);
 
         if (inflationCancelled) {
-            var inflationConfig = inflationConfigRepository.getConfigFor(market);
+            InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(market);
             InflationConfig disabledConfig = inflationConfig.disable();
             inflationConfigRepository.saveConfigFor(market, disabledConfig);
         }

@@ -20,14 +20,11 @@ class BobooOpenOrderRefreshServiceTestSpec extends Specification {
 	@Subject
 	def sut = new BobooOpenOrderRefreshService(mockExchangeService, mockOrderService, mockAssembler, accessKey, secretKey)
 
-	def "Update tracked orders from exchange"() {
-		when:
-		sut.refreshOpenOrderFromExchange()
-		then:
-		1 * mockExchangeService.getOpenOrders(_, _ as ApiKeyDto) >> Flux.just(Mock(BobooOpenOrdersDto))
-		1 * mockAssembler.convertExchangeOrder(_ as BobooOpenOrdersDto) >> Mock(Order)
-		1 * mockOrderService.updateOrders({ List<Order> orders ->
-			orders.size() == 1
-		})
-	}
+  def "Update tracked orders from exchange"(){
+        when:
+        sut.refreshOpenOrderFromExchange()
+        then:
+        1 * mockExchangeService.getOpenOrders(_, _ as ApiKeyDto) >> Flux.just(Mock(BobooOpenOrdersDto))
+        1 * mockAssembler.convertExchangeOrder(_ as BobooOpenOrdersDto) >> Mock(Order)
+  }
 }

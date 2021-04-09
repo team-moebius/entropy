@@ -34,23 +34,21 @@ public class BobooOpenOrderRefreshService {
 			.build();
 	}
 
-	public void refreshOpenOrderFromExchange() {
-		log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
-		Flux.fromIterable(trackingSymbols)
-			.flatMap(symbol -> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
-				.map(assembler::convertExchangeOrder)
-				.collectList()
-				.map(bobooOrderService::updateOrders)
-				.doOnSuccess(updatedCount -> log.info(
-					"[BobooOpenOrderRefresh] Updated open orders. count: {}, symbol: {}",
-					updatedCount, symbol
-				))
-				.doOnError(throwable -> log.error(
-					"[BobooOpenOrderRefresh] Failed to update open orders., symbol: {}", symbol
-				))
-				.switchIfEmpty(Mono.empty())
-				.then()
-
+  public void refreshOpenOrderFromExchange(){
+        log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
+        Flux.fromIterable(trackingSymbols)
+                .flatMap(symbol -> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
+                            .map(assembler::convertExchangeOrder)
+                            .collectList()
+                            .doOnSuccess(updatedCount -> log.info(
+                                    "[BobooOpenOrderRefresh] Updated open orders. count: {}, symbol: {}",
+                                    updatedCount, symbol
+                            ))
+                            .doOnError(throwable -> log.error(
+                                    "[BobooOpenOrderRefresh] Failed to update open orders., symbol: {}", symbol
+                            ))
+                            .switchIfEmpty(Mono.empty())
+                            .then()
 			).then()
 			.subscribe();
 

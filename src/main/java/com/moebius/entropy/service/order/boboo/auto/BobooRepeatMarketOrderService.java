@@ -98,7 +98,7 @@ public class BobooRepeatMarketOrderService {
 		}
 
 		return Mono.just(orderRequest)
-			.flatMap(orderService::requestOrderWithoutTracking)
+			.flatMap(orderService::requestOrder)
 			.doOnNext(order -> log.info("[RepeatMarketOrder] Create repeated market order request. [{}]", order))
 			.doOnError(throwable -> log.error("[RepeatMarketOrder] Failed to request market order.", throwable));
 	}
