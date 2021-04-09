@@ -28,11 +28,11 @@ public class BobooOptimizeOrderService {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
 		BigDecimal highestBidPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
 
-		return orderService.fetchOpenOrdersFor(market)
+		return orderService.fetchAllOrdersFor(market)
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
-			.flatMap(orderService::cancelOrderWithoutTracking)
+			.flatMap(orderService::cancelOrder)
 			.filter(order -> order.getPrice().compareTo(marketPrice) == 0 || order.getPrice().compareTo(highestBidPrice) == 0)
-			.flatMap(order -> orderService.requestOrderWithoutTracking(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
+			.flatMap(order -> orderService.requestOrder(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
 				volumeResolver.getInflationVolume(market, order.getOrderPosition()))))
 			.onErrorContinue((throwable, o) -> log.warn("[OptimizeOrder] Failed to cancel existent order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString(), throwable));

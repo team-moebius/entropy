@@ -47,8 +47,6 @@ public class EntropyViewService {
         var inflationConfig = automaticOrderViewAssembler
             .assembleInflationConfig(automaticOrderForm);
 
-        inflationConfigRepository.saveConfigFor(market, inflationConfig);
-
         return optimizeOrderService.optimizeOrders(market)
             .then(Mono.zip(
                 Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
@@ -60,7 +58,8 @@ public class EntropyViewService {
                         .map(HttpEntity::getBody)
                         .map(String::valueOf)))
                 .collectList()
-                .map(automaticOrderViewAssembler::assembleAutomaticOrderResult));
+                .map(automaticOrderViewAssembler::assembleAutomaticOrderResult))
+            .doOnSuccess(automaticOrderResult -> inflationConfigRepository.saveConfigFor(market, inflationConfig));
     }
 
     public Mono<AutomaticOrderCancelResult> cancelAutomaticOrder(

@@ -39,40 +39,30 @@ public class BobooOrderService implements OrderService {
         apiKeyDto = ApiKeyDto.builder().accessKey(accessKey).secretKey(secretKey).build();
     }
 
-    public Flux<Order> fetchOpenOrdersFor(Market market) {
-        return exchangeService.getOpenOrders(market.getSymbol(), apiKeyDto)
-                .map(assembler::convertExchangeOrder);
-    }
-
     @Override
     public Flux<Order> fetchAllOrdersFor(Market market) {
         return exchangeService.getOpenOrders(market.getSymbol(), apiKeyDto)
                 .map(assembler::convertExchangeOrder);
     }
 
+    @Override
     public Mono<Order> requestOrder(OrderRequest orderRequest) {
-        return requestOrderWithoutTracking(orderRequest);
-    }
-
-    public Mono<Order> requestManualOrder(OrderRequest orderRequest) {
-        return requestOrderWithoutTracking(orderRequest);
-    }
-
-    public Mono<Order> requestOrderWithoutTracking(OrderRequest orderRequest) {
         return requestOrderWith(orderRequest, order -> {});
     }
 
-    public Mono<Order> cancelOrder(Order order) {
-        return cancelOrderWithoutTracking(order);
+    @Override
+    public Mono<Order> requestManualOrder(OrderRequest orderRequest) {
+        return requestOrderWith(orderRequest, order -> {});
     }
 
-    public Mono<Order> cancelOrderWithoutTracking(Order order) {
+    @Override
+    public Mono<Order> cancelOrder(Order order) {
         return Optional.ofNullable(order)
-                .map(assembler::convertToCancelRequest)
-                .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
-                .map(bobooCancelResponseMono -> bobooCancelResponseMono
-                        .map(bobooCancelResponse -> order)
-                        .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed for order id" + order.getOrderId(), throwable)))
+            .map(assembler::convertToCancelRequest)
+            .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
+            .map(bobooCancelResponseMono -> bobooCancelResponseMono
+                .map(bobooCancelResponse -> order)
+                .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed for order id" + order.getOrderId(), throwable)))
             .orElse(Mono.empty());
     }
 
