@@ -73,7 +73,7 @@ public class BobooOrderService implements OrderService {
     }
 
     public Mono<Order> requestManualOrder(OrderRequest orderRequest) {
-        return requestOrderWith(orderRequest, this::trackOrder);
+        return requestOrder(orderRequest);
     }
 
     public Mono<Order> requestOrderWithoutTracking(OrderRequest orderRequest) {
