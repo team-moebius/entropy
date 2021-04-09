@@ -86,6 +86,7 @@ public class BobooExchangeService implements ExchangeService<
 				.body(BodyInserters.fromFormData(bodyValue))
 				.retrieve()
 				.bodyToMono(BobooCancelResponse.class)
+				.doOnError(exception -> log.error("[BobooExchange] Failed to cancel order. [{}]", cancelRequest.getOrderId(), exception))
 				//{"code":-1142,"msg":"Order has been canceled"}
 				//{"code":-1139,"msg":"Order has been filled."}
 				.onErrorResume(WebClientResponseException.BadRequest.class, badRequest -> {
