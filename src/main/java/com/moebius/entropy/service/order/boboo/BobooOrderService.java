@@ -73,7 +73,7 @@ public class BobooOrderService implements OrderService {
     }
 
     public Mono<Order> requestManualOrder(OrderRequest orderRequest) {
-        return requestOrderWith(orderRequest, this::trackOrder);
+        return requestOrderWithoutTracking(orderRequest);
     }
 
     public Mono<Order> requestOrderWithoutTracking(OrderRequest orderRequest) {
@@ -85,8 +85,8 @@ public class BobooOrderService implements OrderService {
                 .map(assembler::convertToCancelRequest)
                 .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
                 .map(cancelMono -> cancelMono
-                        .map(bobooCancelResponse -> order)
-                        .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed. [{}]", order.getOrderId(), throwable))
+                    .map(bobooCancelResponse -> order)
+                    .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed. [{}]", order.getOrderId(), throwable))
                     .doOnTerminate(() -> releaseOrderFromTracking(order)))
                 .orElse(Mono.empty());
     }
