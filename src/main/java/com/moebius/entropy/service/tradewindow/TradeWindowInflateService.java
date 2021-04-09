@@ -50,12 +50,7 @@ public class TradeWindowInflateService {
 		}
 
 		return tradeWindowQueryService.fetchTradeWindow(market)
-			.flatMapMany(tradeWindow -> {
-				Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow, inflationConfig);
-				Flux<Order> cancelOrderFlux = cancelInvalidOrders(market, inflationConfig);
-
-				return Flux.merge(requestOrderFlux, cancelOrderFlux);
-			})
+				.flatMapMany(tradeWindow -> requestRequiredOrders(market, tradeWindow, inflationConfig))
 			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
 	}
 
@@ -102,31 +97,5 @@ public class TradeWindowInflateService {
 				BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
 				return new OrderRequest(market, orderPosition, price, inflationVolume);
 			});
-	}
-
-	private Flux<Order> cancelInvalidOrders(Market market, InflationConfig inflationConfig) {
-		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
-		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-
-		BigDecimal maxAskPrice = marketPrice.add(
-			priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
-		);
-
-		BigDecimal minBidPrice = marketPrice.subtract(
-			priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getBidCount()))
-		);
-
-		return orderService.fetchAutomaticOrdersFor(market)
-			.filter(order -> {
-				BigDecimal orderPrice = order.getPrice();
-				if (OrderPosition.ASK.equals(order.getOrderPosition())) {
-					return orderPrice.compareTo(maxAskPrice) > 0;
-				} else {
-					return orderPrice.compareTo(minBidPrice) < 0;
-				}
-			})
-			.doOnNext(order -> log.info("[TradeWindowInflation] Create order cancellations for inflation. [{}]", order))
-			.flatMap(orderService::cancelOrder)
-			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
 	}
 }

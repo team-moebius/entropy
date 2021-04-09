@@ -5,7 +5,6 @@ import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -41,7 +40,6 @@ public class BobooOpenOrderRefreshService {
                 .flatMap(symbol -> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
                             .map(assembler::convertExchangeOrder)
                             .collectList()
-                            .map(bobooOrderService::updateOrders)
                             .doOnSuccess(updatedCount -> log.info(
                                     "[BobooOpenOrderRefresh] Updated open orders. count: {}, symbol: {}",
                                     updatedCount, symbol

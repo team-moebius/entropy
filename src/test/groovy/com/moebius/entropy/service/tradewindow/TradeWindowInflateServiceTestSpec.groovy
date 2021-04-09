@@ -1,6 +1,5 @@
 package com.moebius.entropy.service.tradewindow
 
-
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflateRequest
@@ -12,7 +11,6 @@ import com.moebius.entropy.domain.trade.TradePrice
 import com.moebius.entropy.domain.trade.TradeWindow
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.OrderService
-import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import spock.lang.Shared
@@ -67,10 +65,6 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
         tradeWindowService.fetchTradeWindow(market) >> Mono.just(tradeWindow)
         tradeWindowService.getMarketPrice(market) >> marketPrice
-
-        def askedOrders = orders(askedOrderVolumes, OrderPosition.ASK)
-        def biddenOrders = orders(biddenOrderVolumes, OrderPosition.BID)
-        orderService.fetchAutomaticOrdersFor(market) >> Flux.fromIterable(askedOrders + biddenOrders)
 
         inflationConfigRepository.getConfigFor(market) >> inflationConfig
 

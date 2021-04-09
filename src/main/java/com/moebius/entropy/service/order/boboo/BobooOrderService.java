@@ -9,7 +9,6 @@ import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import com.moebius.entropy.service.order.OrderService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -17,18 +16,15 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class BobooOrderService implements OrderService {
     private final BobooExchangeService exchangeService;
     private final BobooOrderExchangeAssembler assembler;
-    private final Map<String, List<Order>> orderListForSymbol;
-    private final Set<String> automaticOrderIds;
     private final ApiKeyDto apiKeyDto;
     private final DisposableOrderRepository disposableOrderRepository;
 
@@ -40,23 +36,7 @@ public class BobooOrderService implements OrderService {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
         this.disposableOrderRepository = orderRepository;
-        orderListForSymbol = new ConcurrentHashMap<>();
-        automaticOrderIds = new LinkedHashSet<>();
         apiKeyDto = ApiKeyDto.builder().accessKey(accessKey).secretKey(secretKey).build();
-    }
-
-    public Flux<Order> fetchAutomaticOrdersFor(Market market) {
-        return fetchAllOrdersFor(market)
-                .filter(order -> automaticOrderIds.contains(order.getOrderId()));
-    }
-
-    public Flux<Order> fetchManualOrdersFor(Market market) {
-        return fetchAllOrdersFor(market)
-                .filter(order -> !automaticOrderIds.contains(order.getOrderId()));
-    }
-
-    public Flux<Order> fetchAllOrdersFor(Market market) {
-        return Flux.fromIterable(getAllOrdersForMarket(market.getSymbol()));
     }
 
     public Flux<Order> fetchOpenOrdersFor(Market market) {
@@ -64,16 +44,12 @@ public class BobooOrderService implements OrderService {
             .map(assembler::convertExchangeOrder);
     }
 
-    private List<Order> getAllOrdersForMarket(String symbol) {
-        return orderListForSymbol.getOrDefault(symbol, Collections.emptyList());
-    }
-
     public Mono<Order> requestOrder(OrderRequest orderRequest) {
-        return requestOrderWith(orderRequest, this::trackOrderAsAutomaticOrder);
+        return requestOrderWithoutTracking(orderRequest);
     }
 
     public Mono<Order> requestManualOrder(OrderRequest orderRequest) {
-        return requestOrder(orderRequest);
+        return requestOrderWithoutTracking(orderRequest);
     }
 
     public Mono<Order> requestOrderWithoutTracking(OrderRequest orderRequest) {
@@ -81,43 +57,17 @@ public class BobooOrderService implements OrderService {
     }
 
     public Mono<Order> cancelOrder(Order order) {
-        return Optional.ofNullable(order)
-                .map(assembler::convertToCancelRequest)
-                .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
-                .map(cancelMono -> cancelMono
-                        .map(bobooCancelResponse -> order)
-                        .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed for order id" + order.getOrderId(), throwable))
-                    .doOnTerminate(() -> releaseOrderFromTracking(order)))
-                .orElse(Mono.empty());
+        return cancelOrderWithoutTracking(order);
     }
 
     public Mono<Order> cancelOrderWithoutTracking(Order order) {
         return Optional.ofNullable(order)
-            .map(assembler::convertToCancelRequest)
-            .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
-            .map(bobooCancelResponseMono -> bobooCancelResponseMono.map(bobooCancelResponse -> order))
+                .map(assembler::convertToCancelRequest)
+                .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
+                .map(bobooCancelResponseMono -> bobooCancelResponseMono
+                        .map(bobooCancelResponse -> order)
+                        .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed for order id" + order.getOrderId(), throwable)))
             .orElse(Mono.empty());
-    }
-
-    public Mono<Integer> updateOrders(List<Order> orders) {
-        return Mono.just(orders)
-                .map(updatedOrders->{
-                    Set<String> aliveOrderIds = new LinkedHashSet<>();
-                    orderListForSymbol.clear();
-                    updatedOrders.forEach(order -> {
-                        aliveOrderIds.add(order.getOrderId());
-                        trackOrder(order);
-                    });
-
-                    List<String> aliveAutomaticOrderIds = automaticOrderIds.stream()
-                            .filter(aliveOrderIds::contains)
-                            .collect(Collectors.toList());
-
-                    automaticOrderIds.clear();
-                    automaticOrderIds.addAll(aliveAutomaticOrderIds);
-                    return automaticOrderIds;
-                })
-                .map(Set::size);
     }
 
     public Mono<ResponseEntity<?>> stopOrder(String disposableId) {
@@ -137,30 +87,5 @@ public class BobooOrderService implements OrderService {
                     .doOnSuccess(afterOrderCompleted)
                 )
                 .orElse(Mono.empty());
-    }
-
-    private void trackOrderAsAutomaticOrder(Order order) {
-        automaticOrderIds.add(order.getOrderId());
-        trackOrder(order);
-    }
-
-    private void trackOrder(Order order) {
-        List<Order> orders = orderListForSymbol.computeIfAbsent(
-                order.getMarket().getSymbol(), symbol -> new LinkedList<>()
-        );
-        orders.add(order);
-        log.info("[OrderTrack] Succeeded in tracking order. [{}]", order);
-    }
-
-    private void releaseOrderFromTracking(Order order){
-        automaticOrderIds.remove(order.getOrderId());
-        orderListForSymbol.computeIfPresent(order.getMarket().getSymbol(), (symbol, orders) -> {
-            if (CollectionUtils.isNotEmpty(orders)) {
-                log.info("[OrderTrack] to-be released orders id : {}", orders.stream().map(Order::getOrderId).collect(Collectors.toList()));
-                orders.removeIf(trackedOrder -> trackedOrder.getOrderId().equals(order.getOrderId()));
-            }
-            return orders;
-        });
-        log.info("[OrderTrack] Succeeded in releasing order from tracking. [{}]", order);
     }
 }
