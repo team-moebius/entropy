@@ -31,10 +31,11 @@ public class BobooOptimizeOrderService {
 		return orderService.fetchAllOrdersFor(market)
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::cancelOrder)
+			.doOnNext(order -> log.info("[OptimizeOrder] Succeeded to cancel existent order. [{}]", order))
 			.filter(order -> order.getPrice().compareTo(marketPrice) == 0 || order.getPrice().compareTo(highestBidPrice) == 0)
 			.flatMap(order -> orderService.requestOrder(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
 				volumeResolver.getInflationVolume(market, order.getOrderPosition()))))
-			.onErrorContinue((throwable, o) -> log.warn("[OptimizeOrder] Failed to cancel existent order. [{}]",
+			.onErrorContinue((throwable, o) -> log.warn("[OptimizeOrder] Failed to optimize order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString(), throwable));
 	}
 }
