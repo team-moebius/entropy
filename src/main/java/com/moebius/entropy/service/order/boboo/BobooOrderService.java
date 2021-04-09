@@ -41,7 +41,13 @@ public class BobooOrderService implements OrderService {
 
     public Flux<Order> fetchOpenOrdersFor(Market market) {
         return exchangeService.getOpenOrders(market.getSymbol(), apiKeyDto)
-            .map(assembler::convertExchangeOrder);
+                .map(assembler::convertExchangeOrder);
+    }
+
+    @Override
+    public Flux<Order> fetchAllOrdersFor(Market market) {
+        return exchangeService.getOpenOrders(market.getSymbol(), apiKeyDto)
+                .map(assembler::convertExchangeOrder);
     }
 
     public Mono<Order> requestOrder(OrderRequest orderRequest) {
