@@ -15,26 +15,26 @@ import java.util.List;
 @Service
 @Slf4j
 public class BobooOpenOrderRefreshService {
-    private final BobooExchangeService bobooExchangeService;
-    private final BobooOrderService bobooOrderService;
-    private final BobooOrderExchangeAssembler assembler;
-    private final ApiKeyDto apiKeyDto;
-    private final static List<String> trackingSymbols = Collections.singletonList("ETHVUSDT");
+	private final BobooExchangeService bobooExchangeService;
+	private final BobooOrderService bobooOrderService;
+	private final BobooOrderExchangeAssembler assembler;
+	private final ApiKeyDto apiKeyDto;
+	private final static List<String> trackingSymbols = Collections.singletonList("ETHVUSDT");
 
-    public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
-                                        BobooOrderService bobooOrderService,
-                                        BobooOrderExchangeAssembler assembler,
-                                        @Value("${exchange.boboo.apikey.accessKey}") String accessKey,
-                                        @Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
-        this.bobooExchangeService = bobooExchangeService;
-        this.bobooOrderService = bobooOrderService;
-        this.assembler = assembler;
-        apiKeyDto = ApiKeyDto.builder()
-                .accessKey(accessKey).secretKey(secretKey)
-                .build();
-    }
+	public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
+		BobooOrderService bobooOrderService,
+		BobooOrderExchangeAssembler assembler,
+		@Value("${exchange.boboo.apikey.accessKey}") String accessKey,
+		@Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
+		this.bobooExchangeService = bobooExchangeService;
+		this.bobooOrderService = bobooOrderService;
+		this.assembler = assembler;
+		apiKeyDto = ApiKeyDto.builder()
+			.accessKey(accessKey).secretKey(secretKey)
+			.build();
+	}
 
-    public void refreshOpenOrderFromExchange(){
+  public void refreshOpenOrderFromExchange(){
         log.info("[BobooOpenOrderRefresh] Start refresh from Boboo");
         Flux.fromIterable(trackingSymbols)
                 .flatMap(symbol -> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
@@ -49,10 +49,9 @@ public class BobooOpenOrderRefreshService {
                             ))
                             .switchIfEmpty(Mono.empty())
                             .then()
+			).then()
+			.subscribe();
 
-                ).then()
-                .subscribe();
-
-        log.info("[BobooOpenOrderRefresh] Finished refresh from Boboo");
-    }
+		log.info("[BobooOpenOrderRefresh] Finished refresh from Boboo");
+	}
 }

@@ -15,6 +15,5 @@ import lombok.NoArgsConstructor;
 public class AutomaticOrderCancelForm {
 
     private Market market;
-    private String disposableId;
 
 }

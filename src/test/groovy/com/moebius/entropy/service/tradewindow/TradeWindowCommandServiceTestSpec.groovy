@@ -15,7 +15,7 @@ class TradeWindowCommandServiceTestSpec extends Specification {
 
     def "Test save command"() {
         given:
-        def market = new Market(exchange, symbol, currency)
+        def market = new Market(exchange, symbol, currency, 1)
         when:
         sut.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
 

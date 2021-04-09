@@ -27,7 +27,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     @Shared
     def priceChangeUnit = TradeCurrency.USDT.getPriceUnit()
     @Shared
-    def symbol = "GTAXUSDT"
+    def symbol = "GTAX2USDT"
     @Shared
     def exchange = Exchange.BOBOO
     def tradeWindowService = Mock(TradeWindowQueryService)
@@ -41,7 +41,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
             tradeWindowService, inflationConfigRepository, orderService, inflationVolumeResolver, mockEventListener
     )
 
-    def market = new Market(exchange, symbol, TradeCurrency.USDT)
+    def market = new Market(exchange, symbol, TradeCurrency.USDT, 1)
     def inflateRequest = new InflateRequest(market)
     def inflationConfig = InflationConfig.builder()
             .askCount(8).bidCount(9).enable(true)

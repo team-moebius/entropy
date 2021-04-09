@@ -23,7 +23,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 	@Shared
 	def symbol = "GTAXUSDT"
 	@Shared
-	def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
+	def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT, 1)
 	def price = BigDecimal.valueOf(11.11)
 	def volume = BigDecimal.valueOf(123.123)
 
