@@ -30,10 +30,14 @@ function stopAutomaticOrder(market) {
 
 document.getElementById('btn-start-automatic-trade').addEventListener('click', function (ev) {
     ev.preventDefault();
-    startAutomaticOrder();
+
+    const market = document.getElementById('market');
+    startAutomaticOrder(market.value);
 })
 
 document.getElementById('btn-stop-automatic-trade').addEventListener('click', function (ev) {
     ev.preventDefault();
-    stopAutomaticOrder();
+
+    const market = document.getElementById('market');
+    stopAutomaticOrder(market.value);
 })
