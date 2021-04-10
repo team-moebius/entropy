@@ -39,3 +39,6 @@ reactor:
     http:
       server:
         AccessLog: INFO
+
+entropy:
+  symbols: GTAX2USDT,ETHVUSDT

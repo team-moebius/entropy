@@ -27,7 +27,7 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
         given:
         def orderBook = Mock(BobooOrderBookDto)
         def tradeWindow = new TradeWindow([], [])
-        def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
+        def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 1)
         def marketPrice = BigDecimal.valueOf(123.123)
         assembler.assembleTradeWindow(orderBook) >> tradeWindow
         assembler.extractMarket(orderBook) >> market
@@ -44,7 +44,7 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
     def "On failed to change on trade window"() {
         def orderBook = Mock(BobooOrderBookDto)
         def tradeWindow = null
-        def market = new Market(Exchange.BOBOO, "GTAXUSDT", TradeCurrency.USDT)
+        def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 1)
         def marketPrice = BigDecimal.valueOf(123.123)
         assembler.assembleTradeWindow(orderBook) >> tradeWindow
         assembler.extractMarket(orderBook) >> market
