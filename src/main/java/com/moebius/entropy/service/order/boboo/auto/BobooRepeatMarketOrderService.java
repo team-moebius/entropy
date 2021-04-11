@@ -82,13 +82,13 @@ public class BobooRepeatMarketOrderService {
 		if (orderPosition == OrderPosition.ASK) {
 			RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
 			BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
-				market.getDecimalPosition());
+				market.getVolumeDecimalPosition());
 
 			orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
 		} else if (orderPosition == OrderPosition.BID) {
 			RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
 			BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
-				market.getDecimalPosition());
+				market.getVolumeDecimalPosition());
 
 			orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
 		}

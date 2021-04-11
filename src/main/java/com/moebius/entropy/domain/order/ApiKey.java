@@ -1,4 +1,4 @@
-package com.moebius.entropy.dto.exchange.order;
+package com.moebius.entropy.domain.order;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ApiKeyDto {
+public class ApiKey {
 	private String accessKey;
 	private String secretKey;
 }

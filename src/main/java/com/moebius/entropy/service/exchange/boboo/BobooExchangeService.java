@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.assembler.BobooAssembler;
 import com.moebius.entropy.domain.order.OrderStatus;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.ExchangeService;
@@ -59,7 +59,7 @@ public class BobooExchangeService implements ExchangeService<
 	private final DisposableOrderRepository disposableOrderRepository;
 	private final ObjectMapper objectMapper;
 
-	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKeyDto apiKey) {
+	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKey apiKey) {
 		return webClient.get()
 				.uri(uriBuilder -> uriBuilder.scheme(scheme)
 						.host(host)
@@ -72,7 +72,7 @@ public class BobooExchangeService implements ExchangeService<
 	}
 
 	@Override
-	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest, ApiKeyDto apiKey) {
+	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest, ApiKey apiKey) {
 		MultiValueMap<String, String> queryParam = bobooAssembler.assembleCancelRequestQueryParam(cancelRequest);
 		MultiValueMap<String, String> bodyValue = bobooAssembler.assembleCancelRequestBodyValue(queryParam, apiKey);
 
@@ -110,7 +110,7 @@ public class BobooExchangeService implements ExchangeService<
 	}
 
 	@Override
-	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest, ApiKeyDto apiKey) {
+	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest, ApiKey apiKey) {
 		MultiValueMap<String, String> queryParam = bobooAssembler.assembleOrderRequestQueryParam(orderRequest);
 		MultiValueMap<String, String> bodyValue = bobooAssembler.assembleOrderRequestBodyValue(queryParam, apiKey);
 

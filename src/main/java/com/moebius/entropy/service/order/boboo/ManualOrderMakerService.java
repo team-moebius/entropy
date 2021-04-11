@@ -37,7 +37,7 @@ public class ManualOrderMakerService {
 
         int division = randomUtil.getRandomInteger(request.getStartRange(), request.getEndRange());
         List<BigDecimal> randomVolumes = randomUtil
-                .getRandomSlices(requestedVolume, division, market.getDecimalPosition());
+                .getRandomSlices(requestedVolume, division, market.getVolumeDecimalPosition());
         OrderPosition orderPosition = request.getOrderPosition();
         BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
 
@@ -63,7 +63,7 @@ public class ManualOrderMakerService {
     private BigDecimal getRandomRequestVolume(ManualOrderMakingRequest request) {
         return randomUtil.getRandomDecimal(
             request.getRequestedVolumeFrom().floatValue(),
-            request.getRequestedVolumeTo().floatValue(), request.getMarket().getDecimalPosition());
+            request.getRequestedVolumeTo().floatValue(), request.getMarket().getVolumeDecimalPosition());
     }
 
     private ManualOrderResult makeResult(List<Pair<Order, Object>> pairs) {

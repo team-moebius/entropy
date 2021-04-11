@@ -2,7 +2,7 @@ package com.moebius.entropy.service.exchange
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.moebius.entropy.assembler.BobooAssembler
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto
+import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.boboo.*
 import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
@@ -47,7 +47,7 @@ class BobooExchangeServiceTestSpec extends Specification {
     def "Should get open orders"() {
         given:
         bobooService.authHeaderName = "X-BH-APIKEY"
-        def apiKeyDto = Stub(ApiKeyDto) {
+        def apiKeyDto = Stub(ApiKey) {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
@@ -77,7 +77,7 @@ class BobooExchangeServiceTestSpec extends Specification {
 
     def "Should request new order"() {
         bobooService.authHeaderName = "X-BH-APIKEY"
-        def apiKeyDto = Stub(ApiKeyDto) {
+        def apiKeyDto = Stub(ApiKey) {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
@@ -103,7 +103,7 @@ class BobooExchangeServiceTestSpec extends Specification {
 
     def "Should request to cancel open order"() {
         bobooService.authHeaderName = "X-BH-APIKEY"
-        def apiKeyDto = Stub(ApiKeyDto) {
+        def apiKeyDto = Stub(ApiKey) {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
@@ -129,7 +129,7 @@ class BobooExchangeServiceTestSpec extends Specification {
 
     def "Error due to fulfilled order while request to cancel open order"() {
         bobooService.authHeaderName = "X-BH-APIKEY"
-        def apiKeyDto = Stub(ApiKeyDto) {
+        def apiKeyDto = Stub(ApiKey) {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
@@ -164,7 +164,7 @@ class BobooExchangeServiceTestSpec extends Specification {
 
     def "Other error while request to cancel open order"() {
         bobooService.authHeaderName = "X-BH-APIKEY"
-        def apiKeyDto = Stub(ApiKeyDto) {
+        def apiKeyDto = Stub(ApiKey) {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }

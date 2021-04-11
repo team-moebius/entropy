@@ -21,7 +21,7 @@ class TradeWindowInflationVolumeResolverTestSpec extends Specification {
     def symbol = "GTAX2USDT"
     @Shared
     def exchange = Exchange.BOBOO
-    def market = new Market(exchange, symbol, TradeCurrency.USDT, 1)
+    def market = new Market(exchange, symbol, TradeCurrency.USDT, 2, 2)
 
     def "Should get Random volume from configuration"() {
         given:

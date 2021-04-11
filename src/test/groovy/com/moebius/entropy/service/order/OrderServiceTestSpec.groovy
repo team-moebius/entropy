@@ -32,9 +32,9 @@ class OrderServiceTestSpec extends Specification {
     OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, disposableOrderRepository, accessKey, secretKey)
 
     @Shared
-    def symbol = "GTAXUSDT"
+    def symbol = "GTAX2USDT"
     @Shared
-    def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT)
+    def market = new Market(Exchange.BOBOO, symbol, TradeCurrency.USDT, 2, 2)
     def price = BigDecimal.valueOf(11.11)
     def volume = BigDecimal.valueOf(123.123)
     @Shared

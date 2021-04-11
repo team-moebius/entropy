@@ -4,7 +4,7 @@ import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import com.moebius.entropy.service.order.OrderService;
@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 public class BobooOrderService implements OrderService {
     private final BobooExchangeService exchangeService;
     private final BobooOrderExchangeAssembler assembler;
-    private final ApiKeyDto apiKeyDto;
+    private final ApiKey apiKeyDto;
     private final DisposableOrderRepository disposableOrderRepository;
 
     public BobooOrderService(BobooExchangeService exchangeService,
@@ -36,7 +36,7 @@ public class BobooOrderService implements OrderService {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
         this.disposableOrderRepository = orderRepository;
-        apiKeyDto = ApiKeyDto.builder().accessKey(accessKey).secretKey(secretKey).build();
+        apiKeyDto = ApiKey.builder().accessKey(accessKey).secretKey(secretKey).build();
     }
 
     @Override

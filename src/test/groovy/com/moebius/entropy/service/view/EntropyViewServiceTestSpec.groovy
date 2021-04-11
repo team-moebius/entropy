@@ -31,7 +31,7 @@ import spock.lang.Specification
 import java.time.Duration
 
 class EntropyViewServiceTestSpec extends Specification {
-	def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 1)
+	def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)
 	def disposableIds = ["test-disposable-id", "test-disposable-id2"]
 	def automaticOrderViewAssembler = Mock(AutomaticOrderViewAssembler)
 	def manualOrderViewAssembler = Mock(ManualOrderRequestAssembler)
