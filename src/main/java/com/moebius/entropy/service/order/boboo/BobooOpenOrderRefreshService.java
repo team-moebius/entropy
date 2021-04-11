@@ -1,7 +1,7 @@
 package com.moebius.entropy.service.order.boboo;
 
 import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +18,7 @@ public class BobooOpenOrderRefreshService {
 	private final BobooExchangeService bobooExchangeService;
 	private final BobooOrderService bobooOrderService;
 	private final BobooOrderExchangeAssembler assembler;
-	private final ApiKeyDto apiKeyDto;
+	private final ApiKey apiKeyDto;
 	private final static List<String> trackingSymbols = Collections.singletonList("ETHVUSDT");
 
 	public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
@@ -29,9 +29,9 @@ public class BobooOpenOrderRefreshService {
 		this.bobooExchangeService = bobooExchangeService;
 		this.bobooOrderService = bobooOrderService;
 		this.assembler = assembler;
-		apiKeyDto = ApiKeyDto.builder()
-			.accessKey(accessKey).secretKey(secretKey)
-			.build();
+		apiKeyDto = new ApiKey();
+		apiKeyDto.setAccessKey(accessKey);
+		apiKeyDto.setSecretKey(secretKey);
 	}
 
   public void refreshOpenOrderFromExchange(){

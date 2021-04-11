@@ -27,10 +27,10 @@ import java.util.Map;
 @RequestMapping("/")
 public class EntropyWebController {
 
-	private final static Market GTAX_MARKET = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 1);
+	private final static Market GTAX_MARKET = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2);
 	private final static Map<String, Market> MARKETS = Map.of(
 		"gtax2", GTAX_MARKET,
-		"ethv", new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT, 2));
+		"ethv", new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT, 2, 1));
 	private final EntropyViewService viewService;
 
 	@GetMapping(value = "")

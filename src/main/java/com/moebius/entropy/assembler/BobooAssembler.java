@@ -2,7 +2,7 @@ package com.moebius.entropy.assembler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest;
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
@@ -39,7 +39,7 @@ public class BobooAssembler {
 	private Map<String, String> params;
 	private final ObjectMapper objectMapper;
 
-	public MultiValueMap<String, String> assembleOpenOrdersQueryParams(String symbol, ApiKeyDto apiKey) {
+	public MultiValueMap<String, String> assembleOpenOrdersQueryParams(String symbol, ApiKey apiKey) {
 		MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 
 		queryParams.add("symbol", symbol);
@@ -89,7 +89,7 @@ public class BobooAssembler {
 	}
 
 	public MultiValueMap<String, String> assembleOrderRequestBodyValue(MultiValueMap<String, String> queryParam,
-																	   ApiKeyDto apiKeyDto) {
+																	   ApiKey apiKeyDto) {
 		MultiValueMap<String, String> requestBody = createBaseBodyValue();
 
 		String signature = ParameterSecurityEncoder.encodeParameters(queryParam, requestBody, apiKeyDto.getSecretKey());
@@ -105,7 +105,7 @@ public class BobooAssembler {
 	}
 
 	public MultiValueMap<String, String> assembleCancelRequestBodyValue(MultiValueMap<String, String> queryParam,
-																		ApiKeyDto apiKeyDto) {
+																		ApiKey apiKeyDto) {
 		MultiValueMap<String, String> requestBody = createBaseBodyValue();
 
 		String signature = ParameterSecurityEncoder.encodeParameters(queryParam, requestBody, apiKeyDto.getSecretKey());

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.moebius.entropy.domain.order.OrderType
 import com.moebius.entropy.domain.order.OrderSide
 import com.moebius.entropy.domain.order.TimeInForce
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto
+import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto
@@ -34,7 +34,7 @@ class BobooAssemblerTestSpec extends Specification {
 
 	def "Should assemble open orders query params"() {
 		given:
-		def apiKey = Stub(ApiKeyDto) {
+		def apiKey = Stub(ApiKey) {
 			getAccessKey() >> "testAccessKey"
 			getSecretKey() >> "testSecretKey"
 		}
@@ -119,10 +119,9 @@ class BobooAssemblerTestSpec extends Specification {
 				"symbol": ["GTAXUSDT"], "side": ["BUY"], "type": ["LIMIT"],
 				"timeInForce": ["GTC"], "quantity": ["1"], "price": ["0.1"],
 		])
-		def apiKeyDto = ApiKeyDto.builder()
-				.accessKey("test_access_key")
-				.secretKey("test_secrey_key")
-				.build()
+		def apiKeyDto = new ApiKey()
+		apiKeyDto.setAccessKey("test_access_key")
+		apiKeyDto.setSecretKey("test_secret_key")
 
 		when:
 		def bodyRequest = bobooAssembler.assembleOrderRequestBodyValue(queryParam, apiKeyDto)
@@ -150,10 +149,9 @@ class BobooAssemblerTestSpec extends Specification {
 	def "Should assemble requestBody for order cancel request"(){
 		given:
 		def queryParam = new LinkedMultiValueMap(["origClientOrderId": ["some-test-string"],])
-		def apiKeyDto = ApiKeyDto.builder()
-				.accessKey("test_access_key")
-				.secretKey("test_secrey_key")
-				.build()
+		def apiKeyDto = new ApiKey()
+		apiKeyDto.setAccessKey("test_secret_key")
+		apiKeyDto.setSecretKey("test_access_key")
 
 		when:
 		def bodyRequest = bobooAssembler.assembleCancelRequestBodyValue(queryParam, apiKeyDto)
