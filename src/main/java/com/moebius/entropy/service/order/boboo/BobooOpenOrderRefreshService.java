@@ -29,9 +29,9 @@ public class BobooOpenOrderRefreshService {
 		this.bobooExchangeService = bobooExchangeService;
 		this.bobooOrderService = bobooOrderService;
 		this.assembler = assembler;
-		apiKeyDto = ApiKey.builder()
-			.accessKey(accessKey).secretKey(secretKey)
-			.build();
+		apiKeyDto = new ApiKey();
+		apiKeyDto.setAccessKey(accessKey);
+		apiKeyDto.setSecretKey(secretKey);
 	}
 
   public void refreshOpenOrderFromExchange(){

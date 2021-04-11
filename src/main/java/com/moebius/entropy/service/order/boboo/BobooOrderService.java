@@ -36,7 +36,9 @@ public class BobooOrderService implements OrderService {
         this.exchangeService = exchangeService;
         this.assembler = assembler;
         this.disposableOrderRepository = orderRepository;
-        apiKeyDto = ApiKey.builder().accessKey(accessKey).secretKey(secretKey).build();
+        apiKeyDto = new ApiKey();
+        apiKeyDto.setAccessKey(accessKey);
+        apiKeyDto.setSecretKey(secretKey);
     }
 
     @Override

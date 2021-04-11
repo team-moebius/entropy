@@ -119,10 +119,9 @@ class BobooAssemblerTestSpec extends Specification {
 				"symbol": ["GTAXUSDT"], "side": ["BUY"], "type": ["LIMIT"],
 				"timeInForce": ["GTC"], "quantity": ["1"], "price": ["0.1"],
 		])
-		def apiKeyDto = ApiKey.builder()
-				.accessKey("test_access_key")
-				.secretKey("test_secrey_key")
-				.build()
+		def apiKeyDto = new ApiKey()
+		apiKeyDto.setAccessKey("test_access_key")
+		apiKeyDto.setSecretKey("test_secret_key")
 
 		when:
 		def bodyRequest = bobooAssembler.assembleOrderRequestBodyValue(queryParam, apiKeyDto)
@@ -150,10 +149,9 @@ class BobooAssemblerTestSpec extends Specification {
 	def "Should assemble requestBody for order cancel request"(){
 		given:
 		def queryParam = new LinkedMultiValueMap(["origClientOrderId": ["some-test-string"],])
-		def apiKeyDto = ApiKey.builder()
-				.accessKey("test_access_key")
-				.secretKey("test_secrey_key")
-				.build()
+		def apiKeyDto = new ApiKey()
+		apiKeyDto.setAccessKey("test_secret_key")
+		apiKeyDto.setSecretKey("test_access_key")
 
 		when:
 		def bodyRequest = bobooAssembler.assembleCancelRequestBodyValue(queryParam, apiKeyDto)
