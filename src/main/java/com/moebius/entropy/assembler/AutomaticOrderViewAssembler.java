@@ -75,6 +75,8 @@ public class AutomaticOrderViewAssembler {
             .exchange(market.getExchange())
             .symbol(market.getSymbol())
             .tradeCurrency(market.getTradeCurrency())
+            .priceDecimalPosition(market.getPriceDecimalPosition())
+            .volumeDecimalPosition(market.getVolumeDecimalPosition())
             .build();
     }
 

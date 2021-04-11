@@ -137,10 +137,10 @@ public class BobooDividedDummyOrderService {
 		return Flux.range(0, dummyOrderRequest.getReorderCount())
 			.flatMapIterable(count -> dummyOrderRequest.getOrderRequests())
 			.delayElements(dummyOrderRequest.getDelay())
-			.flatMap(orderService::requestOrderWithoutTracking)
+			.flatMap(orderService::requestOrder)
 			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to request dummy order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
-			.flatMap(orderService::cancelOrderWithoutTracking)
+			.flatMap(orderService::cancelOrder)
 			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.doOnComplete(() -> log.info("[DummyOrder] Completed in requesting & cancelling dummy orders. [{}]", dummyOrderRequest));
 	}

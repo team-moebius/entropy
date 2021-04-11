@@ -1,7 +1,7 @@
-function startManualOrder(orderPosition) {
+function startManualOrder(market, orderPosition) {
     const formData = serializeForm(`manual-${orderPosition}-form`);
 
-    requestApi('post', '/order/manual', formData)
+    requestApi('post', `${market}/order/manual`, formData)
         .then((response) => {
             const responseElement = document.getElementById("response-info");
             const responseTextElement = document.getElementById("text-response");

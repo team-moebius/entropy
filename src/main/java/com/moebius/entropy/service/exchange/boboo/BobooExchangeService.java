@@ -1,7 +1,10 @@
 package com.moebius.entropy.service.exchange.boboo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.assembler.BobooAssembler;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.domain.order.OrderStatus;
+import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.ExchangeService;
@@ -14,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.socket.client.WebSocketClient;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -53,21 +57,22 @@ public class BobooExchangeService implements ExchangeService<
 	private final BobooAssembler bobooAssembler;
 	private final BobooTradeWindowChangeEventListener tradeWindowEventListener;
 	private final DisposableOrderRepository disposableOrderRepository;
+	private final ObjectMapper objectMapper;
 
-	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKeyDto apiKey) {
+	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKey apiKey) {
 		return webClient.get()
-			.uri(uriBuilder -> uriBuilder.scheme(scheme)
-				.host(host)
-				.path(openOrdersPath)
-				.queryParams(bobooAssembler.assembleOpenOrdersQueryParams(symbol, apiKey))
-				.build())
-			.header(authHeaderName, apiKey.getAccessKey())
-			.retrieve()
+				.uri(uriBuilder -> uriBuilder.scheme(scheme)
+						.host(host)
+						.path(openOrdersPath)
+						.queryParams(bobooAssembler.assembleOpenOrdersQueryParams(symbol, apiKey))
+						.build())
+				.header(authHeaderName, apiKey.getAccessKey())
+				.retrieve()
 			.bodyToFlux(BobooOpenOrdersDto.class);
 	}
 
 	@Override
-	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest, ApiKeyDto apiKey) {
+	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest, ApiKey apiKey) {
 		MultiValueMap<String, String> queryParam = bobooAssembler.assembleCancelRequestQueryParam(cancelRequest);
 		MultiValueMap<String, String> bodyValue = bobooAssembler.assembleCancelRequestBodyValue(queryParam, apiKey);
 
@@ -80,11 +85,32 @@ public class BobooExchangeService implements ExchangeService<
 				.header(authHeaderName, apiKey.getAccessKey())
 				.body(BodyInserters.fromFormData(bodyValue))
 				.retrieve()
-				.bodyToMono(BobooCancelResponse.class);
+				.bodyToMono(BobooCancelResponse.class)
+				.doOnError(exception -> log.error("[BobooExchange] Failed to cancel order. {}", ((WebClientResponseException) exception).getResponseBodyAsString()))
+				//{"code":-1142,"msg":"Order has been canceled"}
+				//{"code":-1139,"msg":"Order has been filled."}
+				.onErrorResume(WebClientResponseException.BadRequest.class, badRequest -> {
+					String responseString = badRequest.getResponseBodyAsString();
+					try {
+						BobooErrorResponse bobooErrorResponse = objectMapper.readValue(responseString, BobooErrorResponse.class);
+						int code = bobooErrorResponse.getCode();
+						if (code == -1142 || code == -1139) {
+							return Mono.just(BobooCancelResponse.builder()
+									.orderId(cancelRequest.getOrderId())
+									.clientOrderId(cancelRequest.getOrderId())
+									.status(OrderStatus.CANCELED)
+									.build());
+						}
+					} catch (JsonProcessingException e) {
+						log.error("[BobooOrderCancel] Failed to parse error response from exchange" + responseString, e);
+					}
+					return Mono.error(badRequest);
+
+				});
 	}
 
 	@Override
-	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest, ApiKeyDto apiKey) {
+	public Mono<BobooOrderResponseDto> requestOrder(BobooOrderRequestDto orderRequest, ApiKey apiKey) {
 		MultiValueMap<String, String> queryParam = bobooAssembler.assembleOrderRequestQueryParam(orderRequest);
 		MultiValueMap<String, String> bodyValue = bobooAssembler.assembleOrderRequestBodyValue(queryParam, apiKey);
 

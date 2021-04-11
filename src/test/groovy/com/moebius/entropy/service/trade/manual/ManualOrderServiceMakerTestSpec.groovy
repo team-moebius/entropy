@@ -31,10 +31,10 @@ class ManualOrderServiceMakerTestSpec extends Specification {
     @Subject
     def sut = new ManualOrderMakerService(randomUtil, orderService, tradeWindowRepository)
     @Shared
-    def symbol = "GTAXUSDT"
+    def symbol = "GTAX2USDT"
     @Shared
     def exchange = Exchange.BOBOO
-    def market = new Market(exchange, symbol, TradeCurrency.USDT)
+    def market = new Market(exchange, symbol, TradeCurrency.USDT, 2, 2)
 
 
     @Unroll

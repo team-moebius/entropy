@@ -1,6 +1,6 @@
-function startAutomaticOrder() {
+function startAutomaticOrder(market) {
     const formData = serializeForm('automatic-form')
-    requestApi('post', '/order/automatic', formData)
+    requestApi('post', `${market}/order/automatic`, formData)
         .then((response) => {
             const responseElement = document.getElementById("response-info");
             const responseTextElement = document.getElementById("text-response");
@@ -13,8 +13,8 @@ function startAutomaticOrder() {
         })
         .catch(error=>console.log(error));
 }
-function stopAutomaticOrder() {
-    requestApi('delete', '/order/automatic')
+function stopAutomaticOrder(market) {
+    requestApi('delete', `${market}/order/automatic`)
         .then((response) => {
             const responseElement = document.getElementById("response-info");
             const responseTextElement = document.getElementById("text-response");
@@ -30,10 +30,14 @@ function stopAutomaticOrder() {
 
 document.getElementById('btn-start-automatic-trade').addEventListener('click', function (ev) {
     ev.preventDefault();
-    startAutomaticOrder();
+
+    const market = document.getElementById('market');
+    startAutomaticOrder(market.value);
 })
 
 document.getElementById('btn-stop-automatic-trade').addEventListener('click', function (ev) {
     ev.preventDefault();
-    stopAutomaticOrder();
+
+    const market = document.getElementById('market');
+    stopAutomaticOrder(market.value);
 })

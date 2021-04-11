@@ -5,5 +5,6 @@ public enum OrderStatus {
 	PARTIALLY_FILLED,
 	FILLED,
 	CANCELED,
-	REJECTED
+	REJECTED,
+	PENDING_NEW
 }
