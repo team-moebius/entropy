@@ -8,42 +8,31 @@ import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
 import com.moebius.entropy.service.order.OrderService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class BobooOrderService implements OrderService {
     private final BobooExchangeService exchangeService;
     private final BobooOrderExchangeAssembler assembler;
-    private final ApiKey apiKeyDto;
+    private final Map<String, ApiKey> apiKeys;
     private final DisposableOrderRepository disposableOrderRepository;
-
-    public BobooOrderService(BobooExchangeService exchangeService,
-                             BobooOrderExchangeAssembler assembler,
-                             DisposableOrderRepository orderRepository,
-                             @Value("${exchange.boboo.apikey.accessKey}") String accessKey,
-                             @Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
-        this.exchangeService = exchangeService;
-        this.assembler = assembler;
-        this.disposableOrderRepository = orderRepository;
-        apiKeyDto = new ApiKey();
-        apiKeyDto.setAccessKey(accessKey);
-        apiKeyDto.setSecretKey(secretKey);
-    }
 
     @Override
     public Flux<Order> fetchAllOrdersFor(Market market) {
-        return exchangeService.getOpenOrders(market.getSymbol(), apiKeyDto)
+        return exchangeService.getOpenOrders(market.getSymbol(), getApiKeyByMarketSymbol(market))
                 .map(assembler::convertExchangeOrder);
     }
 
@@ -61,7 +50,7 @@ public class BobooOrderService implements OrderService {
     public Mono<Order> cancelOrder(Order order) {
         return Optional.ofNullable(order)
             .map(assembler::convertToCancelRequest)
-            .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, apiKeyDto))
+            .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, getApiKeyByMarketSymbol(order.getMarket())))
             .map(bobooCancelResponseMono -> bobooCancelResponseMono
                 .map(bobooCancelResponse -> order)
                 .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed for order id" + order.getOrderId(), throwable)))
@@ -79,11 +68,16 @@ public class BobooOrderService implements OrderService {
     private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted){
         return Optional.ofNullable(orderRequest)
                 .map(assembler::convertToOrderRequest)
-                .map(bobooOrderRequest->exchangeService.requestOrder(bobooOrderRequest, apiKeyDto))
+                .map(bobooOrderRequest->exchangeService.requestOrder(bobooOrderRequest, getApiKeyByMarketSymbol(orderRequest.getMarket())))
                 .map(orderMono->orderMono.map(assembler::convertToOrder)
                     .filter(Objects::nonNull)
                     .doOnSuccess(afterOrderCompleted)
                 )
                 .orElse(Mono.empty());
+    }
+
+    private ApiKey getApiKeyByMarketSymbol(Market market) {
+        return Optional.ofNullable(apiKeys.getOrDefault(market.getSymbol().toLowerCase(), null))
+            .orElseThrow();
     }
 }

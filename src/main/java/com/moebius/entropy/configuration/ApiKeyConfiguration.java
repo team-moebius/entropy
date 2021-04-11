@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
@@ -16,4 +17,9 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "entropy")
 public class ApiKeyConfiguration {
 	private Map<String, ApiKey> apiKeys;
+
+	@Bean
+	Map<String, ApiKey> apiKeys() {
+		return apiKeys;
+	}
 }
