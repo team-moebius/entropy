@@ -53,7 +53,7 @@ public class BobooOrderService implements OrderService {
             .map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, getApiKeyByMarketSymbol(order.getMarket())))
             .map(bobooCancelResponseMono -> bobooCancelResponseMono
                 .map(bobooCancelResponse -> order)
-                .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed for order id" + order.getOrderId(), throwable)))
+                .doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed. [{}]", order, throwable)))
             .orElse(Mono.empty());
     }
 
