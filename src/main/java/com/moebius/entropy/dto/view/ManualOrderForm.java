@@ -1,5 +1,6 @@
 package com.moebius.entropy.dto.view;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.moebius.entropy.validators.ValidRangeField;
 import lombok.*;
@@ -17,6 +18,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ManualOrderForm {
     @JsonProperty("order-position")
     @NotEmpty

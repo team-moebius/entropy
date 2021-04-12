@@ -17,10 +17,14 @@ function startManualOrder(market, orderPosition) {
 
 document.getElementById('btn-manual-sell-start').addEventListener('click', function (ev) {
     ev.preventDefault();
-    startManualOrder("sell");
+
+    const market = document.getElementById('market');
+    startManualOrder(market.value, "sell");
 })
 
 document.getElementById('btn-manual-buy-start').addEventListener('click', function (ev) {
     ev.preventDefault();
-    startManualOrder("buy");
+
+    const market = document.getElementById('market');
+    startManualOrder(market.value,"buy");
 })
