@@ -17,6 +17,7 @@ import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
@@ -81,7 +82,8 @@ public class TradeWindowInflateService {
 			BinaryOperator<BigDecimal> priceCalculationHandler,
 			List<TradePrice> prices
 	) {
-		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market)
+			.setScale(market.getPriceDecimalPosition(), RoundingMode.HALF_UP);
 		BigDecimal startPrice = OrderPosition.BID.equals(orderPosition)
 				? marketPrice.subtract(market.getTradeCurrency().getPriceUnit())
 				: marketPrice;
