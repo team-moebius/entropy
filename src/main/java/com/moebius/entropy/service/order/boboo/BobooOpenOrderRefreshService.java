@@ -16,18 +16,15 @@ import java.util.List;
 @Slf4j
 public class BobooOpenOrderRefreshService {
 	private final BobooExchangeService bobooExchangeService;
-	private final BobooOrderService bobooOrderService;
 	private final BobooOrderExchangeAssembler assembler;
 	private final ApiKey apiKeyDto;
 	private final static List<String> trackingSymbols = Collections.singletonList("ETHVUSDT");
 
 	public BobooOpenOrderRefreshService(BobooExchangeService bobooExchangeService,
-		BobooOrderService bobooOrderService,
 		BobooOrderExchangeAssembler assembler,
 		@Value("${exchange.boboo.apikey.accessKey}") String accessKey,
 		@Value("${exchange.boboo.apikey.secretKey}") String secretKey) {
 		this.bobooExchangeService = bobooExchangeService;
-		this.bobooOrderService = bobooOrderService;
 		this.assembler = assembler;
 		apiKeyDto = new ApiKey();
 		apiKeyDto.setAccessKey(accessKey);

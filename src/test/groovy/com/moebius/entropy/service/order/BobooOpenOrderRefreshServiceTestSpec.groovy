@@ -13,12 +13,11 @@ import spock.lang.Subject
 
 class BobooOpenOrderRefreshServiceTestSpec extends Specification {
 	def mockExchangeService = Mock(BobooExchangeService)
-	def mockOrderService = Mock(BobooOrderService)
 	def mockAssembler = Mock(BobooOrderExchangeAssembler)
 	def accessKey = "some_test_api_key"
 	def secretKey = "some_test_secret_key"
 	@Subject
-	def sut = new BobooOpenOrderRefreshService(mockExchangeService, mockOrderService, mockAssembler, accessKey, secretKey)
+	def sut = new BobooOpenOrderRefreshService(mockExchangeService, mockAssembler, accessKey, secretKey)
 
   def "Update tracked orders from exchange"(){
         when:

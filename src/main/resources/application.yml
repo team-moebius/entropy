@@ -41,6 +41,9 @@ reactor:
         AccessLog: INFO
 
 entropy:
+  userDetail:
+    username: mmadmin
+    password: oq6343wy@@
   symbols: GTAX2USDT,ETHVUSDT
   apiKeys:
     ethvusdt:
