@@ -20,9 +20,9 @@ import java.util.ArrayList;
 @Configuration
 @EnableWebFluxSecurity
 public class WebfluxSecurityConfig {
-    @Value("${entropy.user-detail.user-name}")
+    @Value("${entropy.userDetail.username}")
     private String username;
-    @Value("${entropy.user-detail.password}")
+    @Value("${entropy.userDetail.password}")
     private String password;
 
     @Bean

@@ -41,9 +41,9 @@ reactor:
         AccessLog: INFO
 
 entropy:
-  user-detail:
-    user-name: entropy
-    password: p@$$w0rd-th@t-need-t0-be-ch@nged
+  userDetail:
+    username: mmadmin
+    password: oq6343wy@@
   symbols: GTAX2USDT,ETHVUSDT
   apiKeys:
     ethvusdt:
