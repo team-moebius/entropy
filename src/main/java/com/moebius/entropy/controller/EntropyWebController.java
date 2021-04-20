@@ -1,6 +1,5 @@
 package com.moebius.entropy.controller;
 
-
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.domain.Market;
@@ -12,12 +11,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 import java.time.Duration;
+import java.util.Map;
 
 @SuppressWarnings("unused")
 @RequiredArgsConstructor
@@ -26,45 +27,60 @@ import java.time.Duration;
 @RequestMapping("/")
 public class EntropyWebController {
 
-    private final static Market market = new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT);
-    private final EntropyViewService viewService;
+	private final static Market GTAX_MARKET = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2);
+	private final static Map<String, Market> MARKETS = Map.of(
+		"gtax2", GTAX_MARKET,
+		"ethv", new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT, 2, 1));
+	private final EntropyViewService viewService;
 
-    @GetMapping("/")
-    public String index() {
+	@GetMapping(value = "")
+    public String index(Model model) {
+        model.addAttribute("market", "gtax2");
         return "index";
     }
 
-    @GetMapping(value = "/subscribe-market-prices", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @ResponseBody
-    public Flux<ServerSentEvent<MarketPriceDto>> getPriceStream() {
-        return viewService.receiveMarketPriceDto(market, Duration.ofSeconds(1L))
-            .map(marketPrice -> ServerSentEvent
-                .builder(marketPrice)
-                .build()
-            );
-    }
+	@GetMapping(value = "/{market}")
+	public String index(@PathVariable("market") String market, Model model) {
+		if (!MARKETS.containsKey(market.toLowerCase())) {
+			model.addAttribute("market", "gtax2");
+		} else {
+			model.addAttribute("market", market);
+		}
 
-    @PostMapping("/order/automatic")
-    @ResponseBody
-    public Mono<AutomaticOrderResult> requestAutomaticOrder(
-        @Valid @RequestBody AutomaticOrderForm orderForm) {
-        return viewService.startAutomaticOrder(market, orderForm);
-    }
+		return "index";
+	}
 
-    @DeleteMapping("/order/automatic")
-    @ResponseBody
-    public Mono<AutomaticOrderCancelResult> cancelAutomaticOrder(
-            @RequestParam(defaultValue = "disposableId") String disposableId) {
-        return viewService.cancelAutomaticOrder(AutomaticOrderCancelForm.builder()
-                .disposableId(disposableId)
-                .market(market)
-                .build());
-    }
+	@GetMapping(value = "/{market}/subscribe-market-prices", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	@ResponseBody
+	public Flux<ServerSentEvent<MarketPriceDto>> getPriceStream(@PathVariable("market") String market) {
+		return viewService.receiveMarketPriceDto(MARKETS.getOrDefault(market.toLowerCase(), GTAX_MARKET), Duration.ofSeconds(1L))
+			.map(marketPrice -> ServerSentEvent
+				.builder(marketPrice)
+				.build()
+			);
+	}
 
-    @PostMapping("/order/manual")
-    @ResponseBody
-    public Mono<ManualOrderResult> requestAutomaticOrder(
-        @Valid @RequestBody ManualOrderForm orderForm) {
-        return viewService.requestManualOrder(market, orderForm);
-    }
+	@PostMapping("/{market}/order/automatic")
+	@ResponseBody
+	public Mono<AutomaticOrderResult> requestAutomaticOrder(
+		@PathVariable("market") String market,
+		@Valid @RequestBody AutomaticOrderForm orderForm) {
+		return viewService.startAutomaticOrder(MARKETS.getOrDefault(market.toLowerCase(), GTAX_MARKET), orderForm);
+	}
+
+	@DeleteMapping("/{market}/order/automatic")
+	@ResponseBody
+	public Mono<AutomaticOrderCancelResult> cancelAutomaticOrder(@PathVariable("market") String market) {
+		return viewService.cancelAutomaticOrder(AutomaticOrderCancelForm.builder()
+			.market(MARKETS.getOrDefault(market.toLowerCase(), GTAX_MARKET))
+			.build());
+	}
+
+	@PostMapping("/{market}/order/manual")
+	@ResponseBody
+	public Mono<ManualOrderResult> requestAutomaticOrder(
+		@PathVariable("market") String market,
+		@Valid @RequestBody ManualOrderForm orderForm) {
+		return viewService.requestManualOrder(MARKETS.getOrDefault(market.toLowerCase(), GTAX_MARKET), orderForm);
+	}
 }

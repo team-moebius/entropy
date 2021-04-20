@@ -4,6 +4,7 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.order.config.DummyOrderConfig;
 import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.util.EntropyRandomUtils;
@@ -21,7 +22,6 @@ import java.util.Optional;
 public class TradeWindowInflationVolumeResolver {
 	private final InflationConfigRepository inflationConfigRepository;
 	private final EntropyRandomUtils randomUtils;
-	private final static int DECIMAL_POSITION = 1;
 
 	public BigDecimal getRandomMarketVolume(BigDecimal minVolume, BigDecimal maxVolume, int decimalPosition) {
 		return randomUtils.getRandomDecimal(minVolume.floatValue(), maxVolume.floatValue(), decimalPosition);
@@ -29,7 +29,7 @@ public class TradeWindowInflationVolumeResolver {
 
 	public BigDecimal getInflationVolume(Market market, OrderPosition orderPosition) {
 		return Optional.ofNullable(inflationConfigRepository.getConfigFor(market))
-			.map(inflationConfig -> getRandomVolume(inflationConfig, orderPosition))
+			.map(inflationConfig -> getRandomVolume(inflationConfig, orderPosition, market.getVolumeDecimalPosition()))
 			.orElse(BigDecimal.ZERO);
 	}
 
@@ -37,7 +37,7 @@ public class TradeWindowInflationVolumeResolver {
 		List<BigDecimal> dividedVolumes = new ArrayList<>();
 		BigDecimal inflationVolume = Optional.ofNullable(orderDto)
 			.map(DividedDummyOrderDto::getInflationConfig)
-			.map(inflationConfig -> getRandomVolume(inflationConfig, orderPosition))
+			.map(inflationConfig -> getRandomVolume(inflationConfig, orderPosition, orderDto.getMarket().getVolumeDecimalPosition()))
 			.orElse(BigDecimal.ZERO);
 		int minDividedOrderCount = 0;
 		int maxDividedOrderCount = 0;
@@ -65,7 +65,10 @@ public class TradeWindowInflationVolumeResolver {
 		int range = randomUtils.getRandomInteger(minDividedOrderCount, maxDividedOrderCount);
 
 		for (int i = range - 1; i > 0; --i) {
-			BigDecimal dividedVolume = randomUtils.getRandomDecimal(1f * i, inflationVolume.floatValue(), DECIMAL_POSITION);
+			BigDecimal dividedVolume = randomUtils.getRandomDecimal(1f * i, inflationVolume.floatValue(), Optional.ofNullable(orderDto)
+				.map(DividedDummyOrderDto::getMarket)
+				.map(MarketDto::getVolumeDecimalPosition)
+				.orElse(0));
 			dividedVolumes.add(dividedVolume);
 			inflationVolume = inflationVolume.subtract(dividedVolume);
 		}
@@ -79,7 +82,7 @@ public class TradeWindowInflationVolumeResolver {
 		return dividedVolumes;
 	}
 
-	private BigDecimal getRandomVolume(InflationConfig inflationConfig, OrderPosition orderPosition) {
+	private BigDecimal getRandomVolume(InflationConfig inflationConfig, OrderPosition orderPosition, int decimalPosition) {
 		return Optional.ofNullable(inflationConfig)
 			.map(config -> {
 				BigDecimal maxVolume;
@@ -94,7 +97,7 @@ public class TradeWindowInflationVolumeResolver {
 				return Pair.of(minVolume, maxVolume);
 			})
 			.map(rangePair -> randomUtils.getRandomDecimal(
-				rangePair.getLeft().floatValue(), rangePair.getRight().floatValue(), DECIMAL_POSITION
+				rangePair.getLeft().floatValue(), rangePair.getRight().floatValue(), decimalPosition
 			))
 			.orElse(BigDecimal.ZERO);
 	}

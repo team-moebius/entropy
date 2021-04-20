@@ -29,7 +29,6 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class BobooRepeatMarketOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
-	private final static int DECIMAL_POSITION = 1;
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
@@ -83,13 +82,13 @@ public class BobooRepeatMarketOrderService {
 		if (orderPosition == OrderPosition.ASK) {
 			RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
 			BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
-				DECIMAL_POSITION);
+				market.getVolumeDecimalPosition());
 
 			orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
 		} else if (orderPosition == OrderPosition.BID) {
 			RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
 			BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
-				DECIMAL_POSITION);
+				market.getVolumeDecimalPosition());
 
 			orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
 		}
@@ -99,7 +98,7 @@ public class BobooRepeatMarketOrderService {
 		}
 
 		return Mono.just(orderRequest)
-			.flatMap(orderService::requestOrderWithoutTracking)
+			.flatMap(orderService::requestOrder)
 			.doOnNext(order -> log.info("[RepeatMarketOrder] Create repeated market order request. [{}]", order))
 			.doOnError(throwable -> log.error("[RepeatMarketOrder] Failed to request market order.", throwable));
 	}

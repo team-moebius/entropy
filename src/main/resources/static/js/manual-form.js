@@ -1,7 +1,7 @@
-function startManualOrder(orderPosition) {
+function startManualOrder(market, orderPosition) {
     const formData = serializeForm(`manual-${orderPosition}-form`);
 
-    requestApi('post', '/order/manual', formData)
+    requestApi('post', `${market}/order/manual`, formData)
         .then((response) => {
             const responseElement = document.getElementById("response-info");
             const responseTextElement = document.getElementById("text-response");
@@ -17,10 +17,14 @@ function startManualOrder(orderPosition) {
 
 document.getElementById('btn-manual-sell-start').addEventListener('click', function (ev) {
     ev.preventDefault();
-    startManualOrder("sell");
+
+    const market = document.getElementById('market');
+    startManualOrder(market.value, "sell");
 })
 
 document.getElementById('btn-manual-buy-start').addEventListener('click', function (ev) {
     ev.preventDefault();
-    startManualOrder("buy");
+
+    const market = document.getElementById('market');
+    startManualOrder(market.value,"buy");
 })

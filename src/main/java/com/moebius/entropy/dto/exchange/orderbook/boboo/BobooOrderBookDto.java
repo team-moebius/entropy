@@ -10,7 +10,7 @@ import java.util.Map;
 
 @Getter
 @Builder
-@ToString(exclude = "data")
+@ToString
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -33,7 +33,7 @@ public class BobooOrderBookDto implements OrderBookDto<BobooOrderBookDto.Data> {
 
 	@Getter
 	@Builder
-	@ToString
+	@ToString(exclude = {"symbol", "timestamp", "version"})
 	@NoArgsConstructor(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	@JsonIgnoreProperties(ignoreUnknown = true)

@@ -3,7 +3,7 @@ package com.moebius.entropy.controller;
 import com.moebius.entropy.domain.order.OrderSide;
 import com.moebius.entropy.domain.order.OrderType;
 import com.moebius.entropy.domain.order.TimeInForce;
-import com.moebius.entropy.dto.exchange.order.ApiKeyDto;
+import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
@@ -47,7 +47,7 @@ public class BobooController {
 	 * }
 	 */
 	@PostMapping("/open-orders")
-	public Flux<BobooOpenOrdersDto> getOpenOrders(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto) {
+	public Flux<BobooOpenOrdersDto> getOpenOrders(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
 		return bobooExchangeService.getOpenOrders(symbol, apiKeyDto);
 	}
 
@@ -67,7 +67,7 @@ public class BobooController {
 	}
 
 	@PostMapping("/cancel-test-order")
-	public Flux<BobooCancelResponse> cancelAllOpenOrders(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto) {
+	public Flux<BobooCancelResponse> cancelAllOpenOrders(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
 		return bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
 			.map(bobooOpenOrdersDto -> BobooCancelRequest.builder()
 				.orderId(bobooOpenOrdersDto.getInternalId())
@@ -84,7 +84,7 @@ public class BobooController {
 	}
 
 	@PostMapping("/test-buy-order")
-	public Mono<BobooOrderResponseDto> testBuyOrder(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto) {
+	public Mono<BobooOrderResponseDto> testBuyOrder(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
 		var clientOrderId = OrderIdUtil.generateOrderId();
 		var orderRequest = BobooOrderRequestDto.builder()
 			.symbol(symbol)
@@ -99,7 +99,7 @@ public class BobooController {
 	}
 
 	@PostMapping("/test-sell-order")
-	public Mono<BobooOrderResponseDto> testSellOrder(@RequestParam String symbol, @RequestBody ApiKeyDto apiKeyDto) {
+	public Mono<BobooOrderResponseDto> testSellOrder(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
 		var clientOrderId = OrderIdUtil.generateOrderId();
 		var orderRequest = BobooOrderRequestDto.builder()
 			.symbol(symbol)
@@ -114,7 +114,7 @@ public class BobooController {
 	}
 
 	private Mono<BobooOrderResponseDto> getBobooOrderResponseDto(@RequestParam String symbol,
-		@RequestBody ApiKeyDto apiKeyDto, String clientOrderId, BobooOrderRequestDto orderRequest) {
+		@RequestBody ApiKey apiKeyDto, String clientOrderId, BobooOrderRequestDto orderRequest) {
 		return bobooExchangeService.requestOrder(orderRequest, apiKeyDto)
 			.flatMap(bobooOrderResponseDto -> bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
 				.collectList()

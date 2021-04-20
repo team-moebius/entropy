@@ -23,6 +23,7 @@ exchange:
       cancel-orders: /openapi/v1/order
     websocket:
       uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
+      timeout: 60000
     orderbook:
       topic: depth
       event: sub
@@ -43,3 +44,11 @@ entropy:
   user-detail:
     user-name: entropy
     password: p@$$w0rd-th@t-need-t0-be-ch@nged
+  symbols: GTAX2USDT,ETHVUSDT
+  apiKeys:
+    ethvusdt:
+      accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO
+      secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq
+    gtax2usdt:
+      accessKey: WHgLvRJllxqilnP0CSgHCBnuJoteNwiIkSTSY7Cqq9c9AuU0zqYXVH4ENFRzKZ83
+      secretKey: 0le5t8SgaK7mLOBzPvHDgqKt0C2x8H6ThO7Vi3ZgPqqKgXuv9OmGsIvMfcuYJFun
