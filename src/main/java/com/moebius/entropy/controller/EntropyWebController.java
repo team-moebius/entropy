@@ -30,7 +30,8 @@ public class EntropyWebController {
 	private final static Market GTAX_MARKET = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2);
 	private final static Map<String, Market> MARKETS = Map.of(
 		"gtax2", GTAX_MARKET,
-		"ethv", new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT, 2, 1));
+		"ethv", new Market(Exchange.BOBOO, "ETHVUSDT", TradeCurrency.USDT, 2, 1),
+		"moi", new Market(Exchange.BOBOO, "MOIUSDT", TradeCurrency.USDT, 2, 2));
 	private final EntropyViewService viewService;
 
 	@GetMapping(value = "")
