@@ -11,10 +11,12 @@ import org.apache.commons.lang3.StringUtils;
 public class SymbolUtil {
     private final static Map<String, Integer> PRICE_DECIMAL_POSITIONS = Map.of(
         "GTAX2USDT", 2,
-        "ETHVUSDT", 2);
+        "ETHVUSDT", 2,
+        "MOIUSDT", 2);
     private final static Map<String, Integer> VOLUME_DECIMAL_POSITIONS = Map.of(
         "GTAX2USDT", 2,
-        "ETHVUSDT", 1);
+        "ETHVUSDT", 1,
+        "MOIUSDT", 2);
     public static Market marketFromSymbol(String symbol) {
         return Optional.ofNullable(symbol)
             .filter(StringUtils::isNotEmpty)
