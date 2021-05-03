@@ -5,6 +5,7 @@ import com.moebius.entropy.assembler.ManualOrderRequestAssembler;
 import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
+import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.view.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
@@ -103,9 +104,13 @@ public class EntropyViewService {
                 .price(price)
                 .symbol(SymbolUtil.stripCurrencyFromSymbol(market))
                 .exchange(market.getExchange())
-                .tradeCurrency(market.getTradeCurrency().name())
+                .tradeCurrency(getTradeCurrency(market.getTradeCurrency()))
                 .priceUnit(market.getTradeCurrency().getPriceUnit())
                 .build());
 
+    }
+
+    private String getTradeCurrency(TradeCurrency tradeCurrency) {
+        return tradeCurrency.name().contains("USDT") ? "USDT" : tradeCurrency.name();
     }
 }
