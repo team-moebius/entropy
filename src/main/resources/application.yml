@@ -44,14 +44,14 @@ entropy:
   userDetail:
     username: mmadmin
     password: oq6343wy@@
-  symbols: GTAX2USDT,ETHVUSDT,MOIUSDT
+  symbols: GTAX2USDT,MOIUSDT,DGCUSDT
   apiKeys:
-    ethvusdt:
-      accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO
-      secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq
     gtax2usdt:
       accessKey: WHgLvRJllxqilnP0CSgHCBnuJoteNwiIkSTSY7Cqq9c9AuU0zqYXVH4ENFRzKZ83
       secretKey: 0le5t8SgaK7mLOBzPvHDgqKt0C2x8H6ThO7Vi3ZgPqqKgXuv9OmGsIvMfcuYJFun
     moiusdt:
       accessKey: 5WaXKrsVSP3WDWITF5tG3ZbA6UBPEbwkNumMpRhlqTEbkQczXzd7TTDizIpLRlwG
       secretKey: C8y7NdpTpTyh6HDctCpTNivCYD9KkEmkS0DMqZYqgNGIAJ3WAAAgL7TC0W3XqpIq
+    dgcusdt:
+      accessKey: VFFnCtzstJqR46tvzK3JcgFqZJBEyG4y20odnNWPUNONO34cjmMTV56HS2bDJQyF
+      secretKey: kbAJJfE3DXsfEAZCGtdG5q5fmYaZUdvDLD0ySuE06OhN9nGupj6tRIaWcGLZhzro
