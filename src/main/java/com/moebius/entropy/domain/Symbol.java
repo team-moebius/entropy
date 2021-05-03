@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public enum Symbol {
 	GTAX2USDT("gtax2", new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)),
 	MOIUSDT("moi", new Market(Exchange.BOBOO, "MOIUSDT", TradeCurrency.USDT, 2, 2)),
-	DGCUSDT("dgc", new Market(Exchange.BOBOO, "DGCUSDT", TradeCurrency.DETAILED_USDT, 3, 3));
+	DGCUSDT("dgc", new Market(Exchange.BOBOO, "DGCUSDT", TradeCurrency.DETAILED_USDT, 4, 4));
 
 	private final String key;
 	private final Market market;
