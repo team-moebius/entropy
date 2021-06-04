@@ -2,5 +2,6 @@ package com.moebius.entropy.domain.order;
 
 public enum OrderType {
 	LIMIT,
-	MARKET
+	MARKET,
+	LIMIT_MAKER
 }
