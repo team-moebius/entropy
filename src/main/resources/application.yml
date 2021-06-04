@@ -16,13 +16,13 @@ exchange:
   boboo:
     rest:
       scheme: https
-      host: api.boboo.vip
+      host: api.bhex.com
       auth-header-name: X-BH-APIKEY
       open-orders: /openapi/v1/openOrders
       request-orders: /openapi/v1/order
       cancel-orders: /openapi/v1/order
     websocket:
-      uri: wss://wsapi.boboo.vip/openapi/quote/ws/v1
+      uri: wss://wsapi.bhex.com/openapi/quote/ws/v1
       timeout: 60000
     orderbook:
       topic: depth
@@ -47,8 +47,8 @@ entropy:
   symbols: GTAX2USDT,MOIUSDT
   apiKeys:
     gtax2usdt:
-      accessKey: WHgLvRJllxqilnP0CSgHCBnuJoteNwiIkSTSY7Cqq9c9AuU0zqYXVH4ENFRzKZ83
-      secretKey: 0le5t8SgaK7mLOBzPvHDgqKt0C2x8H6ThO7Vi3ZgPqqKgXuv9OmGsIvMfcuYJFun
+      accessKey: vLpYoIFCHgnkJV0nFIwNzyUcXnDRBKg0GsVQZsemx0mN3gUINfFDxJlJNxbUAxWp
+      secretKey: JeL98KsXWyatA3QmmQF4WsvyBUeiMut6QEgJJDoZEK5hJwLcPdiifU3QDBdye5c0
     moiusdt:
-      accessKey: 5WaXKrsVSP3WDWITF5tG3ZbA6UBPEbwkNumMpRhlqTEbkQczXzd7TTDizIpLRlwG
-      secretKey: C8y7NdpTpTyh6HDctCpTNivCYD9KkEmkS0DMqZYqgNGIAJ3WAAAgL7TC0W3XqpIq
+      accessKey: XQBxuCfJ6Fq8k44wQC00qCaxVxqs15ssFtBIOf5wIMWT9DszWHUUYBSyzDxTZ9e9
+      secretKey: pGn7s2vzbfJUt8vLuABPwYEfIlrfIs1AL8uzVMAn6Wxz5xzc70In5VBpBkFskScR
