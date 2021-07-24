@@ -11,6 +11,7 @@ import com.moebius.entropy.domain.trade.TradePrice
 import com.moebius.entropy.domain.trade.TradeWindow
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.OrderService
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import spock.lang.Shared
@@ -30,7 +31,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def symbol = "GTAX2USDT"
     @Shared
     def exchange = Exchange.BOBOO
-    def tradeWindowService = Mock(TradeWindowQueryService)
+    def tradeWindowQueryService = Mock(TradeWindowQueryService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def orderService = Mock(OrderService)
     def inflationVolumeResolver = Mock(TradeWindowInflationVolumeResolver)
@@ -38,7 +39,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
     @Subject
     TradeWindowInflateService sut = new TradeWindowInflateService(
-            tradeWindowService, inflationConfigRepository, orderService, inflationVolumeResolver, mockEventListener
+            tradeWindowQueryService, inflationConfigRepository, orderService, inflationVolumeResolver, mockEventListener
     )
 
     def market = new Market(exchange, symbol, TradeCurrency.USDT, 2, 2)
@@ -63,13 +64,15 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def bidTradeWindow = tradeWindow(bidVolumeForTradeWindow, OrderPosition.BID)
         def tradeWindow = new TradeWindow(askTradeWindow, bidTradeWindow)
 
-        tradeWindowService.fetchTradeWindow(market) >> Mono.just(tradeWindow)
-        tradeWindowService.getMarketPrice(market) >> marketPrice
+        tradeWindowQueryService.fetchTradeWindow(market) >> Mono.just(tradeWindow)
+        tradeWindowQueryService.getMarketPrice(market) >> marketPrice
 
         inflationConfigRepository.getConfigFor(market) >> inflationConfig
 
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.ASK) >> askInflationVolume
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.BID) >> bidInflationVolume
+
+        orderService.fetchAllOrdersFor(market) >> Flux.just(Stub(Order))
 
         def madeAskedPrices = priceUnitMultipliersForAskOrdersShouldBeMade.stream().map({ multiplier ->
             def price = marketPrice + (priceChangeUnit * multiplier)
@@ -132,7 +135,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                     println("Bid Orders should be cancelled" + cancelledBiddenPrices)
                     println("Bid Orders actually cancelled" + it.cancelledBidOrderPrices)
 
-                    it.getCreatedAskOrderPrices() == madeAskedPrices \
+                    assert it.getCreatedAskOrderPrices() == madeAskedPrices \
                         && it.getCreatedBidOrderPrices() == madeBidPrices \
                         && it.getCancelledAskOrderPrices() == cancelledAskedPrices \
                         && it.getCancelledBidOrderPrices() == cancelledBiddenPrices

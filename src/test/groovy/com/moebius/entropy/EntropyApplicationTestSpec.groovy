@@ -24,11 +24,12 @@ class EntropyApplicationTestSpec extends Specification {
 	def "Should execute exchange service's method on application start"() {
 		given:
 		def entropyApplication = new EntropyApplication(exchangeServices)
+		entropyApplication.symbols = ['GTAX2', 'MOI']
 
 		when:
 		entropyApplication.onApplicationEvent(applicationReadyEvent)
 
 		then:
-		1 * bobooService.inflateOrdersByOrderBook(_ as String)
+		2 * bobooService.inflateOrdersByOrderBook(_ as String)
 	}
 }
