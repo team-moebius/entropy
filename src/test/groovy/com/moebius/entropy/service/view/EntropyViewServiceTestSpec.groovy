@@ -7,6 +7,7 @@ import com.moebius.entropy.domain.ManualOrderMakingRequest
 import com.moebius.entropy.domain.ManualOrderResult
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationConfig
+import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.order.DividedDummyOrderDto
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto
@@ -24,11 +25,13 @@ import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderServic
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService
 import org.apache.commons.collections4.CollectionUtils
 import org.springframework.http.ResponseEntity
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 import spock.lang.Specification
 
 import java.time.Duration
+import java.util.function.Predicate
 
 class EntropyViewServiceTestSpec extends Specification {
 	def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)
@@ -71,6 +74,7 @@ class EntropyViewServiceTestSpec extends Specification {
 		1 * automaticOrderViewAssembler.assembleAutomaticOrderResult(disposableIds) >> AutomaticOrderResult.builder()
 				.disposableIds(disposableIds)
 				.build()
+		1 * optimizeOrderService.optimizeOrders(market) >> Flux.just(Stub(Order))
 
 		expect:
 		StepVerifier.create(sut.startAutomaticOrder(market, orderForm))
@@ -94,6 +98,7 @@ class EntropyViewServiceTestSpec extends Specification {
 		1 * inflationConfigRepository.saveConfigFor(market, { it.enable == false })
 		1 * bobooOrderService.stopOrder("test-disposable-id") >> Mono.just(ResponseEntity.ok("test-disposable-id"))
         1 * bobooOrderService.stopOrder("test-disposable-id2") >> Mono.just(ResponseEntity.ok("test-disposable-id2"))
+		1 * disposableOrderRepository.getKeysBy(_ as Predicate) >> ["test-disposable-id", "test-disposable-id2"]
 
 		expect:
 		StepVerifier.create(sut.cancelAutomaticOrder(cancelForm))
@@ -138,7 +143,7 @@ class EntropyViewServiceTestSpec extends Specification {
 					assert it.getExchange() == market.getExchange()
 					assert it.getTradeCurrency() == market.getTradeCurrency().name()
 					assert it.getPriceUnit() == market.getTradeCurrency().priceUnit
-					assert it.getSymbol() == "GTAX"
+					assert it.getSymbol() == "GTAX2"
 					assert it.getPrice() == prices[0]
 				})
 				.thenAwait(Duration.ofSeconds(intervalSeconds))
@@ -146,7 +151,7 @@ class EntropyViewServiceTestSpec extends Specification {
 					assert it.getExchange() == market.getExchange()
 					assert it.getTradeCurrency() == market.getTradeCurrency().name()
 					assert it.getPriceUnit() == market.getTradeCurrency().priceUnit
-					assert it.getSymbol() == "GTAX"
+					assert it.getSymbol() == "GTAX2"
 					assert it.getPrice() == prices[1]
 				})
 				.thenAwait(Duration.ofSeconds(intervalSeconds))
@@ -154,7 +159,7 @@ class EntropyViewServiceTestSpec extends Specification {
 					assert it.getExchange() == market.getExchange()
 					assert it.getTradeCurrency() == market.getTradeCurrency().name()
 					assert it.getPriceUnit() == market.getTradeCurrency().priceUnit
-					assert it.getSymbol() == "GTAX"
+					assert it.getSymbol() == "GTAX2"
 					assert it.getPrice() == prices[2]
 				})
 				.verifyComplete()
