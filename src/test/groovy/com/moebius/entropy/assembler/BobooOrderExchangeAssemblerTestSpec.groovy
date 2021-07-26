@@ -51,7 +51,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 	def "Convert BobooOrderResultResponse to Order entity"() {
 		given:
 		def bobooOrderResponse = BobooOrderResponseDto.builder()
-				.symbol("GTAXUSDT")
+				.symbol("GTAX2USDT")
 				.orderId("494736827050147840")
 				.clientOrderId("157371322565051")
 				.transactTime(1573713225668)
@@ -69,7 +69,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 		then:
 		order.orderId == bobooOrderResponse.orderId
 		order.market.symbol == symbol
-		order.market.exchange == market.getExchange()
+		order.market.exchange == market.exchange
 		order.orderPosition == OrderPosition.ASK
 		order.price == bobooOrderResponse.price
 		order.volume == bobooOrderResponse.origQty
@@ -96,7 +96,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 	def "Convert OpenOrder from Boboo to Order"() {
 		given:
 		def bobooOrderResponse = BobooOpenOrdersDto.builder()
-				.symbol("GTAXUSDT")
+				.symbol("GTAX2USDT")
 				.id("157371322565051")
 				.price(0.005452)
 				.originalQuantity(110.0)

@@ -25,10 +25,14 @@ import spock.lang.Subject
 class OrderServiceTestSpec extends Specification {
 	def mockExchangeService = Mock(BobooExchangeService)
 	def mockAssembler = Mock(BobooOrderExchangeAssembler)
-	def apiKeys = ['gtax2usdt': Stub(ApiKey), 'moiusdt': Stub(ApiKey)]
 	def disposableOrderRepository = Mock(DisposableOrderRepository)
 	def accessKey = "some_test_api_key"
 	def secretKey = "some_test_secret_key"
+	def apiKey = Stub(ApiKey) {
+		getAccessKey() >> accessKey
+		getSecretKey() >> secretKey
+	}
+	def apiKeys = ['gtax2usdt': apiKey, 'moiusdt': apiKey]
 
 	@Subject
 	OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, apiKeys, disposableOrderRepository)
