@@ -38,7 +38,7 @@ class ManualOrderServiceMakerTestSpec extends Specification {
 
 
     @Unroll
-    def "Make #orderPosition Order with given condition"() {
+    def "Make #orderPosition Order with given condition - [executed : #executedVolumes / random : #randomValues]"() {
         given:
         def randomVolumes = randomValues.stream()
                 .map({ BigDecimal.valueOf(it) })
@@ -50,10 +50,6 @@ class ManualOrderServiceMakerTestSpec extends Specification {
                     def executedVolume = it.getRight() as float
                     return volume.subtract(BigDecimal.valueOf(executedVolume)).round(2)
                 })
-                .collect(Collectors.toList())
-        def cancelledVolumes = remainVolumes.stream()
-                .filter({ it.doubleValue() > 0.0 })
-                .map({ it.round(2) })
                 .collect(Collectors.toList())
 
         randomUtil.getRandomDecimal(reqVolumeFrom.floatValue(), reqVolumeTo.floatValue(), _) >> requestedVolume
@@ -95,16 +91,6 @@ class ManualOrderServiceMakerTestSpec extends Specification {
                         assert order.orderPosition == orderPosition
                         assert order.market == market
                         assert order.volume == remainVolume
-                        assert order.price == expectedPrice
-                    })
-                    def cancelledOrders = it.getCancelledOrders()
-                    assert cancelledOrders.size() == cancelledVolumes.size()
-                    zipCollections(cancelledOrders, cancelledVolumes).forEach({
-                        def order = it.getLeft() as Order
-                        def cancelledVolume = it.getRight()
-                        assert order.orderPosition == orderPosition
-                        assert order.market == market
-                        assert order.volume == cancelledVolume
                         assert order.price == expectedPrice
                     })
                 })
