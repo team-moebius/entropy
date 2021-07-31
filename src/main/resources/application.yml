@@ -33,6 +33,10 @@ exchange:
       accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO
       secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq
     receiveTimeWindow: 5000
+  bigone:
+    websocket:
+      uri: wss://big.one/ws/contract/v2
+      timeout: 60000
 
 reactor:
   netty:
