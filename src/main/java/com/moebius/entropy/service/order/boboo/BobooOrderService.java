@@ -6,7 +6,7 @@ import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.repository.DisposableOrderRepository;
-import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
+import com.moebius.entropy.service.exchange.BobooExchangeService;
 import com.moebius.entropy.service.order.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

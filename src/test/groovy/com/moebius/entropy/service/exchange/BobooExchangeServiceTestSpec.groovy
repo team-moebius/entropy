@@ -5,7 +5,6 @@ import com.moebius.entropy.assembler.BobooAssembler
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.boboo.*
 import com.moebius.entropy.repository.DisposableOrderRepository
-import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
 import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod

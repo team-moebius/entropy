@@ -7,7 +7,7 @@ import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
-import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
+import com.moebius.entropy.service.exchange.BobooExchangeService;
 import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService;

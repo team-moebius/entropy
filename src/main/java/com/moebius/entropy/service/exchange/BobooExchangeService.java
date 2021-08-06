@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.exchange.boboo;
+package com.moebius.entropy.service.exchange;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,6 +59,7 @@ public class BobooExchangeService implements ExchangeService<
 	private final DisposableOrderRepository disposableOrderRepository;
 	private final ObjectMapper objectMapper;
 
+	@Override
 	public Flux<BobooOpenOrdersDto> getOpenOrders(String symbol, ApiKey apiKey) {
 		return webClient.get()
 				.uri(uriBuilder -> uriBuilder.scheme(scheme)

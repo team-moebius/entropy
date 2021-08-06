@@ -2,7 +2,7 @@ package com.moebius.entropy.service.order.boboo;
 
 import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
 import com.moebius.entropy.domain.order.ApiKey;
-import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
+import com.moebius.entropy.service.exchange.BobooExchangeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;

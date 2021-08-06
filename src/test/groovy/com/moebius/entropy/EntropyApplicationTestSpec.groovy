@@ -1,6 +1,6 @@
 package com.moebius.entropy
 
-import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
+import com.moebius.entropy.service.exchange.BobooExchangeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.test.context.SpringBootTest
