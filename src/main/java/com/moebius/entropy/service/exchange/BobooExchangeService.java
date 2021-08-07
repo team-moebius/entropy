@@ -3,11 +3,11 @@ package com.moebius.entropy.service.exchange;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.assembler.BobooAssembler;
+import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.OrderStatus;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
-import com.moebius.entropy.service.exchange.ExchangeService;
 import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -146,5 +146,10 @@ public class BobooExchangeService implements ExchangeService<
 			.subscribe();
 
 		disposableOrderRepository.set(String.format(ORDER_INFLATION_DISPOSABLE_ID_FORMAT, symbol), disposable);
+	}
+
+	@Override
+	public Exchange getExchange() {
+		return Exchange.BOBOO;
 	}
 }

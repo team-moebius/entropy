@@ -1,7 +1,9 @@
 package com.moebius.entropy.service.order.boboo;
 
 import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
+import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Market;
+import com.moebius.entropy.domain.Symbol;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.ApiKey;
@@ -27,7 +29,7 @@ import java.util.function.Consumer;
 public class BobooOrderService implements OrderService {
     private final BobooExchangeService exchangeService;
     private final BobooOrderExchangeAssembler assembler;
-    private final Map<String, ApiKey> apiKeys;
+    private final Map<Exchange, Map<Symbol, ApiKey>> apiKeys;
     private final DisposableOrderRepository disposableOrderRepository;
 
     @Override
@@ -77,7 +79,8 @@ public class BobooOrderService implements OrderService {
     }
 
     private ApiKey getApiKeyByMarketSymbol(Market market) {
-        return Optional.ofNullable(apiKeys.getOrDefault(market.getSymbol().toLowerCase(), null))
+        return Optional.ofNullable(apiKeys.getOrDefault(market.getExchange(), null))
+            .map(symbolApiKeyMap -> symbolApiKeyMap.getOrDefault(Symbol.valueOf(market.getSymbol()), null))
             .orElseThrow();
     }
 }
