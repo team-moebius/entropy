@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Component
-public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<BobooCancelRequest, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto>{
+public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<BobooCancelRequestDto, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto>{
     @Override
     public BobooOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
         return Optional.ofNullable(orderRequest)
@@ -45,9 +45,9 @@ public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<Boboo
     }
 
     @Override
-    public BobooCancelRequest convertToCancelRequest(Order order) {
+    public BobooCancelRequestDto convertToCancelRequest(Order order) {
         return Optional.ofNullable(order)
-                .map(cancelTarget-> BobooCancelRequest.builder()
+                .map(cancelTarget-> BobooCancelRequestDto.builder()
                         .orderId(cancelTarget.getOrderId())
                         .build()
                 )

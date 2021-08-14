@@ -106,7 +106,7 @@ class BobooExchangeServiceTestSpec extends Specification {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
-        def cancelRequest = Mock(BobooCancelRequest)
+        def cancelRequest = Mock(BobooCancelRequestDto)
         1 * bobooAssembler.assembleCancelRequestQueryParam(cancelRequest) >> new LinkedMultiValueMap<String, String>([:])
         1 * bobooAssembler.assembleCancelRequestBodyValue(_, apiKeyDto) >> new LinkedMultiValueMap<String, String>([:])
 
@@ -118,11 +118,11 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * requestBodyUriSpec.header("X-BH-APIKEY", "testAccessKey") >> requestBodySpec
         1 * requestBodySpec.body(_ as BodyInserter<MultiValueMap<String, String>, ClientHttpRequest>) >> requestBodySpec
         1 * requestBodySpec.retrieve() >> responseSpec
-        1 * responseSpec.bodyToMono(BobooCancelResponse.class) >> Mono.just(BobooCancelResponse.builder().build())
+        1 * responseSpec.bodyToMono(BobooCancelResponseDto.class) >> Mono.just(BobooCancelResponseDto.builder().build())
 
         expect:
         StepVerifier.create(bobooService.cancelOrder(cancelRequest, apiKeyDto))
-                .assertNext({ it instanceof BobooCancelResponse })
+                .assertNext({ it instanceof BobooCancelResponseDto })
                 .verifyComplete()
     }
 
@@ -132,7 +132,7 @@ class BobooExchangeServiceTestSpec extends Specification {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
-        def cancelRequest = Mock(BobooCancelRequest)
+        def cancelRequest = Mock(BobooCancelRequestDto)
         1 * bobooAssembler.assembleCancelRequestQueryParam(cancelRequest) >> new LinkedMultiValueMap<String, String>([:])
         1 * bobooAssembler.assembleCancelRequestBodyValue(_, apiKeyDto) >> new LinkedMultiValueMap<String, String>([:])
 
@@ -145,13 +145,13 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * requestBodySpec.body(_ as BodyInserter<MultiValueMap<String, String>, ClientHttpRequest>) >> requestBodySpec
         1 * requestBodySpec.retrieve() >> responseSpec
 
-        1 * responseSpec.bodyToMono(BobooCancelResponse.class) >> Mono.error(new WebClientResponseException.BadRequest(
+        1 * responseSpec.bodyToMono(BobooCancelResponseDto.class) >> Mono.error(new WebClientResponseException.BadRequest(
                 "Bad Request", HttpHeaders.EMPTY, "{\"code\":-1142,\"msg\":\"Order has been canceled\"}".getBytes("UTF-8"), Charset.defaultCharset(), null
         ))
 
         expect:
         StepVerifier.create(bobooService.cancelOrder(cancelRequest, apiKeyDto))
-                .assertNext({ it instanceof BobooCancelResponse })
+                .assertNext({ it instanceof BobooCancelResponseDto })
                 .verifyComplete()
 
         where:
@@ -167,7 +167,7 @@ class BobooExchangeServiceTestSpec extends Specification {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
-        def cancelRequest = Mock(BobooCancelRequest)
+        def cancelRequest = Mock(BobooCancelRequestDto)
         1 * bobooAssembler.assembleCancelRequestQueryParam(cancelRequest) >> new LinkedMultiValueMap<String, String>([:])
         1 * bobooAssembler.assembleCancelRequestBodyValue(_, apiKeyDto) >> new LinkedMultiValueMap<String, String>([:])
 
@@ -180,7 +180,7 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * requestBodySpec.body(_ as BodyInserter<MultiValueMap<String, String>, ClientHttpRequest>) >> requestBodySpec
         1 * requestBodySpec.retrieve() >> responseSpec
 
-        1 * responseSpec.bodyToMono(BobooCancelResponse.class) >> Mono.error(error)
+        1 * responseSpec.bodyToMono(BobooCancelResponseDto.class) >> Mono.error(error)
 
         expect:
         StepVerifier.create(bobooService.cancelOrder(cancelRequest, apiKeyDto))

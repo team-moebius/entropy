@@ -6,7 +6,7 @@ import com.moebius.entropy.domain.order.OrderType
 import com.moebius.entropy.domain.order.OrderSide
 import com.moebius.entropy.domain.order.TimeInForce
 import com.moebius.entropy.domain.order.ApiKey
-import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
@@ -135,7 +135,7 @@ class BobooAssemblerTestSpec extends Specification {
 
 	def "Should assemble query param for order cancel request"(){
 		given:
-		def cancelRequest = BobooCancelRequest.builder()
+		def cancelRequest = BobooCancelRequestDto.builder()
 				.orderId("some-test-string")
 				.build()
 

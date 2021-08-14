@@ -8,8 +8,8 @@ import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.trade.TradeCurrency
-import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
-import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponse
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequestDto
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponseDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
 import com.moebius.entropy.repository.DisposableOrderRepository
@@ -95,8 +95,8 @@ class OrderServiceTestSpec extends Specification {
 
 		1 * mockExchangeService.cancelOrder(_, {
 			it.accessKey == accessKey && it.secretKey == secretKey
-		}) >> Mono.just(Mock(BobooCancelResponse))
-		1 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled) >> Mock(BobooCancelRequest)
+		}) >> Mono.just(Mock(BobooCancelResponseDto))
+		1 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled) >> Mock(BobooCancelRequestDto)
 
 		expect:
 		StepVerifier.create(sut.cancelOrder(orderShouldBeCancelled))

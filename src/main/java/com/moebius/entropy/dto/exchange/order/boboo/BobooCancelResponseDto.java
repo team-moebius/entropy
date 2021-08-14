@@ -7,7 +7,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class BobooCancelResponse {
+public class BobooCancelResponseDto {
     private long exchangeId;
     private String symbol;
     private String clientOrderId;

@@ -32,7 +32,7 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class BobooExchangeService implements ExchangeService<
-    BobooCancelRequest, BobooCancelResponse, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto
+	BobooCancelRequestDto, BobooCancelResponseDto, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrdersDto
 > {
 	@Value("${exchange.boboo.rest.scheme}")
 	private String scheme;
@@ -73,7 +73,7 @@ public class BobooExchangeService implements ExchangeService<
 	}
 
 	@Override
-	public Mono<BobooCancelResponse> cancelOrder(BobooCancelRequest cancelRequest, ApiKey apiKey) {
+	public Mono<BobooCancelResponseDto> cancelOrder(BobooCancelRequestDto cancelRequest, ApiKey apiKey) {
 		MultiValueMap<String, String> queryParam = bobooAssembler.assembleCancelRequestQueryParam(cancelRequest);
 		MultiValueMap<String, String> bodyValue = bobooAssembler.assembleCancelRequestBodyValue(queryParam, apiKey);
 
@@ -86,17 +86,17 @@ public class BobooExchangeService implements ExchangeService<
 				.header(authHeaderName, apiKey.getAccessKey())
 				.body(BodyInserters.fromFormData(bodyValue))
 				.retrieve()
-				.bodyToMono(BobooCancelResponse.class)
+				.bodyToMono(BobooCancelResponseDto.class)
 				.doOnError(exception -> log.error("[BobooExchange] Failed to cancel order. {}", ((WebClientResponseException) exception).getResponseBodyAsString()))
 				//{"code":-1142,"msg":"Order has been canceled"}
 				//{"code":-1139,"msg":"Order has been filled."}
 				.onErrorResume(WebClientResponseException.BadRequest.class, badRequest -> {
 					String responseString = badRequest.getResponseBodyAsString();
 					try {
-						BobooErrorResponse bobooErrorResponse = objectMapper.readValue(responseString, BobooErrorResponse.class);
+						BobooErrorResponseDto bobooErrorResponse = objectMapper.readValue(responseString, BobooErrorResponseDto.class);
 						int code = bobooErrorResponse.getCode();
 						if (code == -1142 || code == -1139) {
-							return Mono.just(BobooCancelResponse.builder()
+							return Mono.just(BobooCancelResponseDto.builder()
 									.orderId(cancelRequest.getOrderId())
 									.clientOrderId(cancelRequest.getOrderId())
 									.status(OrderStatus.CANCELED)

@@ -67,9 +67,9 @@ public class BobooController {
 	}
 
 	@PostMapping("/cancel-test-order")
-	public Flux<BobooCancelResponse> cancelAllOpenOrders(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
+	public Flux<BobooCancelResponseDto> cancelAllOpenOrders(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
 		return bobooExchangeService.getOpenOrders(symbol, apiKeyDto)
-			.map(bobooOpenOrdersDto -> BobooCancelRequest.builder()
+			.map(bobooOpenOrdersDto -> BobooCancelRequestDto.builder()
 				.orderId(bobooOpenOrdersDto.getInternalId())
 				.build()
 			)
@@ -134,7 +134,7 @@ public class BobooController {
 					));
 				return orderResponse;
 			})
-			.flatMap(orderResponse -> bobooExchangeService.cancelOrder(BobooCancelRequest.builder()
+			.flatMap(orderResponse -> bobooExchangeService.cancelOrder(BobooCancelRequestDto.builder()
 				.orderId(orderResponse.getOrderId())
 				.build(), apiKeyDto)
 				.map(cancelResponse -> orderResponse)

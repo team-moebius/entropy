@@ -3,7 +3,7 @@ package com.moebius.entropy.assembler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.domain.order.ApiKey;
-import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest;
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequestDto;
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto;
@@ -98,7 +98,7 @@ public class BobooAssembler {
 		return requestBody;
 	}
 
-	public MultiValueMap<String, String> assembleCancelRequestQueryParam(BobooCancelRequest bobooCancelRequest) {
+	public MultiValueMap<String, String> assembleCancelRequestQueryParam(BobooCancelRequestDto bobooCancelRequest) {
 		MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
 		queryParams.add("orderId", bobooCancelRequest.getOrderId());
 		return queryParams;
