@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BobooOpenOrdersDto {
+public class BobooOpenOrderDto {
 	@JsonProperty("clientOrderId")
 	private String id;
 	private String symbol;

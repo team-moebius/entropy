@@ -3,6 +3,7 @@ package com.moebius.entropy.service.order
 import com.moebius.entropy.assembler.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
+import com.moebius.entropy.domain.Symbol
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition
@@ -32,7 +33,8 @@ class OrderServiceTestSpec extends Specification {
 		getAccessKey() >> accessKey
 		getSecretKey() >> secretKey
 	}
-	def apiKeys = ['gtax2usdt': apiKey, 'moiusdt': apiKey]
+	def apiKeys = [(Exchange.BOBOO): [(Symbol.GTAX2USDT): apiKey, (Symbol.MOIUSDT): apiKey],
+				   (Exchange.BIGONE): [(Symbol.OAUSDT): apiKey]]
 
 	@Subject
 	OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, apiKeys, disposableOrderRepository)

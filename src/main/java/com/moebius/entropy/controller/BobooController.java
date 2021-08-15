@@ -47,7 +47,7 @@ public class BobooController {
 	 * }
 	 */
 	@PostMapping("/open-orders")
-	public Flux<BobooOpenOrdersDto> getOpenOrders(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
+	public Flux<BobooOpenOrderDto> getOpenOrders(@RequestParam String symbol, @RequestBody ApiKey apiKeyDto) {
 		return bobooExchangeService.getOpenOrders(symbol, apiKeyDto);
 	}
 
@@ -121,7 +121,7 @@ public class BobooController {
 				.zipWith(Mono.just(bobooOrderResponseDto))
 			)
 			.map(pair -> {
-				List<BobooOpenOrdersDto> openOrders = pair.getT1();
+				List<BobooOpenOrderDto> openOrders = pair.getT1();
 				BobooOrderResponseDto orderResponse = pair.getT2();
 
 				openOrders.stream()

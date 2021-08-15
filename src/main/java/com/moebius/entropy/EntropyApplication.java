@@ -3,6 +3,7 @@ package com.moebius.entropy;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Symbol;
 import com.moebius.entropy.service.exchange.ExchangeService;
+import com.moebius.entropy.service.inflate.InflateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
@@ -18,7 +19,7 @@ import java.util.Map;
 @SpringBootApplication
 @RequiredArgsConstructor
 public class EntropyApplication implements ApplicationListener<ApplicationReadyEvent> {
-	private final List<ExchangeService> exchangeServices;
+	private final List<InflateService> inflateServices;
 	private final Map<Exchange, List<Symbol>> symbols;
 
 	public static void main(String[] args) {
@@ -27,9 +28,9 @@ public class EntropyApplication implements ApplicationListener<ApplicationReadyE
 
 	@Override
 	public void onApplicationEvent(ApplicationReadyEvent event) {
-		exchangeServices.forEach(exchangeService ->
-			symbols.getOrDefault(exchangeService.getExchange(), Collections.emptyList()).stream()
+		inflateServices.forEach(inflateService ->
+			symbols.getOrDefault(inflateService.getExchange(), Collections.emptyList()).stream()
 				.map(Enum::toString)
-				.forEach(exchangeService::inflateOrdersByOrderBook));
+				.forEach(inflateService::inflateOrdersByOrderBook));
 	}
 }

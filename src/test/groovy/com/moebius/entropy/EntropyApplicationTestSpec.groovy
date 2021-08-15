@@ -1,6 +1,8 @@
 package com.moebius.entropy
 
-import com.moebius.entropy.service.exchange.BobooExchangeService
+import com.moebius.entropy.domain.Exchange
+import com.moebius.entropy.domain.Symbol
+import com.moebius.entropy.service.inflate.BobooInflateService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.test.context.SpringBootTest
@@ -9,8 +11,10 @@ import spock.lang.Specification
 
 @SpringBootTest(classes = EntropyApplication)
 class EntropyApplicationTestSpec extends Specification {
-	def bobooService = Mock(BobooExchangeService)
-	def exchangeServices = [bobooService]
+	def inflateService = Mock(BobooInflateService)
+	def inflateServices = [inflateService]
+	def symbols = [(Exchange.BOBOO): [Symbol.GTAX2USDT, Symbol.MOIUSDT],
+				   (Exchange.BIGONE): [Symbol.OAUSDT]]
 	def applicationReadyEvent = Stub(ApplicationReadyEvent)
 
 	@Autowired
@@ -23,13 +27,13 @@ class EntropyApplicationTestSpec extends Specification {
 
 	def "Should execute exchange service's method on application start"() {
 		given:
-		def entropyApplication = new EntropyApplication(exchangeServices)
-		entropyApplication.symbols = ['GTAX2', 'MOI']
+		def entropyApplication = new EntropyApplication(inflateServices, symbols)
 
 		when:
 		entropyApplication.onApplicationEvent(applicationReadyEvent)
 
 		then:
-		2 * bobooService.inflateOrdersByOrderBook(_ as String)
+		1 * inflateService.getExchange() >> Exchange.BOBOO
+		2 * inflateService.inflateOrdersByOrderBook(_ as String)
 	}
 }

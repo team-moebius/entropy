@@ -8,7 +8,6 @@ import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradeWindow
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
 import reactor.core.publisher.Flux
-import reactor.core.publisher.Mono
 import spock.lang.Specification
 import spock.lang.Subject
 
@@ -18,11 +17,7 @@ class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
     def inflateService = Mock(TradeWindowInflateService)
 
     @Subject
-    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler,)
-
-    def setup(){
-        sut.setTradeWindowInflateService(inflateService)
-    }
+    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler, inflateService)
 
     def "On any changes on trade window"() {
         given:

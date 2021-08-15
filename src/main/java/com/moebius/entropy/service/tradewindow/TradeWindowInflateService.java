@@ -35,13 +35,6 @@ public class TradeWindowInflateService {
 	private final InflationConfigRepository inflationConfigRepository;
 	private final OrderService orderService;
 	private final TradeWindowInflationVolumeResolver volumeResolver;
-	private final BobooTradeWindowChangeEventListener windowChangeEventListener;
-
-	@SuppressWarnings("unused")
-	@PostConstruct
-	public void onCreate() {
-		windowChangeEventListener.setTradeWindowInflateService(this);
-	}
 
 	public Flux<Order> inflateOrders(InflateRequest inflateRequest) {
 		Market market = inflateRequest.getMarket();

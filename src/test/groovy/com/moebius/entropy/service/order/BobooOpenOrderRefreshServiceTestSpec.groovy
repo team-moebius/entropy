@@ -3,7 +3,7 @@ package com.moebius.entropy.service.order
 import com.moebius.entropy.assembler.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.ApiKey
-import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto
+import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrderDto
 import com.moebius.entropy.service.exchange.BobooExchangeService
 import com.moebius.entropy.service.order.boboo.BobooOpenOrderRefreshService
 import reactor.core.publisher.Flux
@@ -22,7 +22,7 @@ class BobooOpenOrderRefreshServiceTestSpec extends Specification {
         when:
         sut.refreshOpenOrderFromExchange()
         then:
-        1 * mockExchangeService.getOpenOrders(_, _ as ApiKey) >> Flux.just(Mock(BobooOpenOrdersDto))
-        1 * mockAssembler.convertExchangeOrder(_ as BobooOpenOrdersDto) >> Mock(Order)
+        1 * mockExchangeService.getOpenOrders(_, _ as ApiKey) >> Flux.just(Mock(BobooOpenOrderDto))
+        1 * mockAssembler.convertExchangeOrder(_ as BobooOpenOrderDto) >> Mock(Order)
   }
 }

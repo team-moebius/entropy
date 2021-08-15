@@ -12,7 +12,5 @@ public interface ExchangeService<CANCEL_REQ, CANCEL_RES, ORDER_REQ, ORDER_RES, O
 
 	Mono<ORDER_RES> requestOrder(ORDER_REQ orderRequest, ApiKey apiKey);
 
-	void inflateOrdersByOrderBook(String symbol);
-
 	Exchange getExchange();
 }

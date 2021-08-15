@@ -32,15 +32,13 @@ class BobooExchangeServiceTestSpec extends Specification {
     def headersSpec = Mock(WebClient.RequestHeadersSpec)
     def responseSpec = Mock(WebClient.ResponseSpec)
     def webClient = Mock(WebClient)
-    def webSocketClient = Mock(WebSocketClient)
     def bobooAssembler = Mock(BobooAssembler)
-    def eventListener = Mock(BobooTradeWindowChangeEventListener)
     def disposableOrderRepository = Mock(DisposableOrderRepository)
     def objectMapper = new ObjectMapper()
 
     @Subject
     def bobooService = new BobooExchangeService(
-            webClient, webSocketClient, bobooAssembler, eventListener, disposableOrderRepository, objectMapper
+            webClient, bobooAssembler, disposableOrderRepository, objectMapper
     )
 
     def "Should get open orders"() {
@@ -55,23 +53,12 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * uriSpec.uri(_ as Function<UriBuilder, URI>) >> headersSpec
         1 * headersSpec.header("X-BH-APIKEY", "testAccessKey") >> headersSpec
         1 * headersSpec.retrieve() >> responseSpec
-        1 * responseSpec.bodyToFlux(BobooOpenOrdersDto.class) >> Flux.just(BobooOpenOrdersDto.builder().build())
+        1 * responseSpec.bodyToFlux(BobooOpenOrderDto.class) >> Flux.just(BobooOpenOrderDto.builder().build())
 
         expect:
         StepVerifier.create(bobooService.getOpenOrders("GTAXUSDT", apiKeyDto))
-                .assertNext({ it instanceof BobooOpenOrdersDto })
+                .assertNext({ it instanceof BobooOpenOrderDto })
                 .verifyComplete()
-    }
-
-    def "Should get and log order book"() {
-        given:
-        disposableOrderRepository.get(_ as String) >> []
-        when:
-        bobooService.websocketUri = "wss://wsapi.boboo.vip/openapi/quote/ws/v1"
-        bobooService.inflateOrdersByOrderBook("GTAXUSDT")
-
-        then:
-        1 * webSocketClient.execute(_ as URI, _ as WebSocketHandler) >> Mono.empty()
     }
 
     def "Should request new order"() {

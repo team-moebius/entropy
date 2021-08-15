@@ -38,7 +38,7 @@ exchange:
       request-orders: /api/v3/viewer/orders
       cancel-orders: /api/v3/viewer/orders/{id}/cancel
     websocket:
-      uri: wss://big.one/ws/contract/v2
+      uri: wss://big.one/ws/v2
       timeout: 60000
     receiveTimeWindow: 5000
 reactor:
