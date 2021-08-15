@@ -2,8 +2,8 @@ package com.moebius.entropy.dto.exchange.orderbook;
 
 import java.util.List;
 
-public interface OrderBookDto<DATA> {
+public interface OrderBookDto<ITEM> {
 	String getSymbol();
 
-	List<DATA> getData();
+	List<ITEM> getData();
 }

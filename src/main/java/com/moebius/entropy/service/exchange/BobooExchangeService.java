@@ -2,7 +2,7 @@ package com.moebius.entropy.service.exchange;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.moebius.entropy.assembler.BobooAssembler;
+import com.moebius.entropy.assembler.boboo.BobooAssembler;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.domain.order.OrderStatus;

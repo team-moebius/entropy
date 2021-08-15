@@ -42,7 +42,7 @@ public class BigoneOrderBookDto implements OrderBookDto<BigoneOrderBookDto.Depth
 	@ToString
 	@NoArgsConstructor(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
-	public static class DepthWrapper {
+	private static class DepthWrapper {
 		private Depth depth;
 	}
 

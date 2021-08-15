@@ -1,6 +1,6 @@
 package com.moebius.entropy.service.tradewindow
 
-import com.moebius.entropy.assembler.TradeWindowAssembler
+import com.moebius.entropy.assembler.boboo.BobooTradeWindowAssembler
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationResult
@@ -11,13 +11,13 @@ import reactor.core.publisher.Flux
 import spock.lang.Specification
 import spock.lang.Subject
 
-class BobooTradeWindowChangeEventListenerTestSpec extends Specification {
+class TradeWindowChangeEventListenerTestSpec extends Specification {
     def commandService = Mock(TradeWindowCommandService)
-    def assembler = Mock(TradeWindowAssembler)
+    def assembler = Mock(BobooTradeWindowAssembler)
     def inflateService = Mock(TradeWindowInflateService)
 
     @Subject
-    def sut = new BobooTradeWindowChangeEventListener(commandService, assembler, inflateService)
+    def sut = new TradeWindowChangeEventListener(commandService, assembler, inflateService)
 
     def "On any changes on trade window"() {
         given:

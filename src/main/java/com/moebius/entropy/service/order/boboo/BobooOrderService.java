@@ -1,6 +1,6 @@
 package com.moebius.entropy.service.order.boboo;
 
-import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
+import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.Symbol;

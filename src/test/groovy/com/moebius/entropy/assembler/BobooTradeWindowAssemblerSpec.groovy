@@ -1,11 +1,12 @@
 package com.moebius.entropy.assembler
 
+import com.moebius.entropy.assembler.boboo.BobooTradeWindowAssembler
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto
 import spock.lang.Specification
 
-class TradeWindowAssemblerSpec extends Specification {
-	TradeWindowAssembler sut = new TradeWindowAssembler()
+class BobooTradeWindowAssemblerSpec extends Specification {
+	BobooTradeWindowAssembler sut = new BobooTradeWindowAssembler()
 
 	def "Test all data exist"() {
 		given:

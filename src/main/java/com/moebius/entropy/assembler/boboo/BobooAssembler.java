@@ -1,4 +1,4 @@
-package com.moebius.entropy.assembler;
+package com.moebius.entropy.assembler.boboo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

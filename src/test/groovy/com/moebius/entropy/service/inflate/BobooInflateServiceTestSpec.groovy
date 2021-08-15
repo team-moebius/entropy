@@ -1,9 +1,9 @@
 package com.moebius.entropy.service.inflate
 
-import com.moebius.entropy.assembler.BobooAssembler
+import com.moebius.entropy.assembler.boboo.BobooAssembler
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.repository.DisposableOrderRepository
-import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener
+import com.moebius.entropy.service.tradewindow.TradeWindowChangeEventListener
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.client.WebSocketClient
 import reactor.core.Disposable
@@ -14,7 +14,7 @@ import spock.lang.Subject
 class BobooInflateServiceTestSpec extends Specification {
 	def webSocketClient = Mock(WebSocketClient)
 	def bobooAssembler = Mock(BobooAssembler)
-	def tradeWindowEventListener = Mock(BobooTradeWindowChangeEventListener)
+	def tradeWindowEventListener = Mock(TradeWindowChangeEventListener)
 	def disposableOrderRepository = Mock(DisposableOrderRepository)
 
 	@Subject

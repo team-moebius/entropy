@@ -1,5 +1,6 @@
-package com.moebius.entropy.assembler;
+package com.moebius.entropy.assembler.boboo;
 
+import com.moebius.entropy.assembler.OrderExchangeAssembler;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.OrderType;
@@ -14,7 +15,8 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 @Component
-public class BobooOrderExchangeAssembler implements OrderExchangeAssembler<BobooCancelRequestDto, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrderDto>{
+public class BobooOrderExchangeAssembler implements
+    OrderExchangeAssembler<BobooCancelRequestDto, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrderDto> {
     @Override
     public BobooOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
         return Optional.ofNullable(orderRequest)

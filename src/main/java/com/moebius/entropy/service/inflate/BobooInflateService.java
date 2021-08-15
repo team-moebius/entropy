@@ -1,9 +1,9 @@
 package com.moebius.entropy.service.inflate;
 
-import com.moebius.entropy.assembler.BobooAssembler;
+import com.moebius.entropy.assembler.boboo.BobooAssembler;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.repository.DisposableOrderRepository;
-import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener;
+import com.moebius.entropy.service.tradewindow.TradeWindowChangeEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +24,7 @@ public class BobooInflateService implements InflateService {
 
 	private final WebSocketClient webSocketClient;
 	private final BobooAssembler bobooAssembler;
-	private final BobooTradeWindowChangeEventListener tradeWindowEventListener;
+	private final TradeWindowChangeEventListener tradeWindowEventListener;
 	private final DisposableOrderRepository disposableOrderRepository;
 
 	@Value("${exchange.boboo.websocket.uri}")

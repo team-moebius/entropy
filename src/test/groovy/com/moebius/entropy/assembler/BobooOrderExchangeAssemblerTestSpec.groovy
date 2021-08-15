@@ -1,5 +1,6 @@
 package com.moebius.entropy.assembler
 
+import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.*
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition

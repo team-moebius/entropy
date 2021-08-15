@@ -1,6 +1,6 @@
 package com.moebius.entropy.service.order
 
-import com.moebius.entropy.assembler.BobooOrderExchangeAssembler
+import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrderDto

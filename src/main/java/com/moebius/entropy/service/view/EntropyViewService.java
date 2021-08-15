@@ -9,7 +9,7 @@ import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.view.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
-import com.moebius.entropy.service.order.boboo.ManualOrderMakerService;
+import com.moebius.entropy.service.order.ManualOrderMakerService;
 import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService;
 import com.moebius.entropy.service.order.boboo.auto.BobooOptimizeOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;

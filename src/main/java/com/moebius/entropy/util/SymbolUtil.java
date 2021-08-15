@@ -13,6 +13,7 @@ public class SymbolUtil {
 	public static Market marketFromSymbol(String symbol) {
 		return Optional.ofNullable(symbol)
 			.filter(StringUtils::isNotEmpty)
+			.map(s -> s.replace('-', '\u0000'))
 			.map(MARKETS::get)
 			.orElse(null);
 	}

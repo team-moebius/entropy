@@ -1,6 +1,6 @@
 package com.moebius.entropy.service.order.boboo;
 
-import com.moebius.entropy.assembler.BobooOrderExchangeAssembler;
+import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.service.exchange.BobooExchangeService;
 import lombok.extern.slf4j.Slf4j;
