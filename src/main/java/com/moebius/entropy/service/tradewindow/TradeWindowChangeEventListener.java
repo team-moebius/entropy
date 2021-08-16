@@ -19,6 +19,7 @@ public class TradeWindowChangeEventListener {
 	private final TradeWindowCommandService commandService;
 	private final TradeWindowInflateService inflateService;
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void inflateOrdersOnTradeWindowChange(OrderBookDto orderBookDto) {
 	    Market market = SymbolUtil.marketFromSymbol(orderBookDto.getSymbol());
         TradeWindowAssembler<?> assembler = assemblerFactory.getTradeWindowAssembler(market.getExchange());
