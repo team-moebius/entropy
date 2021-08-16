@@ -2,7 +2,7 @@ package com.moebius.entropy
 
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Symbol
-import com.moebius.entropy.service.inflate.BobooInflateService
+import com.moebius.entropy.service.inflate.boboo.BobooInflateService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.boot.test.context.SpringBootTest

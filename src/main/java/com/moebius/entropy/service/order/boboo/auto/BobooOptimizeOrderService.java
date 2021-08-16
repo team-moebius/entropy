@@ -4,7 +4,7 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
+import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ public class BobooOptimizeOrderService {
 	private final static long DEFAULT_DELAY = 300L;
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
-	private final TradeWindowInflationVolumeResolver volumeResolver;
+	private final TradeWindowVolumeResolver volumeResolver;
 
 	public Flux<Order> optimizeOrders(Market market) {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);

@@ -10,7 +10,7 @@ import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderResponseDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
+import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class BobooRepeatMarketOrderService {
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
-	private final TradeWindowInflationVolumeResolver volumeResolver;
+	private final TradeWindowVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
 
 	public Mono<ResponseEntity<?>> executeRepeatMarketOrders(RepeatMarketOrderDto repeatMarketOrderDto) {

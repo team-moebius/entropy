@@ -13,10 +13,10 @@ import org.apache.commons.collections4.CollectionUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
-class TradeWindowInflationVolumeResolverTestSpec extends Specification {
+class TradeWindowVolumeResolverTestSpec extends Specification {
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def entropyRandomUtils = Mock(EntropyRandomUtils)
-    def sut = new TradeWindowInflationVolumeResolver(inflationConfigRepository, entropyRandomUtils)
+    def sut = new TradeWindowVolumeResolver(inflationConfigRepository, entropyRandomUtils)
     @Shared
     def symbol = "GTAX2USDT"
     @Shared

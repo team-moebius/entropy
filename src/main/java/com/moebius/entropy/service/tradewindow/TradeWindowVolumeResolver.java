@@ -19,7 +19,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class TradeWindowInflationVolumeResolver {
+public class TradeWindowVolumeResolver {
 	private final InflationConfigRepository inflationConfigRepository;
 	private final EntropyRandomUtils randomUtils;
 

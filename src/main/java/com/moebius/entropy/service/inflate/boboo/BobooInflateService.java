@@ -1,8 +1,9 @@
-package com.moebius.entropy.service.inflate;
+package com.moebius.entropy.service.inflate.boboo;
 
 import com.moebius.entropy.assembler.boboo.BobooAssembler;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.repository.DisposableOrderRepository;
+import com.moebius.entropy.service.inflate.InflateService;
 import com.moebius.entropy.service.tradewindow.TradeWindowChangeEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ public class BobooInflateService implements InflateService {
 
 	private final WebSocketClient webSocketClient;
 	private final BobooAssembler bobooAssembler;
-	private final TradeWindowChangeEventListener tradeWindowEventListener;
+	private final TradeWindowChangeEventListener tradeWindowChangeEventListener;
 	private final DisposableOrderRepository disposableOrderRepository;
 
 	@Value("${exchange.boboo.websocket.uri}")
@@ -34,7 +35,7 @@ public class BobooInflateService implements InflateService {
 
 	@Override
 	public void inflateOrdersByOrderBook(String symbol) {
-		log.info("[BobooExchange] Start to inflate orders of {} by order book.", symbol);
+		log.info("[Boboo] Start to inflate orders of {} by order book.", symbol);
 		disposableOrderRepository.get(String.format(ORDER_INFLATION_DISPOSABLE_ID_FORMAT, symbol))
 			.forEach(Disposable::dispose);
 
@@ -44,10 +45,13 @@ public class BobooInflateService implements InflateService {
 				.subscribeOn(Schedulers.single())
 				.timeout(Duration.ofMillis(timeout), Schedulers.single())
 				.map(bobooAssembler::assembleOrderBookDto)
-				.doOnNext(tradeWindowEventListener::inflateOrdersOnTradeWindowChange)
+				.doOnNext(tradeWindowChangeEventListener::inflateOrdersOnTradeWindowChange)
 				.then()
-				.doOnError(exception -> log.error("[BobooExchange] Failed to inflate orders of {} by order book.", symbol, exception))
-				.doOnTerminate(() -> inflateOrdersByOrderBook(symbol)))
+				.doOnError(exception -> log.error("[Boboo] Failed to inflate orders of {} by order book.", symbol, exception))
+				.doOnTerminate(() -> {
+					log.error("[Boboo] Terminated order inflation of {}, retry inflation ...", symbol);
+					inflateOrdersByOrderBook(symbol);
+				}))
 			.subscribe();
 
 		disposableOrderRepository.set(String.format(ORDER_INFLATION_DISPOSABLE_ID_FORMAT, symbol), disposable);

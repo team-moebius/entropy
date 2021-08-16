@@ -13,12 +13,26 @@ public class SymbolUtil {
 	public static Market marketFromSymbol(String symbol) {
 		return Optional.ofNullable(symbol)
 			.filter(StringUtils::isNotEmpty)
-			.map(s -> s.replace('-', '\u0000'))
+			.map(s -> s.replace("-", ""))
 			.map(MARKETS::get)
 			.orElse(null);
 	}
 
 	public static String stripCurrencyFromSymbol(Market market) {
 		return Symbol.valueOf(market.getSymbol()).getKey().toUpperCase();
+	}
+
+	public static String addDashBeforeBaseCurrency(String symbol) {
+		if (symbol.contains("-")) {
+			return symbol;
+		}
+
+		int index = symbol.indexOf("USDT");
+
+		if (index == -1) {
+			return symbol;
+		}
+
+		return symbol.substring(0, index) + "-" + symbol.substring(index);
 	}
 }

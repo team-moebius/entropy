@@ -36,7 +36,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def tradeWindowQueryService = Mock(TradeWindowQueryService)
     def inflationConfigRepository = Mock(InflationConfigRepository)
     def orderService = Mock(OrderService)
-    def inflationVolumeResolver = Mock(TradeWindowInflationVolumeResolver)
+    def inflationVolumeResolver = Mock(TradeWindowVolumeResolver)
     def mockEventListener = Mock(TradeWindowChangeEventListener)
 
     @Subject

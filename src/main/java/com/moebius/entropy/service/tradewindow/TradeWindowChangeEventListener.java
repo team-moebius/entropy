@@ -22,7 +22,9 @@ public class TradeWindowChangeEventListener {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void inflateOrdersOnTradeWindowChange(OrderBookDto orderBookDto) {
 	    Market market = SymbolUtil.marketFromSymbol(orderBookDto.getSymbol());
-        TradeWindowAssembler<?> assembler = assemblerFactory.getTradeWindowAssembler(market.getExchange());
+        TradeWindowAssembler<?> assembler = Optional.ofNullable(market)
+			.map(foundMarket -> assemblerFactory.getTradeWindowAssembler(foundMarket.getExchange()))
+			.orElse(null);
 
 		Optional.ofNullable(assembler)
 			.map(tradeWindowAssembler -> tradeWindowAssembler.assembleTradeWindow(orderBookDto))

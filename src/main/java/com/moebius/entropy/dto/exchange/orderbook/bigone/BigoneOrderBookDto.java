@@ -42,6 +42,7 @@ public class BigoneOrderBookDto implements OrderBookDto<BigoneOrderBookDto.Depth
 	@ToString
 	@NoArgsConstructor(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	private static class DepthWrapper {
 		private Depth depth;
 	}
@@ -51,8 +52,8 @@ public class BigoneOrderBookDto implements OrderBookDto<BigoneOrderBookDto.Depth
 	@ToString
 	@NoArgsConstructor(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Depth {
-		private String changeId;
 		@JsonProperty("market")
 		private String symbol;
 		private List<Data> asks;
@@ -64,6 +65,7 @@ public class BigoneOrderBookDto implements OrderBookDto<BigoneOrderBookDto.Depth
 	@ToString
 	@NoArgsConstructor(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Data {
 		private BigDecimal price;
 		private BigDecimal amount;

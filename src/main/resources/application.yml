@@ -40,6 +40,7 @@ exchange:
     websocket:
       uri: wss://big.one/ws/v2
       timeout: 60000
+      sub-protocol: json
     receiveTimeWindow: 5000
 reactor:
   netty:

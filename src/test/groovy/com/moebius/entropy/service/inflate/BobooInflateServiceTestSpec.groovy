@@ -3,6 +3,7 @@ package com.moebius.entropy.service.inflate
 import com.moebius.entropy.assembler.boboo.BobooAssembler
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.repository.DisposableOrderRepository
+import com.moebius.entropy.service.inflate.boboo.BobooInflateService
 import com.moebius.entropy.service.tradewindow.TradeWindowChangeEventListener
 import org.springframework.web.reactive.socket.WebSocketHandler
 import org.springframework.web.reactive.socket.client.WebSocketClient

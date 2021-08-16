@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -34,7 +33,7 @@ public class TradeWindowInflateService {
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final InflationConfigRepository inflationConfigRepository;
 	private final OrderService orderService;
-	private final TradeWindowInflationVolumeResolver volumeResolver;
+	private final TradeWindowVolumeResolver volumeResolver;
 
 	public Flux<Order> inflateOrders(InflateRequest inflateRequest) {
 		Market market = inflateRequest.getMarket();

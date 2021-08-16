@@ -10,7 +10,7 @@ import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.tradewindow.TradeWindowInflationVolumeResolver;
+import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.EntropyRandomUtils;
 import lombok.RequiredArgsConstructor;
@@ -40,7 +40,7 @@ public class BobooDividedDummyOrderService {
 
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;
-	private final TradeWindowInflationVolumeResolver volumeResolver;
+	private final TradeWindowVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
 	private final EntropyRandomUtils randomUtils;
 
