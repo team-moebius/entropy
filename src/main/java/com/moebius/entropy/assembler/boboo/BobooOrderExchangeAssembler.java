@@ -21,12 +21,12 @@ public class BobooOrderExchangeAssembler implements
     public BobooOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
         return Optional.ofNullable(orderRequest)
                 .map(request->BobooOrderRequestDto.builder()
-                        .symbol(orderRequest.getMarket().getSymbol())
-                        .quantity(orderRequest.getVolume())
-                        .side(OrderUtil.resolveFromOrderPosition(orderRequest.getOrderPosition()))
+                        .symbol(request.getMarket().getSymbol())
+                        .quantity(request.getVolume())
+                        .side(OrderUtil.resolveFromOrderPosition(request.getOrderPosition()))
                         .type(OrderType.LIMIT)
                         .timeInForce(TimeInForce.GTC)
-                        .price(orderRequest.getPrice())
+                        .price(request.getPrice())
                         .newClientOrderId(OrderIdUtil.generateOrderId())
                         .build()
                 )
@@ -41,7 +41,7 @@ public class BobooOrderExchangeAssembler implements
                         SymbolUtil.marketFromSymbol(orderResponse.getSymbol()),
                         OrderUtil.resolveFromOrderSide(orderResponse.getSide()),
                         orderResponse.getPrice(),
-                        calculateRemainVolume(orderResponse.getOrigQty(), orderResponse.getExecutedQty())
+                        OrderUtil.calculateRemainedVolume(orderResponse.getOrigQty(), orderResponse.getExecutedQty())
                 ))
                 .orElse(null);
     }
@@ -64,20 +64,11 @@ public class BobooOrderExchangeAssembler implements
                         SymbolUtil.marketFromSymbol(bobooOpenOrdersDto.getSymbol()),
                         OrderUtil.resolveFromOrderSide(bobooOpenOrdersDto.getOrderSide()),
                         bobooOpenOrdersDto.getPrice(),
-                        calculateRemainVolume(bobooOpenOrdersDto.getOriginalQuantity(), bobooOpenOrdersDto.getExecutedQuantity())
+                        calculateRemainedVolume(bobooOpenOrdersDto.getOriginalQuantity(), bobooOpenOrdersDto.getExecutedQuantity())
                 ))
                 .orElse(null);
     }
-    private BigDecimal calculateRemainVolume(float original, float executed){
-        return calculateRemainVolume(BigDecimal.valueOf(original), BigDecimal.valueOf(executed));
-    }
-
-    private BigDecimal calculateRemainVolume(BigDecimal original, BigDecimal executed){
-        BigDecimal orgVolume = Optional.ofNullable(original).orElse(BigDecimal.ZERO);
-        BigDecimal executedVolume = Optional.ofNullable(executed).orElse(BigDecimal.ZERO);
-
-        return Optional.of(orgVolume.subtract(executedVolume))
-                .filter(volume->volume.compareTo(BigDecimal.ZERO) > -1)
-                .orElse(BigDecimal.ZERO);
+    private BigDecimal calculateRemainedVolume(float original, float executed){
+        return OrderUtil.calculateRemainedVolume(BigDecimal.valueOf(original), BigDecimal.valueOf(executed));
     }
 }

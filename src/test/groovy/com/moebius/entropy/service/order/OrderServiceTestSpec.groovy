@@ -14,7 +14,7 @@ import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponseDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
 import com.moebius.entropy.repository.DisposableOrderRepository
-import com.moebius.entropy.service.exchange.BobooExchangeService
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier

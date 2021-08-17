@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BigoneOpenOrderDto {
+	private String id;
 	@JsonProperty("asset_pair_name")
 	private String symbol;
 	private BigDecimal price;

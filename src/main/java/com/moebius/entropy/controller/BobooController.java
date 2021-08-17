@@ -7,10 +7,10 @@ import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
-import com.moebius.entropy.service.exchange.BobooExchangeService;
-import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService;
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService;
+import com.moebius.entropy.service.order.auto.DividedDummyOrderService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService;
+import com.moebius.entropy.service.order.auto.RepeatMarketOrderService;
 import com.moebius.entropy.util.OrderIdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,8 +30,8 @@ import java.util.Optional;
 @Slf4j
 public class BobooController {
 	private final BobooExchangeService bobooExchangeService;
-	private final BobooDividedDummyOrderService bobooDividedDummyOrderService;
-	private final BobooRepeatMarketOrderService bobooRepeatMarketOrderService;
+	private final DividedDummyOrderService bobooDividedDummyOrderService;
+	private final RepeatMarketOrderService bobooRepeatMarketOrderService;
 	private final BobooOrderService bobooOrderService;
 
 	/**

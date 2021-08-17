@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.order.boboo.auto;
+package com.moebius.entropy.service.order.auto;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
@@ -27,7 +27,7 @@ import java.time.Duration;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BobooRepeatMarketOrderService {
+public class RepeatMarketOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
 
 	private final BobooOrderService orderService;

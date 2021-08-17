@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.order.boboo.auto;
+package com.moebius.entropy.service.order.auto;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
@@ -18,7 +18,7 @@ import java.time.Duration;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BobooOptimizeOrderService {
+public class OptimizeOrderService {
 	private final static long DEFAULT_DELAY = 300L;
 	private final BobooOrderService orderService;
 	private final TradeWindowQueryService tradeWindowQueryService;

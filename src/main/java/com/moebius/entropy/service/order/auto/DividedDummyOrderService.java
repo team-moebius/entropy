@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.order.boboo.auto;
+package com.moebius.entropy.service.order.auto;
 
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.order.DummyOrderRequest;
@@ -34,7 +34,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class BobooDividedDummyOrderService {
+public class DividedDummyOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
 	private final static long DEFAULT_DELAY = 300L;
 

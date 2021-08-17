@@ -4,7 +4,7 @@ import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrderDto
-import com.moebius.entropy.service.exchange.BobooExchangeService
+import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
 import com.moebius.entropy.service.order.boboo.BobooOpenOrderRefreshService
 import reactor.core.publisher.Flux
 import spock.lang.Specification

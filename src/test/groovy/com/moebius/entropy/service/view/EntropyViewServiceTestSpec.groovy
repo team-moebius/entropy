@@ -17,7 +17,7 @@ import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.dto.view.ManualOrderForm
 import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.repository.InflationConfigRepository
-import com.moebius.entropy.service.order.ManualOrderMakerService
+import com.moebius.entropy.service.order.manual.ManualOrderMakerService
 import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
 import com.moebius.entropy.service.order.boboo.auto.BobooOptimizeOrderService

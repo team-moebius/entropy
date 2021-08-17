@@ -2,7 +2,7 @@ package com.moebius.entropy.service.order.boboo
 
 import spock.lang.Specification
 
-class BobooDividedDummyOrderServiceTestSpec extends Specification {
+class DividedDummyOrderServiceTestSpec extends Specification {
 	def "Should execute divided dummy orders"() {
 		
 	}

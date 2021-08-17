@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.order;
+package com.moebius.entropy.service.order.manual;
 
 import com.moebius.entropy.domain.ManualOrderMakingRequest;
 import com.moebius.entropy.domain.ManualOrderResult;

@@ -1,4 +1,4 @@
-package com.moebius.entropy.service.exchange;
+package com.moebius.entropy.service.exchange.boboo;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,7 @@ import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.domain.order.OrderStatus;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
+import com.moebius.entropy.service.exchange.ExchangeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,12 @@ import reactor.core.publisher.Mono;
 public class BobooExchangeService implements ExchangeService<
 	BobooCancelRequestDto, BobooCancelResponseDto, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrderDto
 	> {
+	private final static String ORDER_INFLATION_DISPOSABLE_ID_FORMAT = "BOBOO-%s-ORDER-INFLATION";
+	private final WebClient webClient;
+	private final BobooAssembler bobooAssembler;
+	private final DisposableOrderRepository disposableOrderRepository;
+	private final ObjectMapper objectMapper;
+
 	@Value("${exchange.boboo.rest.scheme}")
 	private String scheme;
 	@Value("${exchange.boboo.rest.host}")
@@ -39,12 +46,6 @@ public class BobooExchangeService implements ExchangeService<
 	private String requestOrderPath;
 	@Value("${exchange.boboo.rest.cancel-orders}")
 	private String cancelOrderPath;
-
-	private final static String ORDER_INFLATION_DISPOSABLE_ID_FORMAT = "BOBOO-%s-ORDER-INFLATION";
-	private final WebClient webClient;
-	private final BobooAssembler bobooAssembler;
-	private final DisposableOrderRepository disposableOrderRepository;
-	private final ObjectMapper objectMapper;
 
 	@Override
 	public Flux<BobooOpenOrderDto> getOpenOrders(String symbol, ApiKey apiKey) {

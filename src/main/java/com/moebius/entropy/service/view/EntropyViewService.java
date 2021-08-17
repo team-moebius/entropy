@@ -9,11 +9,11 @@ import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.view.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
-import com.moebius.entropy.service.order.ManualOrderMakerService;
-import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService;
-import com.moebius.entropy.service.order.boboo.auto.BobooOptimizeOrderService;
+import com.moebius.entropy.service.order.auto.DividedDummyOrderService;
+import com.moebius.entropy.service.order.auto.OptimizeOrderService;
+import com.moebius.entropy.service.order.auto.RepeatMarketOrderService;
+import com.moebius.entropy.service.order.manual.ManualOrderMakerService;
 import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.SymbolUtil;
 import lombok.RequiredArgsConstructor;
@@ -33,9 +33,9 @@ import java.util.Objects;
 public class EntropyViewService {
 
     private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
-    private final BobooDividedDummyOrderService dividedDummyOrderService;
-    private final BobooRepeatMarketOrderService repeatMarketOrderService;
-    private final BobooOptimizeOrderService optimizeOrderService;
+    private final DividedDummyOrderService dividedDummyOrderService;
+    private final RepeatMarketOrderService repeatMarketOrderService;
+    private final OptimizeOrderService optimizeOrderService;
     private final InflationConfigRepository inflationConfigRepository;
     private final BobooOrderService bobooOrderService;
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
