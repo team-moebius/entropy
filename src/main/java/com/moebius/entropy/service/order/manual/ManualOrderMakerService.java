@@ -8,6 +8,7 @@ import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.repository.TradeWindowRepository;
 import com.moebius.entropy.service.order.OrderService;
+import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.util.EntropyRandomUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ManualOrderMakerService {
     private final EntropyRandomUtils randomUtil;
-    private final OrderService orderService;
+    private final OrderServiceFactory orderServiceFactory;
     private final TradeWindowRepository tradeWindowRepository;
 
     public Mono<ManualOrderResult> requestManualOrderMaking(ManualOrderMakingRequest request) {
@@ -48,6 +49,7 @@ public class ManualOrderMakerService {
                 market.getSymbol(), orderPosition, randomVolumes);
 
         BigDecimal finalMarketPrice = marketPrice;
+        OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
         return Flux.fromIterable(randomVolumes)
                 .map(volume -> new OrderRequest(market, orderPosition, finalMarketPrice, volume))
                 .subscribeOn(Schedulers.parallel())

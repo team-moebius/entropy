@@ -1,6 +1,7 @@
 package com.moebius.entropy.service.tradewindow
 
-import com.moebius.entropy.assembler.boboo.BobooTradeWindowAssembler
+import com.moebius.entropy.assembler.TradeWindowAssembler
+import com.moebius.entropy.assembler.TradeWindowAssemblerFactory
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.inflate.InflationResult
@@ -12,45 +13,51 @@ import spock.lang.Specification
 import spock.lang.Subject
 
 class TradeWindowChangeEventListenerTestSpec extends Specification {
-    def commandService = Mock(TradeWindowCommandService)
-    def assembler = Mock(BobooTradeWindowAssembler)
-    def inflateService = Mock(TradeWindowInflateService)
+	def assemblerFactory = Mock(TradeWindowAssemblerFactory)
+	def commandService = Mock(TradeWindowCommandService)
+	def inflateService = Mock(TradeWindowInflateService)
 
-    @Subject
-    def sut = new TradeWindowChangeEventListener(commandService, assembler, inflateService)
+	@Subject
+	def sut = new TradeWindowChangeEventListener(assemblerFactory, commandService, inflateService)
 
-    def "On any changes on trade window"() {
-        given:
-        def orderBook = Mock(BobooOrderBookDto)
-        def tradeWindow = new TradeWindow([], [])
-        def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)
-        def marketPrice = BigDecimal.valueOf(123.123)
-        assembler.assembleTradeWindow(orderBook) >> tradeWindow
-        assembler.extractMarket(orderBook) >> market
-        assembler.extractMarketPrice(orderBook) >> marketPrice
+	def "On any changes on trade window"() {
+		given:
+		def orderBook = Stub(BobooOrderBookDto) {
+			getSymbol() >> "GTAX2USDT"
+		}
+		def tradeWindow = new TradeWindow([], [])
+		def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)
+		def marketPrice = BigDecimal.valueOf(123.123)
 
-        when:
-        sut.inflateOrdersOnTradeWindowChange(orderBook)
+		when:
+		sut.inflateOrdersOnTradeWindowChange(orderBook)
 
-        then:
-        1 * commandService.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
-        1 * inflateService.inflateOrders({ it.market == market }) >> Flux.just(Stub(InflationResult))
-    }
+		then:
+		1 * assemblerFactory.getTradeWindowAssembler(_ as Exchange) >> Stub(TradeWindowAssembler) {
+			assembleTradeWindow(orderBook) >> tradeWindow
+			extractMarket(orderBook) >> market
+			extractMarketPrice(orderBook) >> marketPrice
+		}
+		1 * commandService.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
+		1 * inflateService.inflateOrders({ it.market == market }) >> Flux.just(Stub(InflationResult))
+	}
 
-    def "On failed to change on trade window"() {
-        def orderBook = Mock(BobooOrderBookDto)
-        def tradeWindow = null
-        def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)
-        def marketPrice = BigDecimal.valueOf(123.123)
-        assembler.assembleTradeWindow(orderBook) >> tradeWindow
-        assembler.extractMarket(orderBook) >> market
-        assembler.extractMarketPrice(orderBook) >> marketPrice
+	def "On failed to change on trade window"() {
+		def orderBook = Stub(BobooOrderBookDto)
+		def tradeWindow = null
+		def market = new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)
+		def marketPrice = BigDecimal.valueOf(123.123)
 
-        when:
-        sut.inflateOrdersOnTradeWindowChange(orderBook)
+		when:
+		sut.inflateOrdersOnTradeWindowChange(orderBook)
 
-        then:
-        0 * commandService.saveCurrentTradeWindow(_, _, _)
-        0 * inflateService.inflateOrders(_)
-    }
+		then:
+		0 * assemblerFactory.getTradeWindowAssembler(_ as Exchange) >> Stub(TradeWindowAssembler) {
+			assembleTradeWindow(orderBook) >> tradeWindow
+			extractMarket(orderBook) >> market
+			extractMarketPrice(orderBook) >> marketPrice
+		}
+		0 * commandService.saveCurrentTradeWindow(_, _, _)
+		0 * inflateService.inflateOrders(_)
+	}
 }

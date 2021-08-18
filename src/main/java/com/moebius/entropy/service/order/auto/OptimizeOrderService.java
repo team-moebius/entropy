@@ -3,9 +3,10 @@ package com.moebius.entropy.service.order.auto;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
-import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
+import com.moebius.entropy.service.order.OrderService;
+import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
+import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,13 +21,14 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class OptimizeOrderService {
 	private final static long DEFAULT_DELAY = 300L;
-	private final BobooOrderService orderService;
+	private final OrderServiceFactory orderServiceFactory;
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowVolumeResolver volumeResolver;
 
 	public Flux<Order> optimizeOrders(Market market) {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
 		BigDecimal highestBidPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
+		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
 		return orderService.fetchAllOrdersFor(market)
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))

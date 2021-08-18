@@ -9,9 +9,10 @@ import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderResponseDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
-import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
+import com.moebius.entropy.service.order.OrderService;
+import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
+import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +31,7 @@ import java.time.Duration;
 public class RepeatMarketOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "REPEAT-MARKET-ORDER";
 
-	private final BobooOrderService orderService;
+	private final OrderServiceFactory orderServiceFactory;
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
@@ -96,6 +97,8 @@ public class RepeatMarketOrderService {
 		if (orderRequest == null) {
 			return Mono.empty();
 		}
+
+		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
 		return Mono.just(orderRequest)
 			.flatMap(orderService::requestOrder)

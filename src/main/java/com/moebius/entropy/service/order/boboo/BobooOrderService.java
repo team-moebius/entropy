@@ -59,6 +59,11 @@ public class BobooOrderService implements OrderService {
             .orElse(Mono.empty());
     }
 
+    @Override
+    public Exchange getExchange() {
+        return Exchange.BOBOO;
+    }
+
     public Mono<ResponseEntity<?>> stopOrder(String disposableId) {
         Optional.ofNullable(disposableOrderRepository.get(disposableId))
             .ifPresent(disposables -> disposables.forEach(Disposable::dispose));

@@ -9,11 +9,12 @@ import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.view.*;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
+import com.moebius.entropy.service.order.OrderService;
+import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.order.auto.DividedDummyOrderService;
 import com.moebius.entropy.service.order.auto.OptimizeOrderService;
 import com.moebius.entropy.service.order.auto.RepeatMarketOrderService;
 import com.moebius.entropy.service.order.manual.ManualOrderMakerService;
-import com.moebius.entropy.service.order.boboo.BobooOrderService;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.SymbolUtil;
 import lombok.RequiredArgsConstructor;
@@ -37,7 +38,7 @@ public class EntropyViewService {
     private final RepeatMarketOrderService repeatMarketOrderService;
     private final OptimizeOrderService optimizeOrderService;
     private final InflationConfigRepository inflationConfigRepository;
-    private final BobooOrderService bobooOrderService;
+    private final OrderServiceFactory orderServiceFactory;
     private final ManualOrderRequestAssembler manualOrderRequestAssembler;
     private final ManualOrderMakerService manualOrderMakerService;
     private final DisposableOrderRepository disposableOrderRepository;
@@ -74,10 +75,12 @@ public class EntropyViewService {
             inflationConfigRepository.saveConfigFor(market, disabledConfig);
         }
 
+        OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
+
         return Flux.fromIterable(disposableOrderRepository.getKeysBy(disposableId -> !disposableId.contains("INFLATION") &&
                 disposableId.contains(market.getSymbol())))
             .filter(StringUtils::isNotEmpty)
-            .flatMap(bobooOrderService::stopOrder)
+            .flatMap(orderService::stopOrder)
             .map(ResponseEntity::getBody)
             .map(Object::toString)
             .collectList()

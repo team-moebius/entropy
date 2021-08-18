@@ -1,5 +1,7 @@
 package com.moebius.entropy.service.order.auto;
 
+import com.moebius.entropy.domain.Exchange;
+import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.order.DummyOrderRequest;
 import com.moebius.entropy.domain.order.Order;
@@ -9,9 +11,10 @@ import com.moebius.entropy.domain.order.config.DummyOrderConfig;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
-import com.moebius.entropy.service.order.boboo.BobooOrderService;
-import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
+import com.moebius.entropy.service.order.OrderService;
+import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
+import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import com.moebius.entropy.util.EntropyRandomUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -38,7 +42,7 @@ public class DividedDummyOrderService {
 	private final static String DISPOSABLE_ID_POSTFIX = "DIVIDED-DUMMY-ORDER";
 	private final static long DEFAULT_DELAY = 300L;
 
-	private final BobooOrderService orderService;
+	private final OrderServiceFactory orderServiceFactory;
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
@@ -134,14 +138,28 @@ public class DividedDummyOrderService {
 	}
 
 	private Flux<Order> requestAndCancelDummyOrder(DummyOrderRequest dummyOrderRequest) {
+		if (dummyOrderRequest == null) {
+			return Flux.empty();
+		}
+
+		Exchange exchange = Optional.ofNullable(dummyOrderRequest.getOrderRequests())
+			.flatMap(orderRequests -> orderRequests.stream().findAny())
+			.map(OrderRequest::getMarket)
+			.map(Market::getExchange)
+			.orElse(null);
+
+		OrderService orderService = orderServiceFactory.getOrderService(exchange);
+
 		return Flux.range(0, dummyOrderRequest.getReorderCount())
 			.flatMapIterable(count -> dummyOrderRequest.getOrderRequests())
 			.delayElements(dummyOrderRequest.getDelay())
 			.flatMap(orderService::requestOrder)
-			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to request dummy order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to request dummy order. [{}]",
+				((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::cancelOrder)
-			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]", ((WebClientResponseException) throwable).getResponseBodyAsString()))
+			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]",
+				((WebClientResponseException) throwable).getResponseBodyAsString()))
 			.doOnComplete(() -> log.info("[DummyOrder] Completed in requesting & cancelling dummy orders. [{}]", dummyOrderRequest));
 	}
 }

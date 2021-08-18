@@ -17,11 +17,13 @@ import com.moebius.entropy.dto.view.AutomaticOrderResult
 import com.moebius.entropy.dto.view.ManualOrderForm
 import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.repository.InflationConfigRepository
+import com.moebius.entropy.service.order.OrderService
+import com.moebius.entropy.service.order.OrderServiceFactory
+import com.moebius.entropy.service.order.auto.DividedDummyOrderService
+import com.moebius.entropy.service.order.auto.OptimizeOrderService
+import com.moebius.entropy.service.order.auto.RepeatMarketOrderService
 import com.moebius.entropy.service.order.manual.ManualOrderMakerService
-import com.moebius.entropy.service.order.boboo.auto.BobooDividedDummyOrderService
 import com.moebius.entropy.service.order.boboo.BobooOrderService
-import com.moebius.entropy.service.order.boboo.auto.BobooOptimizeOrderService
-import com.moebius.entropy.service.order.boboo.auto.BobooRepeatMarketOrderService
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService
 import org.apache.commons.collections4.CollectionUtils
 import org.springframework.http.ResponseEntity
@@ -39,18 +41,18 @@ class EntropyViewServiceTestSpec extends Specification {
 	def automaticOrderViewAssembler = Mock(AutomaticOrderViewAssembler)
 	def manualOrderViewAssembler = Mock(ManualOrderRequestAssembler)
 	def manualOrderMakerService = Mock(ManualOrderMakerService)
-	def dividedDummyOrderService = Mock(BobooDividedDummyOrderService)
-	def repeatMarketOrderService = Mock(BobooRepeatMarketOrderService)
-	def optimizeOrderService = Mock(BobooOptimizeOrderService)
+	def dividedDummyOrderService = Mock(DividedDummyOrderService)
+	def repeatMarketOrderService = Mock(RepeatMarketOrderService)
+	def optimizeOrderService = Mock(OptimizeOrderService)
 	def inflationConfigRepository = Mock(InflationConfigRepository)
-	def bobooOrderService = Mock(BobooOrderService)
+	def orderServiceFactory = Mock(OrderServiceFactory)
 	def disposableOrderRepository = Mock(DisposableOrderRepository)
 	def tradeWindowQueryService = Mock(TradeWindowQueryService)
 
 	//TBD for rest service
 	def sut = new EntropyViewService(
 			automaticOrderViewAssembler, dividedDummyOrderService, repeatMarketOrderService, optimizeOrderService, inflationConfigRepository,
-			bobooOrderService, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository, tradeWindowQueryService
+			orderServiceFactory, manualOrderViewAssembler, manualOrderMakerService, disposableOrderRepository, tradeWindowQueryService
 	)
 
 
@@ -96,8 +98,10 @@ class EntropyViewServiceTestSpec extends Specification {
 				.enable(true)
 				.build()
 		1 * inflationConfigRepository.saveConfigFor(market, { it.enable == false })
-		1 * bobooOrderService.stopOrder("test-disposable-id") >> Mono.just(ResponseEntity.ok("test-disposable-id"))
-        1 * bobooOrderService.stopOrder("test-disposable-id2") >> Mono.just(ResponseEntity.ok("test-disposable-id2"))
+		1 * orderServiceFactory.getOrderService(_ as Exchange) >> Stub(OrderService) {
+			stopOrder("test-disposable-id") >> Mono.just(ResponseEntity.ok("test-disposable-id"))
+			stopOrder("test-disposable-id2") >> Mono.just(ResponseEntity.ok("test-disposable-id2"))
+		}
 		1 * disposableOrderRepository.getKeysBy(_ as Predicate) >> ["test-disposable-id", "test-disposable-id2"]
 
 		expect:
