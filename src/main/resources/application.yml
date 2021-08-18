@@ -31,6 +31,12 @@ exchange:
         binary: false
     receiveTimeWindow: 5000
   bigone:
+    auth:
+      header:
+        alg: HS256
+        typ: JWT
+      payload:
+        type: OpenAPIV2
     rest:
       scheme: https
       host: big.one

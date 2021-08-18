@@ -30,8 +30,8 @@ import java.util.Optional;
 @Slf4j
 public class BobooController {
 	private final BobooExchangeService bobooExchangeService;
-	private final DividedDummyOrderService bobooDividedDummyOrderService;
-	private final RepeatMarketOrderService bobooRepeatMarketOrderService;
+	private final DividedDummyOrderService dividedDummyOrderService;
+	private final RepeatMarketOrderService repeatMarketOrderService;
 	private final BobooOrderService bobooOrderService;
 
 	/**
@@ -53,12 +53,12 @@ public class BobooController {
 
 	@PostMapping("/divided-dummy-order")
 	public Mono<ResponseEntity<?>> testDividedDummyOrder(@RequestBody DividedDummyOrderDto dividedDummyOrderDto) {
-		return bobooDividedDummyOrderService.executeDividedDummyOrders(dividedDummyOrderDto);
+		return dividedDummyOrderService.executeDividedDummyOrders(dividedDummyOrderDto);
 	}
 
 	@PostMapping("/repeat-market-order")
 	public Mono<ResponseEntity<?>> testRepeatMarketOrder(@RequestBody RepeatMarketOrderDto repeatMarketOrderDto) {
-		return bobooRepeatMarketOrderService.executeRepeatMarketOrders(repeatMarketOrderDto);
+		return repeatMarketOrderService.executeRepeatMarketOrders(repeatMarketOrderDto);
 	}
 
 	@DeleteMapping("/order")
