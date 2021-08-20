@@ -8,5 +8,5 @@ import lombok.Getter;
 public class BigoneJwtPayloadDto {
 	private String type;
 	private String sub;
-	private long nonce;
+	private String nonce;
 }

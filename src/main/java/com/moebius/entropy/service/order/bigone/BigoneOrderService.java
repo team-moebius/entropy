@@ -53,8 +53,8 @@ public class BigoneOrderService implements OrderService {
 		return Optional.ofNullable(order)
 			.map(assembler::convertToCancelRequest)
 			.map(cancelRequest -> exchangeService.cancelOrder(cancelRequest, getApiKeyByMarketSymbol(order.getMarket())))
-			.map(bobooCancelResponseMono -> bobooCancelResponseMono
-				.map(bobooCancelResponse -> order)
+			.map(bigoneCancelResponseMono -> bigoneCancelResponseMono
+				.map(bigoneCancelResponse -> order)
 				.doOnError(throwable -> log.error("[OrderCancel] Order cancellation failed. [{}]", order, throwable)))
 			.orElse(Mono.empty());
 	}
@@ -75,7 +75,7 @@ public class BigoneOrderService implements OrderService {
 	private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted){
 		return Optional.ofNullable(orderRequest)
 			.map(assembler::convertToOrderRequest)
-			.map(bobooOrderRequest->exchangeService.requestOrder(bobooOrderRequest, getApiKeyByMarketSymbol(orderRequest.getMarket())))
+			.map(bigoneOrderRequest -> exchangeService.requestOrder(bigoneOrderRequest, getApiKeyByMarketSymbol(orderRequest.getMarket())))
 			.map(orderMono->orderMono.map(assembler::convertToOrder)
 				.filter(Objects::nonNull)
 				.doOnSuccess(afterOrderCompleted)

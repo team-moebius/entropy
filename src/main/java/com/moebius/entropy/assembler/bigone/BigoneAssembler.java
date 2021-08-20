@@ -2,6 +2,7 @@ package com.moebius.entropy.assembler.bigone;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneOrderRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookRequestDto;
 import com.moebius.entropy.util.SymbolUtil;
@@ -39,7 +40,7 @@ public class BigoneAssembler {
 					.build())
 				.build());
 		} catch (JsonProcessingException e) {
-			log.warn("[Bigone] Failed to processing json.", e);
+			log.error("[Bigone] Failed to processing json.", e);
 			return StringUtils.EMPTY;
 		}
 	}
@@ -48,8 +49,19 @@ public class BigoneAssembler {
 		try {
 			return objectMapper.readValue(message.getPayloadAsText(), BigoneOrderBookDto.class);
 		} catch (JsonProcessingException e) {
-			log.warn("[Bigone] Failed to processing json.", e);
+			log.error("[Bigone] Failed to processing json.", e);
 			return null;
+		}
+	}
+
+	public String assembleOrderRequestBodyValue(BigoneOrderRequestDto dto) {
+		try {
+			return objectMapper.writeValueAsString(dto.toBuilder()
+				.symbol(SymbolUtil.addDashBeforeBaseCurrency(dto.getSymbol()))
+				.build());
+		} catch (JsonProcessingException e) {
+			log.error("[Bigone] Failed to processing json.", e);
+			return StringUtils.EMPTY;
 		}
 	}
 }

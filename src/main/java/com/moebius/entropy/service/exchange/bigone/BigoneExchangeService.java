@@ -1,13 +1,10 @@
 package com.moebius.entropy.service.exchange.bigone;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.assembler.bigone.BigoneAssembler;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.bigone.*;
-import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.ExchangeService;
-import com.moebius.entropy.service.inflate.InflateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,12 +19,9 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class BigoneExchangeService implements
 	ExchangeService<BigoneCancelRequestDto, BigoneCancelResponseDto, BigoneOrderRequestDto, BigoneOrderResponseDto, BigoneOpenOrderDto> {
-	private final static String ORDER_INFLATION_DISPOSABLE_ID_FORMAT = "BIGONE-%s-ORDER-INFLATION";
 	private final WebClient webClient;
 	private final BigoneJwtService bigoneJwtService;
 	private final BigoneAssembler bigoneAssembler;
-	private final DisposableOrderRepository disposableOrderRepository;
-	private final ObjectMapper objectMapper;
 
 	@Value("${exchange.bigone.rest.scheme}")
 	private String scheme;
@@ -75,7 +69,7 @@ public class BigoneExchangeService implements
 				.build())
 			.contentType(MediaType.APPLICATION_JSON)
 			.headers(httpHeaders -> httpHeaders.setBearerAuth(bigoneJwtService.create(apiKey)))
-			.bodyValue(orderRequest)
+			.bodyValue(bigoneAssembler.assembleOrderRequestBodyValue(orderRequest))
 			.retrieve()
 			.bodyToMono(BigoneOrderResponseDto.class);
 	}

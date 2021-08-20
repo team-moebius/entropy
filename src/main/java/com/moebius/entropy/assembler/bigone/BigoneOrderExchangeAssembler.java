@@ -34,12 +34,13 @@ public class BigoneOrderExchangeAssembler
 	@Override
 	public Order convertToOrder(BigoneOrderResponseDto orderResponse) {
 		return Optional.ofNullable(orderResponse)
-			.map(responseDto -> new Order(
-				responseDto.getId(),
-				SymbolUtil.marketFromSymbol(responseDto.getSymbol()),
-				responseDto.getSide(),
-				responseDto.getPrice(),
-				OrderUtil.calculateRemainedVolume(responseDto.getAmount(), responseDto.getFilledAmount())
+			.map(BigoneOrderResponseDto::getData)
+			.map(data -> new Order(
+				data.getId(),
+				SymbolUtil.marketFromSymbol(data.getSymbol()),
+				data.getSide(),
+				data.getPrice(),
+				OrderUtil.calculateRemainedVolume(data.getAmount(), data.getFilledAmount())
 			))
 			.orElse(null);
 	}

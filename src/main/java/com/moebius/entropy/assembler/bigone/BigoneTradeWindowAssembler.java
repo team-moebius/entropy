@@ -2,11 +2,15 @@ package com.moebius.entropy.assembler.bigone;
 
 import com.moebius.entropy.assembler.TradeWindowAssembler;
 import com.moebius.entropy.domain.Exchange;
+import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.OrderPosition;
+import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.dto.exchange.orderbook.OrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto;
+import com.moebius.entropy.util.SymbolUtil;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.util.Collection;
@@ -21,9 +25,7 @@ public final class BigoneTradeWindowAssembler extends TradeWindowAssembler<Bigon
 		return Optional.ofNullable(orderBookDto)
 			.map(OrderBookDto::getData)
 			.map(this::findFirst)
-			.map(BigoneOrderBookDto.Depth::getAsks)
-			.map(this::findFirst)
-			.map(BigoneOrderBookDto.Data::getPrice)
+			.map(this::getMarketPrice)
 			.orElseThrow(() -> new IllegalStateException(
 				String.format(
 					"[%s] Failed to extract market price from BigoneOrderBookDto due to data missing %s",
@@ -52,5 +54,22 @@ public final class BigoneTradeWindowAssembler extends TradeWindowAssembler<Bigon
 			.flatMap(Collection::stream)
 			.map(data -> new TradePrice(orderPosition, data.getPrice(), data.getAmount()))
 			.collect(Collectors.toList());
+	}
+
+	private BigDecimal getMarketPrice(BigoneOrderBookDto.Depth depth) {
+		Market market = SymbolUtil.marketFromSymbol(depth.getSymbol());
+
+		if (CollectionUtils.isEmpty(depth.getAsks())) {
+			return Optional.ofNullable(depth.getBids())
+				.map(this::findFirst)
+				.map(BigoneOrderBookDto.Data::getPrice)
+				.map(lowestBidPrice -> lowestBidPrice.subtract(market.getTradeCurrency().getPriceUnit()))
+				.orElse(null);
+		} else {
+			return Optional.ofNullable(depth.getAsks())
+				.map(this::findFirst)
+				.map(BigoneOrderBookDto.Data::getPrice)
+				.orElse(null);
+		}
 	}
 }

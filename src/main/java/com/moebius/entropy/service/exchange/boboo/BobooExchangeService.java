@@ -7,7 +7,6 @@ import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.domain.order.OrderStatus;
 import com.moebius.entropy.dto.exchange.order.boboo.*;
-import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.ExchangeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +27,8 @@ import reactor.core.publisher.Mono;
 public class BobooExchangeService implements ExchangeService<
 	BobooCancelRequestDto, BobooCancelResponseDto, BobooOrderRequestDto, BobooOrderResponseDto, BobooOpenOrderDto
 	> {
-	private final static String ORDER_INFLATION_DISPOSABLE_ID_FORMAT = "BOBOO-%s-ORDER-INFLATION";
 	private final WebClient webClient;
 	private final BobooAssembler bobooAssembler;
-	private final DisposableOrderRepository disposableOrderRepository;
 	private final ObjectMapper objectMapper;
 
 	@Value("${exchange.boboo.rest.scheme}")
