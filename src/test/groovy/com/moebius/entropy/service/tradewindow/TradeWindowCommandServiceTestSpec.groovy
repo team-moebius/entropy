@@ -3,6 +3,7 @@ package com.moebius.entropy.service.tradewindow
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.trade.TradeCurrency
+import com.moebius.entropy.domain.trade.TradePrice
 import com.moebius.entropy.domain.trade.TradeWindow
 import com.moebius.entropy.repository.TradeDataRepository
 import spock.lang.Specification
@@ -25,10 +26,10 @@ class TradeWindowCommandServiceTestSpec extends Specification {
 
         where:
         exchange       | symbol | currency           | marketPrice | tradeWindow
-        Exchange.BOBOO | "GTAXUSDT" | TradeCurrency.USDT | 123.12 | new TradeWindow([], [])
-        Exchange.BOBOO | "BTC"  | TradeCurrency.USDT | 1543.12     | new TradeWindow([], [])
-        Exchange.BOBOO | "GTAXUSDT" | TradeCurrency.KRW  | 123.12 | new TradeWindow([], [])
-        Exchange.BOBOO | "BTC"  | TradeCurrency.KRW  | 1543.12     | new TradeWindow([], [])
+        Exchange.BOBOO | "GTAXUSDT" | TradeCurrency.USDT | 123.12 | new TradeWindow([Mock(TradePrice)], [Mock(TradePrice)])
+        Exchange.BOBOO | "BTC"  | TradeCurrency.USDT | 1543.12     | new TradeWindow([Mock(TradePrice)], [Mock(TradePrice)])
+        Exchange.BOBOO | "GTAXUSDT" | TradeCurrency.KRW  | 123.12 | new TradeWindow([Mock(TradePrice)], [Mock(TradePrice)])
+        Exchange.BOBOO | "BTC"  | TradeCurrency.KRW  | 1543.12     | new TradeWindow([Mock(TradePrice)], [Mock(TradePrice)])
     }
 
 
