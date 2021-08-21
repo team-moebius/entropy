@@ -86,8 +86,7 @@ public class TradeWindowInflateService {
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 		BigDecimal highestBidPrice = marketPrice.subtract(priceUnit);
 		Map<Float, Float> priceVolumeMap = prices.stream()
-			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue(),
-				Float::sum));
+			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue()));
 
 		return Flux.range(startFrom, count)
 			.map(BigDecimal::valueOf)
@@ -95,7 +94,7 @@ public class TradeWindowInflateService {
 				.apply(startPrice, priceUnit.multiply(multiplier)))
 			.filter(price -> price.compareTo(marketPrice) != 0 &&
 				price.compareTo(highestBidPrice) != 0 &&
-				(!priceVolumeMap.containsKey(price.floatValue()) || priceVolumeMap.get(price.floatValue()) < minimumVolume.floatValue()))
+				(!priceVolumeMap.containsKey(price.toPlainString()) || priceVolumeMap.get(price.toPlainString()).compareTo(minimumVolume) < 0))
 			.map(price -> {
 				BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
 				return new OrderRequest(market, orderPosition, price, inflationVolume);
