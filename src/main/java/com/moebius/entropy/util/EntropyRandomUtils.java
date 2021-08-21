@@ -16,6 +16,19 @@ public class EntropyRandomUtils {
 				.setScale(decimalPlaces, RoundingMode.HALF_UP);
 	}
 
+	public BigDecimal getRandomDecimal(BigDecimal left, BigDecimal right, int decimalPlaces) {
+		BigDecimal min, max;
+		if (left.compareTo(right) <= 0){
+			min = left;
+			max = right;
+		} else {
+			min = right;
+			max = left;
+		}
+		return max.subtract(min).multiply(BigDecimal.valueOf(Math.random())).add(min)
+				.setScale(decimalPlaces, RoundingMode.HALF_UP);
+	}
+
 	public int getRandomInteger(int min, int max) {
 		return ThreadLocalRandom.current().nextInt(min, max + 1);
 	}

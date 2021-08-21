@@ -13,22 +13,20 @@ import com.moebius.entropy.domain.trade.TradeWindow
 import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.OrderService
 import com.moebius.entropy.service.order.OrderServiceFactory
+import com.moebius.entropy.util.EntropyRandomUtils
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
 import spock.lang.Unroll
 
-import java.util.stream.Collectors
+import java.math.RoundingMode
 
 class TradeWindowInflateServiceTestSpec extends Specification {
     @Shared
     def marketPrice = new BigDecimal("11.35")
-    @Shared
-    def priceChangeUnit = TradeCurrency.USDT.getPriceUnit()
     @Shared
     def symbol = "GTAX2USDT"
     @Shared
@@ -38,23 +36,17 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def orderService = Mock(OrderService)
     def orderServiceFactory = Mock(OrderServiceFactory)
     def inflationVolumeResolver = Mock(TradeWindowVolumeResolver)
+    def randomUtil = Mock(EntropyRandomUtils)
 
     @Subject
     TradeWindowInflateService sut = new TradeWindowInflateService(
-            tradeWindowQueryService, inflationConfigRepository, orderServiceFactory, inflationVolumeResolver
+            tradeWindowQueryService, inflationConfigRepository, orderServiceFactory, inflationVolumeResolver, randomUtil
     )
     def askInflationVolume = new BigDecimal("99.9999")
     def bidInflationVolume = new BigDecimal("111.1111")
 
     def market = new Market(exchange, symbol, TradeCurrency.USDT, 2, 2)
     def inflateRequest = new InflateRequest(market)
-    def inflationConfig = InflationConfig.builder()
-            .askCount(8)
-            .bidCount(9)
-            .bidMinVolume(bidInflationVolume)
-            .askMinVolume(askInflationVolume)
-            .enable(true)
-            .build()
 
 
 //    1. Event를 Parameter로 받고(Event data에 Exchange와 Symbol 받음)
@@ -63,10 +55,19 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 //    4. 3에서 선별된 주문을 취소
 //    5. 설정된 호가 수를 채우기 위해 주문을 생성
     @Unroll
-    def "Test when #comment"() {
+    def "Test with spreadWindow #spreadWindow when #comment"() {
         given:
+        def inflationConfig = InflationConfig.builder()
+                .askCount(askCount)
+                .bidCount(bidCount)
+                .bidMinVolume(bidInflationVolume)
+                .askMinVolume(askInflationVolume)
+                .spreadWindow(spreadWindow)
+                .enable(true)
+                .build()
+
         def askTradeWindow = (params.get("askTradeWindowPair") as List<List>)
-                .collect{
+                .collect {
                     String priceStr = it.get(0)
                     int volume = it.get(1) as Integer
                     new TradePrice(OrderPosition.ASK, new BigDecimal(priceStr), new BigDecimal(volume))
@@ -89,83 +90,111 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.ASK) >> askInflationVolume
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.BID) >> bidInflationVolume
         orderServiceFactory.getOrderService(_ as Exchange) >> orderService
-        orderService.cancelOrder(_ as Order) >> { Order it-> Mono.just(new Order(
-                "cancelled-${it.orderId}", it.market, it.orderPosition, it.price, it.volume
-        ))}
-        orderService.requestOrder(_ as OrderRequest) >> { OrderRequest it-> Mono.just(new Order(
-            "made-${it.volume}", it.market, it.orderPosition, it.price, it.volume
-        ))}
+        orderService.cancelOrder(_ as Order) >> { Order it ->
+            Mono.just(new Order(
+                    "cancelled-${it.orderId}", it.market, it.orderPosition, it.price, it.volume
+            ))
+        }
+        orderService.requestOrder(_ as OrderRequest) >> { OrderRequest it ->
+            Mono.just(new Order(
+                    "made-${it.volume}", it.market, it.orderPosition, it.price, it.volume
+            ))
+        }
+        randomUtil.getRandomDecimal(_ as BigDecimal, _ as BigDecimal, _ as Integer) >> { BigDecimal min, BigDecimal max, int decimalPlaces ->
+            return max.add(min).divide(BigDecimal.valueOf(2L)).setScale(decimalPlaces, RoundingMode.HALF_UP)
+        }
 
-        def madeAskedPrices = (params.get("madeAskPrices") as List<String>).collect{new BigDecimal(it)}
-        def madeBidPrices = (params.get("madeBidPrices") as List<String>).collect{new BigDecimal(it)}
+        def madeAskedPrices = (params.get("madeAskPrices") as List<String>).collect { new BigDecimal(it) }
+        def madeBidPrices = (params.get("madeBidPrices") as List<String>).collect { new BigDecimal(it) }
 
-        def cancelledAskedPrices = (params.get("cancelledAskPrices") as List<String>).collect{new BigDecimal(it)}
+        def cancelledAskedPrices = (params.get("cancelledAskPrices") as List<String>).collect { new BigDecimal(it) }
         def askOrdersInExchange = cancelledAskedPrices.withIndex()
-                .collect{
+                .collect {
                     def (price, index) = it
-                    return new Order("cancelled-${index+1}", market, OrderPosition.ASK, price, askInflationVolume)
+                    return new Order("cancelled-${index + 1}", market, OrderPosition.ASK, price, askInflationVolume)
                 }
 
-        def cancelledBiddenPrices = (params.get("cancelledBidPrices") as List<String>).collect{new BigDecimal(it)}
+        def cancelledBiddenPrices = (params.get("cancelledBidPrices") as List<String>).collect { new BigDecimal(it) }
         def bidOrdersInExchange = cancelledBiddenPrices.withIndex()
-                .collect{
+                .collect {
                     def (price, index) = it
                     return new Order("cancelled-${index}", market, OrderPosition.BID, price, bidInflationVolume)
                 }
 
         orderService.fetchAllOrdersFor(market) >> Flux.fromIterable(
-                bidOrdersInExchange+askOrdersInExchange
+                bidOrdersInExchange + askOrdersInExchange
         )
 
         expect:
         StepVerifier.create(sut.inflateOrders(inflateRequest))
-                .recordWith({return []})
-                .thenConsumeWhile({return true})
-                .consumeRecordedWith({allOrders->
+                .recordWith({ return [] })
+                .thenConsumeWhile({ return true })
+                .consumeRecordedWith({ allOrders ->
                     def madeAskOrderActual = allOrders.stream()
-                            .filter{order->
+                            .filter { order ->
                                 order.getOrderId().startsWith("made-") \
-                                && order.orderPosition == OrderPosition.ASK
+                                  && order.orderPosition == OrderPosition.ASK
                             }
-                            .collect{it}
+                            .collect { it }
 
                     def madeBidOrderActual = allOrders.stream()
-                            .filter{order->
+                            .filter { order ->
                                 order.getOrderId().startsWith("made-") \
-                                && order.orderPosition == OrderPosition.BID
+                                  && order.orderPosition == OrderPosition.BID
                             }
-                            .collect{it}
+                            .collect { it }
 
                     def cancelledAskOrderActual = allOrders.stream()
-                            .filter{order->
+                            .filter { order ->
                                 order.getOrderId().startsWith("cancelled-") \
-                                && order.orderPosition == OrderPosition.ASK
+                                  && order.orderPosition == OrderPosition.ASK
                             }
-                            .collect{it}
+                            .collect { it }
 
                     def cancelledBidOrderActual = allOrders.stream()
-                            .filter{order->
+                            .filter { order ->
                                 order.getOrderId().startsWith("cancelled-") \
-                                && order.orderPosition == OrderPosition.BID
+                                  && order.orderPosition == OrderPosition.BID
                             }
-                            .collect{it}
+                            .collect { it }
 
                     assert madeAskOrderActual.size() == madeAskedPrices.size()
-                    assert madeAskOrderActual.every {madeAskedPrices.contains(it.price)}
+                    assert madeAskOrderActual.every { madeAskedPrices.contains(it.price) }
 
                     assert madeBidOrderActual.size() == madeBidPrices.size()
-                    assert madeBidOrderActual.every {madeBidPrices.contains(it.price)}
+                    assert madeBidOrderActual.every { madeBidPrices.contains(it.price) }
 
                     assert cancelledAskOrderActual.size() == cancelledAskedPrices.size()
-                    assert cancelledAskOrderActual.every {cancelledAskedPrices.contains(it.price)}
+                    assert cancelledAskOrderActual.every { cancelledAskedPrices.contains(it.price) }
 
                     assert cancelledBidOrderActual.size() == cancelledBiddenPrices.size()
-                    assert cancelledBidOrderActual.every {cancelledBiddenPrices.contains(it.price)}
+                    assert cancelledBidOrderActual.every { cancelledBiddenPrices.contains(it.price) }
                 })
                 .verifyComplete()
 
 
         where:
+        spreadWindow | askCount | bidCount | comment
+        1            | 8        | 9        | "trade window is empty on first start"
+        1            | 8        | 9        | "both trade window count less than objective count"
+        1            | 8        | 9        | "both trade window count larger than objective count"
+        1            | 8        | 9        | "both trade window count larger than objective count without no automatic orders"
+        1            | 8        | 9        | "ask count over and bid count less than objective"
+        1            | 8        | 9        | "ask count over and bid count less than objective without no automatic orders"
+        1            | 8        | 9        | "ask count less and bid count over than objective"
+        1            | 8        | 9        | "ask count less and bid count over than objective without no automatic orders"
+        1            | 8        | 9        | "both trade window count larger than objective count but there's some missed price"
+
+        5            | 8        | 9        | "trade window is empty on first start"
+        5            | 8        | 9        | "both trade window count less than objective count"
+        5            | 8        | 9        | "both trade window count larger than objective count"
+        5            | 8        | 9        | "both trade window count larger than objective count without no automatic orders"
+        5            | 8        | 9        | "ask count over and bid count less than objective"
+        5            | 8        | 9        | "ask count over and bid count less than objective without no automatic orders"
+        5            | 8        | 9        | "ask count less and bid count over than objective"
+        5            | 8        | 9        | "ask count less and bid count over than objective without no automatic orders"
+        5            | 8        | 9        | "both trade window count larger than objective count but there's some missed price"
+
         //MarketPrice = 11.35
         //UnitPrice = 0.01
         params << [
@@ -173,7 +202,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                         "askTradeWindowPair": [],
                         "bidTradeWindowPair": [],
                         "madeAskPrices"     : ["11.36", "11.37", "11.38", "11.39", "11.40", "11.41", "11.42", "11.43"],
-                        "madeBidPrices"     : ["11.33", "11.32", "11.31", "11.30", "11.29", "11.28", "11.27", "11.26"],
+                        "madeBidPrices"     : ["11.34", "11.33", "11.32", "11.31", "11.30", "11.29", "11.28", "11.27", "11.26"],
                         "cancelledAskPrices": [],
                         "cancelledBidPrices": [],
                         "comment"           : "trade window is empty on first start"
@@ -182,7 +211,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
 
                         //Starting from 1 unit price more than market price
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
                         "madeAskPrices"     : ["11.42", "11.43"],
                         "madeBidPrices"     : ["11.27", "11.26"],
                         "cancelledAskPrices": [],
@@ -190,26 +219,8 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                         "comment"           : "both trade window count less than objective count",
                 ],
                 [
-                        "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
-                        "madeAskPrices"     : ["11.42", "11.43"],
-                        "madeBidPrices"     : ["11.27", "11.26"],
-                        "cancelledAskPrices": [],
-                        "cancelledBidPrices": [],
-                        "comment"           : "both trade window count less than objective count without automatic orders",
-                ],
-                [
-                        "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
-                        "madeAskPrices"     : ["11.42", "11.43"],
-                        "madeBidPrices"     : ["11.27", "11.26"],
-                        "cancelledAskPrices": [],
-                        "cancelledBidPrices": [],
-                        "comment"           : "both trade window count less than objective count and all orders are automatic orders",
-                ],
-                [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
                         "madeAskPrices"     : [],
                         "madeBidPrices"     : [],
                         "cancelledAskPrices": ["11.45"],
@@ -218,16 +229,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 ],
                 [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
-                        "madeAskPrices"     : [],
-                        "madeBidPrices"     : [],
-                        "cancelledAskPrices": ["11.45"],
-                        "cancelledBidPrices": ["11.23"],
-                        "comment"           : "both trade window count larger than objective count and all orders are automatic orders",
-                ],
-                [
-                        "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
                         "madeAskPrices"     : [],
                         "madeBidPrices"     : [],
                         "cancelledAskPrices": [],
@@ -236,7 +238,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 ],
                 [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
                         "madeAskPrices"     : [],
                         "madeBidPrices"     : ["11.27", "11.26"],
                         "cancelledAskPrices": ["11.45"],
@@ -245,16 +247,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 ],
                 [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
-                        "madeAskPrices"     : [],
-                        "madeBidPrices"     : ["11.27", "11.26"],
-                        "cancelledAskPrices": ["11.45"],
-                        "cancelledBidPrices": [],
-                        "comment"           : "ask count over and bid count less than objective and all orders are automatic orders",
-                ],
-                [
-                        "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206]],
                         "madeAskPrices"     : [],
                         "madeBidPrices"     : ["11.27", "11.26"],
                         "cancelledAskPrices": [],
@@ -263,7 +256,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 ],
                 [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
                         "madeAskPrices"     : ["11.42", "11.43"],
                         "madeBidPrices"     : [],
                         "cancelledAskPrices": [],
@@ -272,16 +265,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 ],
                 [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
-                        "madeAskPrices"     : ["11.42", "11.43"],
-                        "madeBidPrices"     : [],
-                        "cancelledAskPrices": [],
-                        "cancelledBidPrices": ["11.23"],
-                        "comment"           : "ask count less and bid count over than objective and all orders are automatic orders",
-                ],
-                [
-                        "askTradeWindowPair": [["11.36", 123], ["11.37", 124], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 203], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
                         "madeAskPrices"     : ["11.42", "11.43"],
                         "madeBidPrices"     : [],
                         "cancelledAskPrices": [],
@@ -290,29 +274,101 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 ],
                 [
                         "askTradeWindowPair": [["11.36", 123], ["11.37", 000], ["11.38", 125], ["11.39", 126], ["11.40", 127], ["11.41", 128], ["11.42", 129], ["11.43", 130], ["11.44", 131], ["11.45", 132]],
-                        "bidTradeWindowPair": [["11.33", 201], ["11.32", 202], ["11.31", 000], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
+                        "bidTradeWindowPair": [["11.34", 200], ["11.33", 201], ["11.32", 202], ["11.31", 000], ["11.30", 204], ["11.29", 205], ["11.28", 206], ["11.27", 207], ["11.26", 208], ["11.25", 209], ["11.24", 210], ["11.23", 211]],
                         "madeAskPrices"     : ["11.37"],
                         "madeBidPrices"     : ["11.31"],
                         "cancelledAskPrices": ["11.45"],
                         "cancelledBidPrices": ["11.23"],
                         "comment"           : "both trade window count larger than objective count but there's some missed price",
+                ],
+
+
+
+                //(11.36+11.41)/2 == 11.39
+                //(11.34+11.29)/2 == 11.30
+                [
+                        "askTradeWindowPair": [],
+                        "bidTradeWindowPair": [],
+                        "madeAskPrices"     : ["11.39", "11.44", "11.49", "11.54", "11.59", "11.64", "11.69","11.74"],
+                        "madeBidPrices"     : ["11.32", "11.27", "11.22", "11.17", "11.12", "11.07", "11.02", "10.97", "10.92"],
+                        "cancelledAskPrices": [],
+                        "cancelledBidPrices": [],
+                        "comment"           : "trade window is empty on first start"
+                ],
+                [
+                        //11.36, 11.41, 11.46, 11.51, 11.56, 11.61, 11.66, 11.71, 11.76, 11.81, 11.86, 11.91, 11.96, 12.01,
+                        //11.34, 11.29, 11.24, 11.19, 11.14, 11.09, 11.04, 10.99, 10.94, 10.89, 10.84, 10.79, 10.74, 10.69, 10.64, 10.59
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128]],
+                        "bidTradeWindowPair": [["11.34", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206]],
+                        "madeAskPrices"     : ["11.69", "11.74"],
+                        "madeBidPrices"     : ["11.02", "10.97", "10.92"],
+                        "cancelledAskPrices": [],
+                        "cancelledBidPrices": [],
+                        "comment"           : "both trade window count less than objective count",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128], ["11.70", 128], ["11.72", 129], ["11.78", 130], ["11.85", 131]],
+                        "bidTradeWindowPair": [["11.33", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206], ["11.02", 207], ["10.97", 208], ["10.92", 209], ["10.86", 210]],
+                        "madeAskPrices"     : [],
+                        "madeBidPrices"     : [],
+                        "cancelledAskPrices": ["11.78"],
+                        "cancelledBidPrices": ["10.86"],
+                        "comment"           : "both trade window count larger than objective count",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128], ["11.70", 128], ["11.72", 129], ["11.78", 130], ["11.85", 131]],
+                        "bidTradeWindowPair": [["11.33", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206], ["11.02", 207], ["10.97", 208], ["10.92", 209], ["10.86", 210]],
+                        "madeAskPrices"     : [],
+                        "madeBidPrices"     : [],
+                        "cancelledAskPrices": [],
+                        "cancelledBidPrices": [],
+                        "comment"           : "both trade window count larger than objective count without no automatic orders",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128], ["11.70", 128], ["11.72", 129], ["11.78", 130], ["11.85", 131]],
+                        "bidTradeWindowPair": [["11.33", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206]],
+                        "madeAskPrices"     : [],
+                        "madeBidPrices"     : ["11.02", "10.97", "10.92"],
+                        "cancelledAskPrices": ["11.78"],
+                        "cancelledBidPrices": [],
+                        "comment"           : "ask count over and bid count less than objective",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128], ["11.70", 128], ["11.72", 129], ["11.78", 130], ["11.85", 131]],
+                        "bidTradeWindowPair": [["11.33", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206]],
+                        "madeAskPrices"     : [],
+                        "madeBidPrices"     : ["11.02", "10.97", "10.92"],
+                        "cancelledAskPrices": [],
+                        "cancelledBidPrices": [],
+                        "comment"           : "ask count over and bid count less than objective without no automatic orders",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128]],
+                        "bidTradeWindowPair": [["11.33", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206], ["11.02", 207], ["10.97", 208], ["10.92", 209], ["10.86", 210]],
+                        "madeAskPrices"     : ["11.69", "11.74"],
+                        "madeBidPrices"     : [],
+                        "cancelledAskPrices": [],
+                        "cancelledBidPrices": ["10.86"],
+                        "comment"           : "ask count less and bid count over than objective",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128]],
+                        "bidTradeWindowPair": [["11.33", 201], ["11.29", 201], ["11.25", 202], ["11.20", 203], ["11.18", 204], ["11.10", 205], ["11.08", 206], ["11.02", 207], ["10.97", 208], ["10.92", 209], ["10.86", 210]],
+                        "madeAskPrices"     : ["11.69", "11.74"],
+                        "madeBidPrices"     : [],
+                        "cancelledAskPrices": [],
+                        "cancelledBidPrices": [],
+                        "comment"           : "ask count less and bid count over than objective without no automatic orders",
+                ],
+                [
+                        "askTradeWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 000], ["11.55", 126], ["11.56", 127], ["11.61", 128], ["11.70", 128], ["11.72", 129], ["11.78", 130], ["11.85", 131]],
+                        "bidTradeWindowPair": [["11.34", 201], ["11.30", 201], ["11.25", 202], ["11.20", 000], ["11.18", 204], ["11.10", 205], ["11.08", 206], ["11.02", 207], ["10.97", 208], ["10.92", 209], ["10.86", 210]],
+                        "madeAskPrices"     : ["11.49"],
+                        "madeBidPrices"     : ["11.22"],
+                        "cancelledAskPrices": ["11.78"],
+                        "cancelledBidPrices": ["10.86"],
+                        "comment"           : "both trade window count larger than objective count but there's some missed price",
                 ]
-        ]
-        comment << [
-                "trade window is empty on first start",
-                "both trade window count less than objective count",
-                "both trade window count less than objective count without automatic orders",
-                "both trade window count less than objective count and all orders are automatic orders",
-                "both trade window count larger than objective count",
-                "both trade window count larger than objective count and all orders are automatic orders",
-                "both trade window count larger than objective count without no automatic orders",
-                "ask count over and bid count less than objective",
-                "ask count over and bid count less than objective and all orders are automatic orders",
-                "ask count over and bid count less than objective without no automatic orders",
-                "ask count less and bid count over than objective",
-                "ask count less and bid count over than objective and all orders are automatic orders",
-                "ask count less and bid count over than objective without no automatic orders",
-                "both trade window count larger than objective count but there's some missed price",
         ]
     }
 }

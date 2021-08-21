@@ -21,6 +21,8 @@ public class InflationConfig {
     private BigDecimal bidMaxVolume;
     @Builder.Default
     private final boolean enable = false;
+    @Builder.Default
+    private final int spreadWindow = 1;
 
     public InflationConfig disable() {
         return InflationConfig.builder()

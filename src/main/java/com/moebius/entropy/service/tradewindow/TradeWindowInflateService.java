@@ -11,30 +11,29 @@ import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-
+import com.moebius.entropy.util.EntropyRandomUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TradeWindowInflateService {
 
-	private final static int START_FROM_MARKET_PRICE = 0;
-	private final static int START_FROM_NEXT_PRICE = 1;
-
 	private final TradeWindowQueryService tradeWindowQueryService;
 	private final InflationConfigRepository inflationConfigRepository;
 	private final OrderServiceFactory orderServiceFactory;
 	private final TradeWindowVolumeResolver volumeResolver;
+	private final EntropyRandomUtils randomUtils;
 
 	public Flux<Order> inflateOrders(InflateRequest inflateRequest) {
 		Market market = inflateRequest.getMarket();
@@ -54,15 +53,26 @@ public class TradeWindowInflateService {
 	}
 
 	private Flux<Order> requestRequiredOrders(Market market, TradeWindow window, InflationConfig inflationConfig) {
-		Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
-			START_FROM_MARKET_PRICE, inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market,
-			OrderPosition.BID, BigDecimal::subtract,
-			window.getBidPrices());
+		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
+		BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
+    Map<String, BigDecimal> bidVolumeBySpreadWindow = mergeTradeWindowBySpreadWindows(
+        market, bidStartPrice, inflationConfig.getSpreadWindow(), BigDecimal::subtract,
+        window.getBidPrices()
+    );
+    Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
+			inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market, bidStartPrice,
+			OrderPosition.BID, BigDecimal::subtract, inflationConfig.getSpreadWindow(), bidVolumeBySpreadWindow);
+
+		BigDecimal askStartPrice = marketPrice.add(priceUnit);
+    Map<String, BigDecimal> askVolumeBySpreadWindow = mergeTradeWindowBySpreadWindows(
+        market, askStartPrice, inflationConfig.getSpreadWindow(), BigDecimal::add,
+        window.getAskPrices()
+    );
 		Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
-			START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market,
-			OrderPosition.ASK, BigDecimal::add,
-			window.getAskPrices());
+			inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market, askStartPrice,
+			OrderPosition.ASK, BigDecimal::add, inflationConfig.getSpreadWindow(), askVolumeBySpreadWindow);
 
 		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
@@ -72,29 +82,73 @@ public class TradeWindowInflateService {
 			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
 	}
 
+  private Map<String, BigDecimal> mergeTradeWindowBySpreadWindows(
+      Market market, BigDecimal startPrice, int spreadWindow, BinaryOperator<BigDecimal> operationOnPrice,
+      List<TradePrice> prices
+  ) {
+    BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
+    BigDecimal stepPriceRange = priceUnit.multiply(BigDecimal.valueOf(spreadWindow));
+
+    Map<String, BigDecimal> volumesBySpreadWindows = new HashMap<>();
+
+    prices.forEach(tradePrice -> {
+      BigDecimal price = tradePrice.getUnitPrice();
+
+      //when marketPrice is 11.35 and spreadWindow is 5
+      /*
+       * ASK
+       * if price is 11.36, (11.36-11.35-0.01) / 0.01*5 = 0/0.05 = 0 => spreadStartPrice = 11.36
+       * if price is 11.47, (11.47-11.35-0.01) / 0.01*5 = 0.11/0.05 = 2 => spreadStartPrice = (11.35+0.01) + 0.05 * 2 = 11.36+0.10 = 11.46
+       * BID
+       * if price is 11.34, (11.35-11.34) / 0.01*5 = 0.01/0.05 = 0 => spreadStartPrice = 11.35
+       * if price is 11.15, (11.35-11.15) / 0.01*5 = 0.20/0.05 = 4 => spreadStartPrice = 11.35 - 0.05 * 4 = 11.35-0.20 = 11.15
+       */
+
+			BigDecimal spreadUnitStep = startPrice.subtract(price).abs()
+					.divide(stepPriceRange, 0, RoundingMode.FLOOR);
+
+      BigDecimal spreadStartPrice = operationOnPrice.apply(
+					startPrice,
+          stepPriceRange.multiply(spreadUnitStep)
+      );
+
+      String startPriceString = spreadStartPrice.toPlainString();
+      BigDecimal volumeBySpreadWindow = volumesBySpreadWindows.getOrDefault(startPriceString, BigDecimal.ZERO)
+          .add(tradePrice.getVolume());
+      volumesBySpreadWindows.put(startPriceString, volumeBySpreadWindow);
+    });
+    return volumesBySpreadWindows;
+  }
+
 	private Flux<OrderRequest> makeOrderRequestWith(
-		int startFrom, int count, BigDecimal minimumVolume, Market market, OrderPosition orderPosition,
-		BinaryOperator<BigDecimal> priceCalculationHandler,
-		List<TradePrice> prices
+		int count, BigDecimal minimumVolume, Market market, BigDecimal startPrice,
+		OrderPosition orderPosition, BinaryOperator<BigDecimal> operationOnPrice, int spreadWindow,
+		Map<String, BigDecimal> volumesBySpreadWindow
 	) {
-		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market)
-			.setScale(market.getPriceDecimalPosition(), RoundingMode.HALF_UP);
-		BigDecimal startPrice = OrderPosition.BID.equals(orderPosition)
-			? marketPrice.subtract(market.getTradeCurrency().getPriceUnit())
-			: marketPrice;
+		BigDecimal priceUnit = market
+				.getTradeCurrency()
+				.getPriceUnit();
 
-		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-		BigDecimal highestBidPrice = marketPrice.subtract(priceUnit);
-		Map<Float, Float> priceVolumeMap = prices.stream()
-			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue()));
+		BigDecimal stepPriceRange = priceUnit
+				.multiply(BigDecimal.valueOf(spreadWindow));
 
-		return Flux.range(startFrom, count)
+		int scale = priceUnit.scale();
+
+		return Flux.range(0, count)
 			.map(BigDecimal::valueOf)
-			.map(multiplier -> priceCalculationHandler
-				.apply(startPrice, priceUnit.multiply(multiplier)))
-			.filter(price -> price.compareTo(marketPrice) != 0 &&
-				price.compareTo(highestBidPrice) != 0 &&
-				(!priceVolumeMap.containsKey(price.toPlainString()) || priceVolumeMap.get(price.toPlainString()).compareTo(minimumVolume) < 0))
+			.map(multiplier -> Pair.of(multiplier, operationOnPrice
+					.apply(startPrice, stepPriceRange.multiply(multiplier))))
+			.filter(pricePair -> volumesBySpreadWindow.getOrDefault(pricePair.getValue().toPlainString(), BigDecimal.ZERO).compareTo(minimumVolume) < 0)
+			.map(pricePair->{
+				if (spreadWindow == 1){
+					return pricePair.getValue();
+				}
+				BigDecimal startMultiplier = pricePair.getKey();
+				BigDecimal endMultiplier = startMultiplier.add(BigDecimal.ONE);
+				BigDecimal rangeStartPrice = pricePair.getValue();
+				BigDecimal rangeEndPrice = operationOnPrice.apply(startPrice, stepPriceRange.multiply(endMultiplier));
+				return randomUtils.getRandomDecimal(rangeStartPrice, rangeEndPrice, scale);
+			})
 			.map(price -> {
 				BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
 				return new OrderRequest(market, orderPosition, price, inflationVolume);
@@ -105,12 +159,17 @@ public class TradeWindowInflateService {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
-		BigDecimal maxAskPrice = marketPrice.add(
-			priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
+		int spreadWindow = inflationConfig.getSpreadWindow();
+		BigDecimal priceRangeForSteps = priceUnit.multiply(BigDecimal.valueOf(spreadWindow));
+
+		BigDecimal askStartPrice = marketPrice.add(priceUnit);
+		BigDecimal maxAskPrice = askStartPrice.add(
+			priceRangeForSteps.multiply(BigDecimal.valueOf(inflationConfig.getAskCount()))
 		);
 
-		BigDecimal minBidPrice = marketPrice.subtract(
-			priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getBidCount()))
+		BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
+		BigDecimal minBidPrice = bidStartPrice.subtract(
+			priceRangeForSteps.multiply(BigDecimal.valueOf(inflationConfig.getBidCount()))
 		);
 
 		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
