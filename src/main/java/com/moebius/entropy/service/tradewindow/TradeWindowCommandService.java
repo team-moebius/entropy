@@ -43,7 +43,7 @@ public class TradeWindowCommandService {
      * 2. existent trade's BID|ASK volume = new trade's ASK|BID volume : remove that matched trade.
      * 3. existent trade's BID|ASK volume < new trade's ASK|BID volume : remove that matched trade and add the left volume's unit trade to the ASK|BID trades.
      *
-     * In Bigone, there could be 1 ASK / 1 BID tradeWindow (one of both is 0 volume, so it should be filtered first.)
+     * In Bigone, there could be n ASK / n BID tradeWindow (0 volume trade price should be handled with being removed in each ASK or BID windows)
      * maybe it needs to change the List<TradePrice> to Map<String, TradePrice> for supporting integrated update logic.
      */
 
