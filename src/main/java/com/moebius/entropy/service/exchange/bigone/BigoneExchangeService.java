@@ -42,6 +42,7 @@ public class BigoneExchangeService implements
 				.path(openOrdersPath)
 				.queryParams(bigoneAssembler.assembleOpenOrdersQueryParams(symbol))
 				.build())
+			.headers(httpHeaders -> httpHeaders.setBearerAuth(bigoneJwtService.create(apiKey)))
 			.retrieve()
 			.bodyToFlux(BigoneOpenOrderDto.class);
 	}
@@ -52,9 +53,7 @@ public class BigoneExchangeService implements
 			.uri(uriBuilder -> uriBuilder.scheme(scheme)
 				.host(host)
 				.path(cancelOrderPath)
-				.pathSegment(cancelRequest.getId())
-				.build())
-			.contentType(MediaType.APPLICATION_JSON)
+				.build(cancelRequest.getId()))
 			.headers(httpHeaders -> httpHeaders.setBearerAuth(bigoneJwtService.create(apiKey)))
 			.retrieve()
 			.bodyToMono(BigoneCancelResponseDto.class);

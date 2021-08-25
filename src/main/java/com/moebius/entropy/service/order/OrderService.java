@@ -9,15 +9,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public interface OrderService {
-    Flux<Order> fetchAllOrdersFor(Market market);
+	Flux<Order> fetchAllOrdersFor(Market market);
 
-    Mono<Order> requestOrder(OrderRequest orderRequest);
+	Mono<Order> requestOrder(OrderRequest orderRequest);
 
-    Mono<Order> requestManualOrder(OrderRequest orderRequest);
+	Mono<Order> requestManualOrder(OrderRequest orderRequest);
 
-    Mono<Order> cancelOrder(Order order);
+	Mono<Order> cancelOrder(Order order);
 
-    Mono<ResponseEntity<?>> stopOrder(String disposableId);
+	Mono<ResponseEntity<?>> stopOrder(String disposableId);
 
-    Exchange getExchange();
+	Exchange getExchange();
 }

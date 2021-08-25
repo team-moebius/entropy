@@ -28,7 +28,7 @@ import java.util.Optional;
 @RequestMapping("/boboo")
 @RequiredArgsConstructor
 @Slf4j
-public class BobooController {
+public class BobooTestController {
 	private final BobooExchangeService bobooExchangeService;
 	private final DividedDummyOrderService dividedDummyOrderService;
 	private final RepeatMarketOrderService repeatMarketOrderService;
