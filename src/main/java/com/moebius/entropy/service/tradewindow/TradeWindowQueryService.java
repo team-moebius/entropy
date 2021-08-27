@@ -2,7 +2,7 @@ package com.moebius.entropy.service.tradewindow;
 
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.trade.TradeWindow;
-import com.moebius.entropy.repository.TradeWindowRepository;
+import com.moebius.entropy.repository.TradeDataRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -13,10 +13,14 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class TradeWindowQueryService {
 
-	private final TradeWindowRepository repository;
+	private final TradeDataRepository repository;
 
-	public Mono<TradeWindow> fetchTradeWindow(Market market) {
+	public Mono<TradeWindow> getTradeWindowMono(Market market) {
 		return Mono.justOrEmpty(repository.getTradeWindowForSymbol(market));
+	}
+
+	public TradeWindow getTradeWindow(Market market) {
+		return repository.getTradeWindowForSymbol(market);
 	}
 
 	public BigDecimal getMarketPrice(Market market) {

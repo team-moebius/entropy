@@ -36,4 +36,8 @@ public class EntropyRandomUtils {
 				.map(slice -> slice.setScale(decimalPlaces, RoundingMode.HALF_UP))
 				.collect(Collectors.toList());
 	}
+
+	public int getBoundedRandomInteger(int bound) {
+		return ThreadLocalRandom.current().nextInt(bound);
+	}
 }

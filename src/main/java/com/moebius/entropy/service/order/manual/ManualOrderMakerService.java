@@ -6,7 +6,7 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
-import com.moebius.entropy.repository.TradeWindowRepository;
+import com.moebius.entropy.repository.TradeDataRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.util.EntropyRandomUtils;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class ManualOrderMakerService {
     private final EntropyRandomUtils randomUtil;
     private final OrderServiceFactory orderServiceFactory;
-    private final TradeWindowRepository tradeWindowRepository;
+    private final TradeDataRepository tradeDataRepository;
 
     public Mono<ManualOrderResult> requestManualOrderMaking(ManualOrderMakingRequest request) {
         BigDecimal requestedVolume = getRandomRequestVolume(request);
@@ -40,7 +40,7 @@ public class ManualOrderMakerService {
         List<BigDecimal> randomVolumes = randomUtil
                 .getRandomSlices(requestedVolume, division, market.getVolumeDecimalPosition());
         OrderPosition orderPosition = request.getOrderPosition();
-        BigDecimal marketPrice = tradeWindowRepository.getMarketPriceForSymbol(market);
+        BigDecimal marketPrice = tradeDataRepository.getMarketPriceForSymbol(market);
 
         if (OrderPosition.ASK.equals(orderPosition)) {
             marketPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());

@@ -66,7 +66,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         def bidTradeWindow = tradeWindow(bidVolumeForTradeWindow, OrderPosition.BID)
         def tradeWindow = new TradeWindow(askTradeWindow, bidTradeWindow)
 
-        tradeWindowQueryService.fetchTradeWindow(market) >> Mono.just(tradeWindow)
+        tradeWindowQueryService.getTradeWindowMono(market) >> Mono.just(tradeWindow)
         tradeWindowQueryService.getMarketPrice(market) >> marketPrice
 
         inflationConfigRepository.getConfigFor(market) >> inflationConfig

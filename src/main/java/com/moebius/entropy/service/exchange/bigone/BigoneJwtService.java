@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.bigone.BigoneJwtPayloadDto;
+import com.moebius.entropy.util.EntropyRandomUtils;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -24,6 +25,7 @@ public class BigoneJwtService {
 	private final static int NANOS_CORRECTION_FACTOR = 1000000;
 
 	private final ObjectMapper objectMapper;
+	private final EntropyRandomUtils entropyRandomUtils;
 
 	@Value("${exchange.bigone.auth.header.alg}")
 	private String algorithm;
@@ -43,7 +45,8 @@ public class BigoneJwtService {
 				.setPayload(objectMapper.writeValueAsString(BigoneJwtPayloadDto.builder()
 					.type(payloadType)
 					.sub(apiKey.getAccessKey())
-					.nonce(String.valueOf(System.currentTimeMillis() * NANOS_CORRECTION_FACTOR))
+					.nonce(String.valueOf(
+						System.currentTimeMillis() * NANOS_CORRECTION_FACTOR - entropyRandomUtils.getBoundedRandomInteger(NANOS_CORRECTION_FACTOR)))
 					.build()))
 				.signWith(Keys.hmacShaKeyFor(apiKey.getSecretKey().getBytes()), SignatureAlgorithm.HS256)
 				.compact();

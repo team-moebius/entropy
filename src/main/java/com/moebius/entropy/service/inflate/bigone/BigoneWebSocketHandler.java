@@ -1,10 +1,12 @@
 package com.moebius.entropy.service.inflate.bigone;
 
 import com.moebius.entropy.assembler.bigone.BigoneAssembler;
+import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto;
 import com.moebius.entropy.service.tradewindow.TradeWindowChangeEventListener;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
@@ -16,6 +18,7 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -50,6 +53,7 @@ public class BigoneWebSocketHandler implements WebSocketHandler {
 			.subscribeOn(Schedulers.single())
 			.timeout(Duration.ofMillis(timeout), Schedulers.single())
 			.map(bigoneAssembler::assembleOrderBookDto)
+			.filter(this::isValidOrderBookDto)
 			.doOnNext(tradeWindowChangeEventListener::inflateOrdersOnTradeWindowChange)
 			.then()
 			.doOnError(exception -> log.error("[Bigone] Failed to inflate orders of {} by order book.", symbol, exception))
@@ -57,5 +61,13 @@ public class BigoneWebSocketHandler implements WebSocketHandler {
 				log.error("[Bigone] Terminated order inflation of {}, retry inflation ...", symbol);
 				bigoneInflateService.inflateOrdersByOrderBook(symbol);
 			});
+	}
+
+	private boolean isValidOrderBookDto(BigoneOrderBookDto dto) {
+		return Optional.ofNullable(dto)
+			.map(BigoneOrderBookDto::getData)
+			.filter(CollectionUtils::isNotEmpty)
+			.map(depths -> depths.get(0))
+			.isPresent();
 	}
 }

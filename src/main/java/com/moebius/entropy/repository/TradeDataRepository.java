@@ -6,18 +6,18 @@ import com.moebius.entropy.domain.trade.TradeWindow;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class TradeWindowRepository {
+public class TradeDataRepository {
 
 	private final Map<String, BigDecimal> marketPriceForSymbol;
 	private final Map<String, TradeWindow> tradeWindowForSymbol;
 
-	public TradeWindowRepository() {
-		marketPriceForSymbol = new HashMap<>();
-		tradeWindowForSymbol = new HashMap<>();
+	public TradeDataRepository() {
+		marketPriceForSymbol = new ConcurrentHashMap<>();
+		tradeWindowForSymbol = new ConcurrentHashMap<>();
 	}
 
 	public void savePriceForSymbol(Market market, BigDecimal marketPrice) {

@@ -43,7 +43,7 @@ public class TradeWindowInflateService {
 			return Flux.empty();
 		}
 
-		return tradeWindowQueryService.fetchTradeWindow(market)
+		return tradeWindowQueryService.getTradeWindowMono(market)
 			.flatMapMany(tradeWindow -> {
 				Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow, inflationConfig);
 				Flux<Order> cancelOrderFlux = cancelInvalidOrders(market, inflationConfig);
@@ -86,7 +86,8 @@ public class TradeWindowInflateService {
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 		BigDecimal highestBidPrice = marketPrice.subtract(priceUnit);
 		Map<Float, Float> priceVolumeMap = prices.stream()
-			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue(), Float::sum));
+			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue(),
+				Float::sum));
 
 		return Flux.range(startFrom, count)
 			.map(BigDecimal::valueOf)

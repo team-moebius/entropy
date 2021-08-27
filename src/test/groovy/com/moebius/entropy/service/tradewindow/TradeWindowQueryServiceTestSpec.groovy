@@ -4,13 +4,13 @@ import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradeWindow
-import com.moebius.entropy.repository.TradeWindowRepository
+import com.moebius.entropy.repository.TradeDataRepository
 import reactor.test.StepVerifier
 import spock.lang.Specification
 import spock.lang.Subject
 
 class TradeWindowQueryServiceTestSpec extends Specification {
-    def repository = Mock(TradeWindowRepository)
+    def repository = Mock(TradeDataRepository)
     @Subject
     TradeWindowQueryService sut = new TradeWindowQueryService(repository)
 
@@ -23,7 +23,7 @@ class TradeWindowQueryServiceTestSpec extends Specification {
         expect:
         sut.getMarketPrice(market) == marketPrice
 
-        def stepVerifier = StepVerifier.create(sut.fetchTradeWindow(market))
+        def stepVerifier = StepVerifier.create(sut.getTradeWindowMono(market))
         if (tradeWindow != null) {
             stepVerifier.assertNext({
                 it == tradeWindow

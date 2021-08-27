@@ -8,7 +8,7 @@ import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.trade.TradeCurrency
-import com.moebius.entropy.repository.TradeWindowRepository
+import com.moebius.entropy.repository.TradeDataRepository
 import com.moebius.entropy.service.order.OrderService
 import com.moebius.entropy.service.order.OrderServiceFactory
 import com.moebius.entropy.service.order.manual.ManualOrderMakerService
@@ -29,7 +29,7 @@ import java.util.stream.Collectors
 class ManualOrderMakerServiceTestSpec extends Specification {
     def randomUtil = Mock(EntropyRandomUtils)
     def orderServiceFactory = Mock(OrderServiceFactory)
-    def tradeWindowRepository = Mock(TradeWindowRepository)
+    def tradeWindowRepository = Mock(TradeDataRepository)
 
     @Subject
     def sut = new ManualOrderMakerService(randomUtil, orderServiceFactory, tradeWindowRepository)
