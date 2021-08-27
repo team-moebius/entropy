@@ -4,10 +4,11 @@ import java.util.Collections;
 import java.util.List;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
-
-@RequiredArgsConstructor
 @Getter
+@ToString
+@RequiredArgsConstructor
 public class TradeWindow {
 
     public static final TradeWindow emptyWindow = new TradeWindow(Collections.emptyList(),

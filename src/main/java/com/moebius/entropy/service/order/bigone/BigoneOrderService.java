@@ -7,6 +7,7 @@ import com.moebius.entropy.domain.Symbol;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderRequest;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneOpenOrderDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.exchange.bigone.BigoneExchangeService;
 import com.moebius.entropy.service.order.OrderService;
@@ -35,6 +36,7 @@ public class BigoneOrderService implements OrderService {
 	@Override
 	public Flux<Order> fetchAllOrdersFor(Market market) {
 		return exchangeService.getOpenOrders(market.getSymbol(), getApiKeyByMarketSymbol(market))
+			.flatMapIterable(BigoneOpenOrderDto::getData)
 			.map(assembler::convertExchangeOrder);
 	}
 
@@ -73,11 +75,11 @@ public class BigoneOrderService implements OrderService {
 		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
-	private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted){
+	private Mono<Order> requestOrderWith(OrderRequest orderRequest, Consumer<Order> afterOrderCompleted) {
 		return Optional.ofNullable(orderRequest)
 			.map(assembler::convertToOrderRequest)
 			.map(bigoneOrderRequest -> exchangeService.requestOrder(bigoneOrderRequest, getApiKeyByMarketSymbol(orderRequest.getMarket())))
-			.map(orderMono->orderMono.map(assembler::convertToOrder)
+			.map(orderMono -> orderMono.map(assembler::convertToOrder)
 				.filter(Objects::nonNull)
 				.doOnSuccess(afterOrderCompleted)
 			)

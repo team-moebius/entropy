@@ -10,6 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Builder
@@ -18,25 +19,34 @@ import java.time.LocalDateTime;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BigoneOpenOrderDto {
-	private String id;
-	@JsonProperty("asset_pair_name")
-	private String symbol;
-	private BigDecimal price;
-	private BigDecimal amount;
-	@JsonProperty("filled_amount")
-	private BigDecimal filledAmount;
-	@JsonProperty("avg_deal_price")
-	private BigDecimal averageDealPrice;
-	private OrderPosition side;
-	private OrderStatus state;
-	private OrderType type;
-	@JsonProperty("stop_price")
-	private BigDecimal stopPrice;
-	private String operator;
-	@JsonProperty("created_at")
-	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-	private LocalDateTime createdAt;
-	@JsonProperty("updated_at")
-	@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-	private LocalDateTime updatedAt;
+	private String code;
+	private List<Data> data;
+
+	@Getter
+	@Builder
+	@NoArgsConstructor(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	public static class Data {
+		private String id;
+		@JsonProperty("asset_pair_name")
+		private String symbol;
+		private BigDecimal price;
+		private BigDecimal amount;
+		@JsonProperty("filled_amount")
+		private BigDecimal filledAmount;
+		@JsonProperty("avg_deal_price")
+		private BigDecimal averageDealPrice;
+		private OrderPosition side;
+		private OrderStatus state;
+		private OrderType type;
+		@JsonProperty("stop_price")
+		private BigDecimal stopPrice;
+		private String operator;
+		@JsonProperty("created_at")
+		@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+		private LocalDateTime createdAt;
+		@JsonProperty("updated_at")
+		@DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+		private LocalDateTime updatedAt;
+	}
 }

@@ -26,7 +26,7 @@ public class BigoneAssembler {
 
 	public MultiValueMap<String, String> assembleOpenOrdersQueryParams(String symbol) {
 		MultiValueMap<String, String> queryParams = new LinkedMultiValueMap<>();
-		queryParams.add("asset_pair_name", symbol);
+		queryParams.add("asset_pair_name", SymbolUtil.addDashBeforeBaseCurrency(symbol));
 		queryParams.add("limit", OPEN_ORDER_LIMIT);
 		return queryParams;
 	}

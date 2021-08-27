@@ -16,7 +16,7 @@ import java.util.Optional;
 
 @Component
 public class BigoneOrderExchangeAssembler
-	implements OrderExchangeAssembler<BigoneCancelRequestDto, BigoneOrderRequestDto, BigoneOrderResponseDto, BigoneOpenOrderDto> {
+	implements OrderExchangeAssembler<BigoneCancelRequestDto, BigoneOrderRequestDto, BigoneOrderResponseDto, BigoneOpenOrderDto.Data> {
 
 	@Override
 	public BigoneOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
@@ -55,14 +55,14 @@ public class BigoneOrderExchangeAssembler
 	}
 
 	@Override
-	public Order convertExchangeOrder(BigoneOpenOrderDto ordersFromExchange) {
-		return Optional.ofNullable(ordersFromExchange)
-			.map(dto -> new Order(
-				dto.getId(),
-				SymbolUtil.marketFromSymbol(dto.getSymbol()),
-				dto.getSide(),
-				dto.getPrice(),
-				OrderUtil.calculateRemainedVolume(dto.getAmount(), dto.getFilledAmount())
+	public Order convertExchangeOrder(BigoneOpenOrderDto.Data openOrderData) {
+		return Optional.ofNullable(openOrderData)
+			.map(data -> new Order(
+				data.getId(),
+				SymbolUtil.marketFromSymbol(data.getSymbol()),
+				data.getSide(),
+				data.getPrice(),
+				OrderUtil.calculateRemainedVolume(data.getAmount(), data.getFilledAmount())
 			))
 			.orElse(null);
 	}

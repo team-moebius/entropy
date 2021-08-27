@@ -6,5 +6,6 @@ public enum OrderStatus {
 	FILLED,
 	CANCELED,
 	REJECTED,
-	PENDING_NEW
+	PENDING_NEW,
+	PENDING
 }
