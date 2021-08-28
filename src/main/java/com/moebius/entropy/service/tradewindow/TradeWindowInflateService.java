@@ -67,7 +67,7 @@ public class TradeWindowInflateService {
 		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
 		return Flux.merge(bidRequestFlux, askRequestFlux)
-			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order requests for inflation. [{}]", orderRequest))
+			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order for inflation. [{}]", orderRequest))
 			.flatMap(orderService::requestOrder)
 			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
 	}
@@ -125,7 +125,7 @@ public class TradeWindowInflateService {
 					return orderPrice.compareTo(minBidPrice) < 0;
 				}
 			})
-			.doOnNext(order -> log.info("[TradeWindowInflation] Create order cancellations for inflation. [{}]", order))
+			.doOnNext(order -> log.info("[TradeWindowInflation] Cancel order for inflation. [{}]", order))
 			.flatMap(orderService::cancelOrder)
 			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
 	}

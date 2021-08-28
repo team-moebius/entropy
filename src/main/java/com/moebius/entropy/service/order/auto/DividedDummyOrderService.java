@@ -139,6 +139,7 @@ public class DividedDummyOrderService {
 
 	private Flux<Order> requestAndCancelDummyOrder(DummyOrderRequest dummyOrderRequest) {
 		if (dummyOrderRequest == null) {
+			log.error("[DummyOrder] null dummy order request");
 			return Flux.empty();
 		}
 
@@ -150,6 +151,11 @@ public class DividedDummyOrderService {
 
 		OrderService orderService = orderServiceFactory.getOrderService(exchange);
 
+		if (orderService == null) {
+			log.error("[DummyOrder] order service is not found by {}", exchange);
+			return Flux.empty();
+		}
+
 		return Flux.range(0, dummyOrderRequest.getReorderCount())
 			.flatMapIterable(count -> dummyOrderRequest.getOrderRequests())
 			.delayElements(dummyOrderRequest.getDelay())
@@ -160,6 +166,6 @@ public class DividedDummyOrderService {
 			.flatMap(orderService::cancelOrder)
 			.onErrorContinue((throwable, order) -> log.error("[DummyOrder] Failed to cancel dummy order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString()))
-			.doOnComplete(() -> log.info("[DummyOrder] Completed in requesting & cancelling dummy orders. [{}]", dummyOrderRequest));
+			.doOnComplete(() -> log.info("[DummyOrder] Completed in creating & cancelling dummy orders. [{}]", dummyOrderRequest));
 	}
 }

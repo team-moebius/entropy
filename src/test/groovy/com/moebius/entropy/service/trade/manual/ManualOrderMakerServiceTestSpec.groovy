@@ -29,10 +29,10 @@ import java.util.stream.Collectors
 class ManualOrderMakerServiceTestSpec extends Specification {
     def randomUtil = Mock(EntropyRandomUtils)
     def orderServiceFactory = Mock(OrderServiceFactory)
-    def tradeWindowRepository = Mock(TradeDataRepository)
+    def tradeDataRepository = Mock(TradeDataRepository)
 
     @Subject
-    def sut = new ManualOrderMakerService(randomUtil, orderServiceFactory, tradeWindowRepository)
+    def sut = new ManualOrderMakerService(randomUtil, orderServiceFactory, tradeDataRepository)
     @Shared
     def symbol = "GTAX2USDT"
     @Shared
@@ -58,7 +58,7 @@ class ManualOrderMakerServiceTestSpec extends Specification {
         randomUtil.getRandomDecimal(reqVolumeFrom.floatValue(), reqVolumeTo.floatValue(), _) >> requestedVolume
         randomUtil.getRandomSlices(requestedVolume, selectedDivision, _) >> randomVolumes
         randomUtil.getRandomInteger(divisionRange[0], divisionRange[1]) >> selectedDivision
-        tradeWindowRepository.getMarketPriceForSymbol(market) >> marketPrice
+        tradeDataRepository.getMarketPriceByMarket(market) >> marketPrice
         def requestedMarketPrice = OrderPosition.ASK == orderPosition ? marketPrice.subtract(market.tradeCurrency.priceUnit) : marketPrice
 
         (0..<selectedDivision).forEach({ index ->

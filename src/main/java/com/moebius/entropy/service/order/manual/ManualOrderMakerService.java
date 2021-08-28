@@ -40,7 +40,7 @@ public class ManualOrderMakerService {
         List<BigDecimal> randomVolumes = randomUtil
                 .getRandomSlices(requestedVolume, division, market.getVolumeDecimalPosition());
         OrderPosition orderPosition = request.getOrderPosition();
-        BigDecimal marketPrice = tradeDataRepository.getMarketPriceForSymbol(market);
+        BigDecimal marketPrice = tradeDataRepository.getMarketPriceByMarket(market);
 
         if (OrderPosition.ASK.equals(orderPosition)) {
             marketPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());

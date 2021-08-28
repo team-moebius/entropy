@@ -8,6 +8,7 @@ import com.moebius.entropy.dto.exchange.orderbook.OrderBookDto;
 import com.moebius.entropy.util.SymbolUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import reactor.core.scheduler.Schedulers;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -15,14 +16,15 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 public class TradeWindowChangeEventListener {
+
 	private final TradeWindowAssemblerFactory assemblerFactory;
 	private final TradeWindowCommandService commandService;
 	private final TradeWindowInflateService inflateService;
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void inflateOrdersOnTradeWindowChange(OrderBookDto orderBookDto) {
-	    Market market = SymbolUtil.marketFromSymbol(orderBookDto.getSymbol());
-        TradeWindowAssembler<?> assembler = Optional.ofNullable(market)
+		Market market = SymbolUtil.marketFromSymbol(orderBookDto.getSymbol());
+		TradeWindowAssembler<?> assembler = Optional.ofNullable(market)
 			.map(foundMarket -> assemblerFactory.getTradeWindowAssembler(foundMarket.getExchange()))
 			.orElse(null);
 
@@ -36,7 +38,9 @@ public class TradeWindowChangeEventListener {
 			})
 			.ifPresent(checkedMarket -> {
 				InflateRequest request = new InflateRequest(checkedMarket);
-				inflateService.inflateOrders(request).subscribe();
+				inflateService.inflateOrders(request)
+					.subscribeOn(Schedulers.parallel())
+					.subscribe();
 			});
 	}
 }

@@ -20,8 +20,8 @@ class TradeWindowCommandServiceTestSpec extends Specification {
         sut.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
 
         then:
-        1 * mockRepository.saveTradeWindowForSymbol(market, tradeWindow)
-        1 * mockRepository.savePriceForSymbol(market, marketPrice)
+        1 * mockRepository.saveTradeWindow(market, tradeWindow)
+        1 * mockRepository.saveMarketPrice(market, marketPrice)
 
         where:
         exchange       | symbol | currency           | marketPrice | tradeWindow

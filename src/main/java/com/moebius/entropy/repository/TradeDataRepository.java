@@ -12,28 +12,28 @@ import java.util.concurrent.ConcurrentHashMap;
 @Repository
 public class TradeDataRepository {
 
-	private final Map<String, BigDecimal> marketPriceForSymbol;
-	private final Map<String, TradeWindow> tradeWindowForSymbol;
+	private final Map<String, BigDecimal> symbolToMarketPrices;
+	private final Map<String, TradeWindow> symbolToTradeWindows;
 
 	public TradeDataRepository() {
-		marketPriceForSymbol = new ConcurrentHashMap<>();
-		tradeWindowForSymbol = new ConcurrentHashMap<>();
+		symbolToMarketPrices = new ConcurrentHashMap<>();
+		symbolToTradeWindows = new ConcurrentHashMap<>();
 	}
 
-	public void savePriceForSymbol(Market market, BigDecimal marketPrice) {
-		marketPriceForSymbol.put(keyFrom(market), marketPrice);
+	public void saveMarketPrice(Market market, BigDecimal marketPrice) {
+		symbolToMarketPrices.put(keyFrom(market), marketPrice);
 	}
 
-	public BigDecimal getMarketPriceForSymbol(Market market) {
-		return marketPriceForSymbol.getOrDefault(keyFrom(market), BigDecimal.ZERO);
+	public BigDecimal getMarketPriceByMarket(Market market) {
+		return symbolToMarketPrices.getOrDefault(keyFrom(market), BigDecimal.ZERO);
 	}
 
-	public void saveTradeWindowForSymbol(Market market, TradeWindow tradeWindow) {
-		tradeWindowForSymbol.put(keyFrom(market), tradeWindow);
+	public void saveTradeWindow(Market market, TradeWindow tradeWindow) {
+		symbolToTradeWindows.put(keyFrom(market), tradeWindow);
 	}
 
-	public TradeWindow getTradeWindowForSymbol(Market market) {
-		return tradeWindowForSymbol.getOrDefault(keyFrom(market), TradeWindow.emptyWindow);
+	public TradeWindow getTradeWindowByMarket(Market market) {
+		return symbolToTradeWindows.getOrDefault(keyFrom(market), TradeWindow.emptyWindow);
 	}
 
 	private String keyFrom(Market market) {

@@ -42,8 +42,8 @@ public class BobooInflateService implements InflateService {
 		Disposable disposable = webSocketClient.execute(URI.create(webSocketUri),
 			session -> session.send(Mono.just(session.textMessage(bobooAssembler.assembleOrderBookPayload(symbol))))
 				.thenMany(session.receive())
-				.subscribeOn(Schedulers.single())
-				.timeout(Duration.ofMillis(timeout), Schedulers.single())
+				.subscribeOn(Schedulers.boundedElastic())
+				.timeout(Duration.ofMillis(timeout), Schedulers.boundedElastic())
 				.map(bobooAssembler::assembleOrderBookDto)
 				.doOnNext(tradeWindowChangeEventListener::inflateOrdersOnTradeWindowChange)
 				.then()

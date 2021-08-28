@@ -50,8 +50,8 @@ public class BigoneWebSocketHandler implements WebSocketHandler {
 
 		return session.send(Mono.just(session.textMessage(bigoneAssembler.assembleOrderBookPayload(symbol))))
 			.thenMany(session.receive())
-			.subscribeOn(Schedulers.single())
-			.timeout(Duration.ofMillis(timeout), Schedulers.single())
+			.subscribeOn(Schedulers.boundedElastic())
+			.timeout(Duration.ofMillis(timeout), Schedulers.boundedElastic())
 			.map(bigoneAssembler::assembleOrderBookDto)
 			.filter(this::isValidOrderBookDto)
 			.doOnNext(tradeWindowChangeEventListener::inflateOrdersOnTradeWindowChange)

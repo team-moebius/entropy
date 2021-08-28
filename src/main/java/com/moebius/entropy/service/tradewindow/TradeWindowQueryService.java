@@ -16,14 +16,14 @@ public class TradeWindowQueryService {
 	private final TradeDataRepository repository;
 
 	public Mono<TradeWindow> getTradeWindowMono(Market market) {
-		return Mono.justOrEmpty(repository.getTradeWindowForSymbol(market));
+		return Mono.justOrEmpty(repository.getTradeWindowByMarket(market));
 	}
 
 	public TradeWindow getTradeWindow(Market market) {
-		return repository.getTradeWindowForSymbol(market);
+		return repository.getTradeWindowByMarket(market);
 	}
 
 	public BigDecimal getMarketPrice(Market market) {
-		return repository.getMarketPriceForSymbol(market);
+		return repository.getMarketPriceByMarket(market);
 	}
 }

@@ -19,11 +19,11 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public class TradeWindowCommandService {
 
-	private final TradeDataRepository tradeWindowRepository;
+	private final TradeDataRepository tradeDataRepository;
 
 	public void saveCurrentTradeWindow(Market market, BigDecimal marketPrice,
 		TradeWindow tradeWindow) {
-		tradeWindowRepository.savePriceForSymbol(market, marketPrice);
+		tradeDataRepository.saveMarketPrice(market, marketPrice);
 
 		if (tradeWindow == null ||
 			(CollectionUtils.isEmpty(tradeWindow.getAskPrices()) && CollectionUtils.isEmpty(tradeWindow.getBidPrices()))) {
@@ -32,13 +32,13 @@ public class TradeWindowCommandService {
 		}
 
 		TradeWindow toBeSavedWindow = tradeWindow;
-		TradeWindow oldWindow = tradeWindowRepository.getTradeWindowForSymbol(market);
+		TradeWindow oldWindow = tradeDataRepository.getTradeWindowByMarket(market);
 
 		if (needUpdateTradeWindow(oldWindow, tradeWindow)) {
 			toBeSavedWindow = updateTradeWindow(oldWindow, tradeWindow);
 		}
 
-		tradeWindowRepository.saveTradeWindowForSymbol(market, toBeSavedWindow);
+		tradeDataRepository.saveTradeWindow(market, toBeSavedWindow);
 	}
 
 	private boolean needUpdateTradeWindow(TradeWindow oldWindow, TradeWindow newWindow) {
