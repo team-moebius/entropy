@@ -43,6 +43,7 @@ exchange:
       open-orders: /api/v3/viewer/orders
       request-orders: /api/v3/viewer/orders
       cancel-orders: /api/v3/viewer/orders/{id}/cancel
+      order-book: /api/v3/asset_pairs/{asset_pair_name}/depth
     websocket:
       uri: wss://big.one/ws/v2
       timeout: 60000

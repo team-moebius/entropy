@@ -17,9 +17,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TradeWindowChangeEventListener {
 
-	private final TradeWindowAssemblerFactory assemblerFactory;
 	private final TradeWindowCommandService commandService;
 	private final TradeWindowInflateService inflateService;
+	private final TradeWindowAssemblerFactory assemblerFactory;
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void inflateOrdersOnTradeWindowChange(OrderBookDto orderBookDto) {
@@ -38,9 +38,7 @@ public class TradeWindowChangeEventListener {
 			})
 			.ifPresent(checkedMarket -> {
 				InflateRequest request = new InflateRequest(checkedMarket);
-				inflateService.inflateOrders(request)
-					.subscribeOn(Schedulers.parallel())
-					.subscribe();
+				inflateService.inflateOrders(request).subscribe();
 			});
 	}
 }

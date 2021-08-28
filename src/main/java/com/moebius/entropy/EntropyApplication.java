@@ -2,7 +2,6 @@ package com.moebius.entropy;
 
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.Symbol;
-import com.moebius.entropy.service.exchange.ExchangeService;
 import com.moebius.entropy.service.inflate.InflateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
