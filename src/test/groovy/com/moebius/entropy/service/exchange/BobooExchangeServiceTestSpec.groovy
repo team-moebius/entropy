@@ -1,12 +1,11 @@
 package com.moebius.entropy.service.exchange
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.moebius.entropy.assembler.BobooAssembler
+import com.moebius.entropy.assembler.boboo.BobooAssembler
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.boboo.*
 import com.moebius.entropy.repository.DisposableOrderRepository
 import com.moebius.entropy.service.exchange.boboo.BobooExchangeService
-import com.moebius.entropy.service.tradewindow.BobooTradeWindowChangeEventListener
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.client.reactive.ClientHttpRequest
@@ -15,8 +14,6 @@ import org.springframework.util.MultiValueMap
 import org.springframework.web.reactive.function.BodyInserter
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import org.springframework.web.reactive.socket.WebSocketHandler
-import org.springframework.web.reactive.socket.client.WebSocketClient
 import org.springframework.web.util.UriBuilder
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
@@ -33,15 +30,13 @@ class BobooExchangeServiceTestSpec extends Specification {
     def headersSpec = Mock(WebClient.RequestHeadersSpec)
     def responseSpec = Mock(WebClient.ResponseSpec)
     def webClient = Mock(WebClient)
-    def webSocketClient = Mock(WebSocketClient)
     def bobooAssembler = Mock(BobooAssembler)
-    def eventListener = Mock(BobooTradeWindowChangeEventListener)
     def disposableOrderRepository = Mock(DisposableOrderRepository)
     def objectMapper = new ObjectMapper()
 
     @Subject
     def bobooService = new BobooExchangeService(
-            webClient, webSocketClient, bobooAssembler, eventListener, disposableOrderRepository, objectMapper
+            webClient, bobooAssembler, disposableOrderRepository, objectMapper
     )
 
     def "Should get open orders"() {
@@ -56,23 +51,12 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * uriSpec.uri(_ as Function<UriBuilder, URI>) >> headersSpec
         1 * headersSpec.header("X-BH-APIKEY", "testAccessKey") >> headersSpec
         1 * headersSpec.retrieve() >> responseSpec
-        1 * responseSpec.bodyToFlux(BobooOpenOrdersDto.class) >> Flux.just(BobooOpenOrdersDto.builder().build())
+        1 * responseSpec.bodyToFlux(BobooOpenOrderDto.class) >> Flux.just(BobooOpenOrderDto.builder().build())
 
         expect:
         StepVerifier.create(bobooService.getOpenOrders("GTAXUSDT", apiKeyDto))
-                .assertNext({ it instanceof BobooOpenOrdersDto })
+                .assertNext({ it instanceof BobooOpenOrderDto })
                 .verifyComplete()
-    }
-
-    def "Should get and log order book"() {
-        given:
-        disposableOrderRepository.get(_ as String) >> []
-        when:
-        bobooService.websocketUri = "wss://wsapi.boboo.vip/openapi/quote/ws/v1"
-        bobooService.inflateOrdersByOrderBook("GTAXUSDT")
-
-        then:
-        1 * webSocketClient.execute(_ as URI, _ as WebSocketHandler) >> Mono.empty()
     }
 
     def "Should request new order"() {
@@ -107,7 +91,7 @@ class BobooExchangeServiceTestSpec extends Specification {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
-        def cancelRequest = Mock(BobooCancelRequest)
+        def cancelRequest = Mock(BobooCancelRequestDto)
         1 * bobooAssembler.assembleCancelRequestQueryParam(cancelRequest) >> new LinkedMultiValueMap<String, String>([:])
         1 * bobooAssembler.assembleCancelRequestBodyValue(_, apiKeyDto) >> new LinkedMultiValueMap<String, String>([:])
 
@@ -119,11 +103,11 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * requestBodyUriSpec.header("X-BH-APIKEY", "testAccessKey") >> requestBodySpec
         1 * requestBodySpec.body(_ as BodyInserter<MultiValueMap<String, String>, ClientHttpRequest>) >> requestBodySpec
         1 * requestBodySpec.retrieve() >> responseSpec
-        1 * responseSpec.bodyToMono(BobooCancelResponse.class) >> Mono.just(BobooCancelResponse.builder().build())
+        1 * responseSpec.bodyToMono(BobooCancelResponseDto.class) >> Mono.just(BobooCancelResponseDto.builder().build())
 
         expect:
         StepVerifier.create(bobooService.cancelOrder(cancelRequest, apiKeyDto))
-                .assertNext({ it instanceof BobooCancelResponse })
+                .assertNext({ it instanceof BobooCancelResponseDto })
                 .verifyComplete()
     }
 
@@ -133,7 +117,7 @@ class BobooExchangeServiceTestSpec extends Specification {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
-        def cancelRequest = Mock(BobooCancelRequest)
+        def cancelRequest = Mock(BobooCancelRequestDto)
         1 * bobooAssembler.assembleCancelRequestQueryParam(cancelRequest) >> new LinkedMultiValueMap<String, String>([:])
         1 * bobooAssembler.assembleCancelRequestBodyValue(_, apiKeyDto) >> new LinkedMultiValueMap<String, String>([:])
 
@@ -146,13 +130,13 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * requestBodySpec.body(_ as BodyInserter<MultiValueMap<String, String>, ClientHttpRequest>) >> requestBodySpec
         1 * requestBodySpec.retrieve() >> responseSpec
 
-        1 * responseSpec.bodyToMono(BobooCancelResponse.class) >> Mono.error(new WebClientResponseException.BadRequest(
+        1 * responseSpec.bodyToMono(BobooCancelResponseDto.class) >> Mono.error(new WebClientResponseException.BadRequest(
                 "Bad Request", HttpHeaders.EMPTY, "{\"code\":-1142,\"msg\":\"Order has been canceled\"}".getBytes("UTF-8"), Charset.defaultCharset(), null
         ))
 
         expect:
         StepVerifier.create(bobooService.cancelOrder(cancelRequest, apiKeyDto))
-                .assertNext({ it instanceof BobooCancelResponse })
+                .assertNext({ it instanceof BobooCancelResponseDto })
                 .verifyComplete()
 
         where:
@@ -168,7 +152,7 @@ class BobooExchangeServiceTestSpec extends Specification {
             getAccessKey() >> "testAccessKey"
             getSecretKey() >> "testSecretKey"
         }
-        def cancelRequest = Mock(BobooCancelRequest)
+        def cancelRequest = Mock(BobooCancelRequestDto)
         1 * bobooAssembler.assembleCancelRequestQueryParam(cancelRequest) >> new LinkedMultiValueMap<String, String>([:])
         1 * bobooAssembler.assembleCancelRequestBodyValue(_, apiKeyDto) >> new LinkedMultiValueMap<String, String>([:])
 
@@ -181,7 +165,7 @@ class BobooExchangeServiceTestSpec extends Specification {
         1 * requestBodySpec.body(_ as BodyInserter<MultiValueMap<String, String>, ClientHttpRequest>) >> requestBodySpec
         1 * requestBodySpec.retrieve() >> responseSpec
 
-        1 * responseSpec.bodyToMono(BobooCancelResponse.class) >> Mono.error(error)
+        1 * responseSpec.bodyToMono(BobooCancelResponseDto.class) >> Mono.error(error)
 
         expect:
         StepVerifier.create(bobooService.cancelOrder(cancelRequest, apiKeyDto))

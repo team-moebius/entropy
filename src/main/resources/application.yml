@@ -29,11 +29,26 @@ exchange:
       event: sub
       params:
         binary: false
-    apikey:
-      accessKey: DfzOAIhNGl0wMK4tgYsL28ytpuasP6OdOnIZg3jlhqYN4RoKvXgeHMVtwmGASJJO
-      secretKey: cEVZsBwJIyM6eyWXoKMZzH4gTYMhR0lucMITGblWa3zgAnjxHxMjA1VSTC596SXq
     receiveTimeWindow: 5000
-
+  bigone:
+    auth:
+      header:
+        alg: HS256
+        typ: JWT
+      payload:
+        type: OpenAPIV2
+    rest:
+      scheme: https
+      host: big.one
+      open-orders: /api/v3/viewer/orders
+      request-orders: /api/v3/viewer/orders
+      cancel-orders: /api/v3/viewer/orders/{id}/cancel
+      order-book: /api/v3/asset_pairs/{asset_pair_name}/depth
+    websocket:
+      uri: wss://big.one/ws/v2
+      timeout: 60000
+      sub-protocol: json
+    receiveTimeWindow: 5000
 reactor:
   netty:
     http:
@@ -44,11 +59,21 @@ entropy:
   userDetail:
     username: mmadmin
     password: oq6343wy@@
-  symbols: GTAX2USDT,MOIUSDT
+  symbols:
+    boboo:
+      - GTAX2USDT
+      - MOIUSDT
+    bigone:
+      - OAUSDT
   apiKeys:
-    gtax2usdt:
-      accessKey: vLpYoIFCHgnkJV0nFIwNzyUcXnDRBKg0GsVQZsemx0mN3gUINfFDxJlJNxbUAxWp
-      secretKey: JeL98KsXWyatA3QmmQF4WsvyBUeiMut6QEgJJDoZEK5hJwLcPdiifU3QDBdye5c0
-    moiusdt:
-      accessKey: XQBxuCfJ6Fq8k44wQC00qCaxVxqs15ssFtBIOf5wIMWT9DszWHUUYBSyzDxTZ9e9
-      secretKey: pGn7s2vzbfJUt8vLuABPwYEfIlrfIs1AL8uzVMAn6Wxz5xzc70In5VBpBkFskScR
+    boboo:
+      gtax2usdt:
+        accessKey: vLpYoIFCHgnkJV0nFIwNzyUcXnDRBKg0GsVQZsemx0mN3gUINfFDxJlJNxbUAxWp
+        secretKey: JeL98KsXWyatA3QmmQF4WsvyBUeiMut6QEgJJDoZEK5hJwLcPdiifU3QDBdye5c0
+      moiusdt:
+        accessKey: XQBxuCfJ6Fq8k44wQC00qCaxVxqs15ssFtBIOf5wIMWT9DszWHUUYBSyzDxTZ9e9
+        secretKey: pGn7s2vzbfJUt8vLuABPwYEfIlrfIs1AL8uzVMAn6Wxz5xzc70In5VBpBkFskScR
+    bigone:
+      oausdt:
+        accessKey: fad1a6eb-f6b0-11eb-87a8-3632f06506f2
+        secretKey: 7392C9364FBE3B6869C55061E76FF37375BCFB55825245F7D144EBF0D30F034D

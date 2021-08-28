@@ -3,6 +3,9 @@ package com.moebius.entropy.util;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderSide;
 
+import java.math.BigDecimal;
+import java.util.Optional;
+
 public class OrderUtil {
     public static OrderSide resolveFromOrderPosition(OrderPosition orderPosition){
         if (OrderPosition.ASK.equals(orderPosition)){
@@ -26,5 +29,14 @@ public class OrderUtil {
         } else {
             return OrderPosition.BID;
         }
+    }
+
+    public static BigDecimal calculateRemainedVolume(BigDecimal original, BigDecimal executed) {
+        BigDecimal orgVolume = Optional.ofNullable(original).orElse(BigDecimal.ZERO);
+        BigDecimal executedVolume = Optional.ofNullable(executed).orElse(BigDecimal.ZERO);
+
+        return Optional.of(orgVolume.subtract(executedVolume))
+            .filter(volume->volume.compareTo(BigDecimal.ZERO) > -1)
+            .orElse(BigDecimal.ZERO);
     }
 }

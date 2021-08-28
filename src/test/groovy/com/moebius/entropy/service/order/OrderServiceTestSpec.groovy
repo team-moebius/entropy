@@ -1,15 +1,16 @@
 package com.moebius.entropy.service.order
 
-import com.moebius.entropy.assembler.BobooOrderExchangeAssembler
+import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
+import com.moebius.entropy.domain.Symbol
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.order.OrderRequest
 import com.moebius.entropy.domain.trade.TradeCurrency
-import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequest
-import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponse
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelRequestDto
+import com.moebius.entropy.dto.exchange.order.boboo.BobooCancelResponseDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderRequestDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
 import com.moebius.entropy.repository.DisposableOrderRepository
@@ -32,7 +33,8 @@ class OrderServiceTestSpec extends Specification {
 		getAccessKey() >> accessKey
 		getSecretKey() >> secretKey
 	}
-	def apiKeys = ['gtax2usdt': apiKey, 'moiusdt': apiKey]
+	def apiKeys = [(Exchange.BOBOO): [(Symbol.GTAX2USDT): apiKey, (Symbol.MOIUSDT): apiKey],
+				   (Exchange.BIGONE): [(Symbol.OAUSDT): apiKey]]
 
 	@Subject
 	OrderService sut = new BobooOrderService(mockExchangeService, mockAssembler, apiKeys, disposableOrderRepository)
@@ -95,8 +97,8 @@ class OrderServiceTestSpec extends Specification {
 
 		1 * mockExchangeService.cancelOrder(_, {
 			it.accessKey == accessKey && it.secretKey == secretKey
-		}) >> Mono.just(Mock(BobooCancelResponse))
-		1 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled) >> Mock(BobooCancelRequest)
+		}) >> Mono.just(Mock(BobooCancelResponseDto))
+		1 * mockAssembler.convertToCancelRequest(orderShouldBeCancelled) >> Mock(BobooCancelRequestDto)
 
 		expect:
 		StepVerifier.create(sut.cancelOrder(orderShouldBeCancelled))
