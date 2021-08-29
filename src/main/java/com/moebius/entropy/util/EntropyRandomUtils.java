@@ -24,7 +24,7 @@ public class EntropyRandomUtils {
 		int totalNumber = 0;
 		List<Integer> randomNumbers = new ArrayList<>(sliceNumber);
 		for (int i = 0; i < sliceNumber; i++) {
-			int randomInteger = getRandomInteger(1, 10);
+			int randomInteger = getRandomInteger(5, 10);
 			totalNumber += randomInteger;
 			randomNumbers.add(randomInteger);
 		}
@@ -35,5 +35,9 @@ public class EntropyRandomUtils {
 				.map(value::multiply)
 				.map(slice -> slice.setScale(decimalPlaces, RoundingMode.HALF_UP))
 				.collect(Collectors.toList());
+	}
+
+	public int getBoundedRandomInteger(int bound) {
+		return ThreadLocalRandom.current().nextInt(bound);
 	}
 }

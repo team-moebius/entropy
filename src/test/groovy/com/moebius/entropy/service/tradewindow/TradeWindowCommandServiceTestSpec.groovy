@@ -4,12 +4,12 @@ import com.moebius.entropy.domain.Exchange
 import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradeWindow
-import com.moebius.entropy.repository.TradeWindowRepository
+import com.moebius.entropy.repository.TradeDataRepository
 import spock.lang.Specification
 import spock.lang.Subject
 
 class TradeWindowCommandServiceTestSpec extends Specification {
-    def mockRepository = Mock(TradeWindowRepository)
+    def mockRepository = Mock(TradeDataRepository)
     @Subject
     def sut = new TradeWindowCommandService(mockRepository)
 
@@ -20,8 +20,8 @@ class TradeWindowCommandServiceTestSpec extends Specification {
         sut.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
 
         then:
-        1 * mockRepository.saveTradeWindowForSymbol(market, tradeWindow)
-        1 * mockRepository.savePriceForSymbol(market, marketPrice)
+        1 * mockRepository.saveTradeWindow(market, tradeWindow)
+        1 * mockRepository.saveMarketPrice(market, marketPrice)
 
         where:
         exchange       | symbol | currency           | marketPrice | tradeWindow

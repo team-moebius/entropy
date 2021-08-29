@@ -1,5 +1,6 @@
 package com.moebius.entropy.assembler
 
+import com.moebius.entropy.assembler.boboo.BobooOrderExchangeAssembler
 import com.moebius.entropy.domain.*
 import com.moebius.entropy.domain.order.Order
 import com.moebius.entropy.domain.order.OrderPosition
@@ -9,7 +10,7 @@ import com.moebius.entropy.domain.order.OrderStatus
 import com.moebius.entropy.domain.order.OrderType
 import com.moebius.entropy.domain.order.TimeInForce
 import com.moebius.entropy.domain.trade.TradeCurrency
-import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrdersDto
+import com.moebius.entropy.dto.exchange.order.boboo.BobooOpenOrderDto
 import com.moebius.entropy.dto.exchange.order.boboo.BobooOrderResponseDto
 import org.apache.commons.lang3.StringUtils
 import spock.lang.Shared
@@ -95,7 +96,7 @@ class BobooOrderExchangeAssemblerTestSpec extends Specification {
 
 	def "Convert OpenOrder from Boboo to Order"() {
 		given:
-		def bobooOrderResponse = BobooOpenOrdersDto.builder()
+		def bobooOrderResponse = BobooOpenOrderDto.builder()
 				.symbol("GTAX2USDT")
 				.id("157371322565051")
 				.price(0.005452)
