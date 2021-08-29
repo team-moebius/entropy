@@ -1,5 +1,6 @@
 package com.moebius.entropy.domain.inflate;
 
+import com.moebius.entropy.domain.Market;
 import java.math.BigDecimal;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ public class InflationConfig {
     private BigDecimal askMaxVolume;
     private BigDecimal bidMinVolume;
     private BigDecimal bidMaxVolume;
+    private Market market;
     @Builder.Default
     private final boolean enable = false;
     @Builder.Default

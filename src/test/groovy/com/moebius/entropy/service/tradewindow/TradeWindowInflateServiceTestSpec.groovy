@@ -45,8 +45,9 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def askInflationVolume = new BigDecimal("99.9999")
     def bidInflationVolume = new BigDecimal("111.1111")
 
+    def targetMarket = new Market(exchange, symbol, TradeCurrency.DETAILED_USDT, 2, 2)
     def market = new Market(exchange, symbol, TradeCurrency.USDT, 2, 2)
-    def inflateRequest = new InflateRequest(market)
+    def inflateRequest = new InflateRequest(targetMarket)
 
 
 //    1. Event를 Parameter로 받고(Event data에 Exchange와 Symbol 받음)
@@ -62,6 +63,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 .bidCount(bidCount)
                 .bidMinVolume(bidInflationVolume)
                 .askMinVolume(askInflationVolume)
+                .market(market)
                 .spreadWindow(spreadWindow)
                 .enable(true)
                 .build()
@@ -85,7 +87,7 @@ class TradeWindowInflateServiceTestSpec extends Specification {
         tradeWindowQueryService.getTradeWindowMono(market) >> Mono.just(tradeWindow)
         tradeWindowQueryService.getMarketPrice(market) >> marketPrice
 
-        inflationConfigRepository.getConfigFor(market) >> inflationConfig
+        inflationConfigRepository.getConfigFor(targetMarket) >> inflationConfig
 
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.ASK) >> askInflationVolume
         inflationVolumeResolver.getInflationVolume(market, OrderPosition.BID) >> bidInflationVolume

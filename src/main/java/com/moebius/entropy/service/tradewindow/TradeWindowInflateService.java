@@ -17,6 +17,7 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BinaryOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +37,10 @@ public class TradeWindowInflateService {
 	private final EntropyRandomUtils randomUtils;
 
 	public Flux<Order> inflateOrders(InflateRequest inflateRequest) {
-		Market market = inflateRequest.getMarket();
-		InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(market);
+		Market targetMarket = inflateRequest.getMarket();
+		InflationConfig inflationConfig = inflationConfigRepository.getConfigFor(targetMarket);
+		Market market = Optional.ofNullable(inflationConfig.getMarket())
+				.orElse(targetMarket);
 		if (!inflationConfig.isEnable()) {
 			return Flux.empty();
 		}
