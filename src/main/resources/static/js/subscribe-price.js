@@ -13,5 +13,6 @@ window.addEventListener('DOMContentLoaded', () => {
         }
         priceElement.textContent = `${marketPriceDto.price}${tradeCurrency}`;
         priceUnitElement.textContent = `${marketPriceDto.priceUnit}${tradeCurrency}`;
+        document.title = `${marketPriceDto.symbol} - ${marketPriceDto.price}${tradeCurrency}`;
     }
 });
