@@ -13,7 +13,7 @@ import lombok.ToString;
 public class Market {
 
     private final Exchange exchange;
-    private final String symbol;
+    private final Symbol symbol;
     private final TradeCurrency tradeCurrency;
     private final int priceDecimalPosition;
     private final int volumeDecimalPosition;
