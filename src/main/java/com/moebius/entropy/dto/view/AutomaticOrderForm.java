@@ -27,6 +27,10 @@ import java.math.BigDecimal;
 @ToString
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AutomaticOrderForm {
+    @JsonProperty("custom-unit-price")
+    @Positive
+    private BigDecimal customUnitPrice;
+
     @JsonProperty("sell-inflation-count")
     @Positive
     private long sellInflationCount;
