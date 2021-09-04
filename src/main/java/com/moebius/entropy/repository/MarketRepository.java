@@ -10,7 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Repository
-public class SymbolToMarketRepository {
+public class MarketRepository {
 	private final Map<Exchange, Map<Symbol, Market>> symbolToMarkets = new ConcurrentHashMap<>();
 
 	public Map<Symbol, Market> saveSymbolToMarket(Exchange exchange, Symbol symbol, Market market) {

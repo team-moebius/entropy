@@ -1,4 +1,4 @@
-package com.moebius.entropy.validators
+package com.moebius.entropy.validator
 
 import spock.lang.Specification
 

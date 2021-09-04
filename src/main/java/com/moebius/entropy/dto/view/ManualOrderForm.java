@@ -2,7 +2,7 @@ package com.moebius.entropy.dto.view;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.moebius.entropy.validators.ValidRangeField;
+import com.moebius.entropy.validator.ValidRangeField;
 import lombok.*;
 
 import javax.validation.constraints.NotEmpty;

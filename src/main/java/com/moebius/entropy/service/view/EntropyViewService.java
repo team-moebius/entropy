@@ -6,7 +6,12 @@ import com.moebius.entropy.domain.ManualOrderResult;
 import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.trade.TradeCurrency;
-import com.moebius.entropy.dto.view.*;
+import com.moebius.entropy.dto.view.AutomaticOrderCancelForm;
+import com.moebius.entropy.dto.view.AutomaticOrderCancelResult;
+import com.moebius.entropy.dto.view.AutomaticOrderForm;
+import com.moebius.entropy.dto.view.AutomaticOrderResult;
+import com.moebius.entropy.dto.view.ManualOrderForm;
+import com.moebius.entropy.dto.view.MarketPriceDto;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
@@ -16,7 +21,9 @@ import com.moebius.entropy.service.order.auto.OptimizeOrderService;
 import com.moebius.entropy.service.order.auto.RepeatMarketOrderService;
 import com.moebius.entropy.service.order.manual.ManualOrderMakerService;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
-import com.moebius.entropy.util.SymbolUtil;
+import java.time.Duration;
+import java.util.Objects;
+import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpEntity;
@@ -25,41 +32,41 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import javax.validation.Valid;
-import java.time.Duration;
-import java.util.Objects;
-
 @Service
 @RequiredArgsConstructor
 public class EntropyViewService {
 
-    private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
     private final DividedDummyOrderService dividedDummyOrderService;
     private final RepeatMarketOrderService repeatMarketOrderService;
     private final OptimizeOrderService optimizeOrderService;
-    private final InflationConfigRepository inflationConfigRepository;
     private final OrderServiceFactory orderServiceFactory;
-    private final ManualOrderRequestAssembler manualOrderRequestAssembler;
     private final ManualOrderMakerService manualOrderMakerService;
-    private final DisposableOrderRepository disposableOrderRepository;
     private final TradeWindowQueryService tradeWindowQueryService;
+    private final AutomaticOrderViewAssembler automaticOrderViewAssembler;
+    private final ManualOrderRequestAssembler manualOrderRequestAssembler;
+    private final InflationConfigRepository inflationConfigRepository;
+    private final DisposableOrderRepository disposableOrderRepository;
 
     public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
         @Valid AutomaticOrderForm automaticOrderForm) {
-        InflationConfig inflationConfig = automaticOrderViewAssembler.assembleInflationConfig(automaticOrderForm);
+        InflationConfig inflationConfig = automaticOrderViewAssembler
+            .assembleInflationConfig(automaticOrderForm);
 
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
         return optimizeOrderService.optimizeOrders(market)
             .then(Mono.zip(
-                Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
-                Mono.just(automaticOrderViewAssembler.assembleRepeatMarketOrder(market, automaticOrderForm)))
-                .flatMapMany(tuple -> Flux.merge(dividedDummyOrderService.executeDividedDummyOrders(tuple.getT1())
-                        .map(HttpEntity::getBody)
-                        .map(String::valueOf),
-                    repeatMarketOrderService.executeRepeatMarketOrders(tuple.getT2())
-                        .map(HttpEntity::getBody)
-                        .map(String::valueOf)))
+                Mono.just(automaticOrderViewAssembler
+                    .assembleDivideDummyOrder(market, automaticOrderForm)),
+                Mono.just(automaticOrderViewAssembler
+                    .assembleRepeatMarketOrder(market, automaticOrderForm)))
+                .flatMapMany(tuple -> Flux
+                    .merge(dividedDummyOrderService.executeDividedDummyOrders(tuple.getT1())
+                            .map(HttpEntity::getBody)
+                            .map(String::valueOf),
+                        repeatMarketOrderService.executeRepeatMarketOrders(tuple.getT2())
+                            .map(HttpEntity::getBody)
+                            .map(String::valueOf)))
                 .collectList()
                 .map(automaticOrderViewAssembler::assembleAutomaticOrderResult));
     }
@@ -77,8 +84,9 @@ public class EntropyViewService {
 
         OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
-        return Flux.fromIterable(disposableOrderRepository.getKeysBy(disposableId -> !disposableId.contains("INFLATION") &&
-                disposableId.contains(market.getSymbol())))
+        return Flux.fromIterable(disposableOrderRepository.getKeysBy(
+            disposableId -> !disposableId.contains("INFLATION") && disposableId
+                .contains(market.getSymbol().name())))
             .filter(StringUtils::isNotEmpty)
             .flatMap(orderService::stopOrder)
             .map(ResponseEntity::getBody)
@@ -105,7 +113,7 @@ public class EntropyViewService {
             .map(index -> tradeWindowQueryService.getMarketPrice(market))
             .map(price -> MarketPriceDto.builder()
                 .price(price)
-                .symbol(SymbolUtil.stripCurrencyFromSymbol(market))
+                .symbol(market.getSymbol().name())
                 .exchange(market.getExchange())
                 .tradeCurrency(getTradeCurrency(market.getTradeCurrency()))
                 .priceUnit(market.getTradeCurrency().getPriceUnit())

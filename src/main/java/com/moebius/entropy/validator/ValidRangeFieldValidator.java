@@ -1,4 +1,4 @@
-package com.moebius.entropy.validators;
+package com.moebius.entropy.validator;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.BeanWrapperImpl;
