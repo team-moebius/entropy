@@ -64,7 +64,7 @@ class EntropyViewServiceTestSpec extends Specification {
 		def repeatMarketOrderDto = Stub(RepeatMarketOrderDto)
 
 		1 * inflationConfigRepository.saveConfigFor(market, inflationConfig)
-		1 * automaticOrderViewAssembler.assembleInflationConfig(orderForm) >> inflationConfig
+		1 * automaticOrderViewAssembler.assembleInflationConfig(market, orderForm) >> inflationConfig
 		1 * automaticOrderViewAssembler.assembleDivideDummyOrder(market, orderForm) >> dividedDummyOrderDto
 		1 * automaticOrderViewAssembler.assembleRepeatMarketOrder(market, orderForm) >> repeatMarketOrderDto
 		1 * dividedDummyOrderService.executeDividedDummyOrders(dividedDummyOrderDto) >> Mono.just(
