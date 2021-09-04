@@ -18,7 +18,7 @@ class TradeWindowChangeEventListenerTestSpec extends Specification {
 	def inflateService = Mock(TradeWindowInflateService)
 
 	@Subject
-	def sut = new TradeWindowChangeEventListener(assemblerFactory, commandService, inflateService)
+	def sut = new TradeWindowChangeEventListener(commandService, inflateService, assemblerFactory)
 
 	def "On any changes on trade window"() {
 		given:

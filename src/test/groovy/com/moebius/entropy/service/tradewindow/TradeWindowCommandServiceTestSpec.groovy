@@ -11,8 +11,10 @@ import spock.lang.Subject
 
 class TradeWindowCommandServiceTestSpec extends Specification {
     def mockRepository = Mock(TradeDataRepository)
+    def mockServiceFactory = Mock(TradeDataServiceFactory)
+    def mockTradeDataService = Mock(TradeDataService)
     @Subject
-    def sut = new TradeWindowCommandService(mockRepository)
+    def sut = new TradeWindowCommandService(mockRepository, mockServiceFactory)
 
     def "Test save command"() {
         given:
@@ -21,8 +23,10 @@ class TradeWindowCommandServiceTestSpec extends Specification {
         sut.saveCurrentTradeWindow(market, marketPrice, tradeWindow)
 
         then:
-        1 * mockRepository.saveTradeWindow(market, tradeWindow)
+//        1 * mockRepository.saveTradeWindow(market, tradeWindow)
+        1 * mockServiceFactory.getTradeDataService(exchange) >> mockTradeDataService
         1 * mockRepository.saveMarketPrice(market, marketPrice)
+        1 * mockTradeDataService.handleTradeWindow(market, tradeWindow)
 
         where:
         exchange       | symbol | currency           | marketPrice | tradeWindow
