@@ -49,6 +49,17 @@ exchange:
       timeout: 60000
       sub-protocol: json
     receiveTimeWindow: 5000
+  hotbit:
+    rest:
+      scheme: https
+      host: api.hotbit.io
+      open-orders: /v2/p2/order.pending
+      request-orders: /v2/p2/order.put_limit
+      cancel-orders: /v2/p2/order.cancel
+      order-book: /v2/p1/order.book
+    websocket:
+      uri: wss://ws.hotbit.io/v2/
+      timeout: 60000
 reactor:
   netty:
     http:
