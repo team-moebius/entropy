@@ -31,12 +31,11 @@ class BobooExchangeServiceTestSpec extends Specification {
     def responseSpec = Mock(WebClient.ResponseSpec)
     def webClient = Mock(WebClient)
     def bobooAssembler = Mock(BobooAssembler)
-    def disposableOrderRepository = Mock(DisposableOrderRepository)
     def objectMapper = new ObjectMapper()
 
     @Subject
     def bobooService = new BobooExchangeService(
-            webClient, bobooAssembler, disposableOrderRepository, objectMapper
+            webClient, bobooAssembler, objectMapper
     )
 
     def "Should get open orders"() {

@@ -46,7 +46,7 @@ public class EntropyViewService {
 
     public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
         @Valid AutomaticOrderForm automaticOrderForm) {
-        InflationConfig inflationConfig = automaticOrderViewAssembler.assembleInflationConfig(automaticOrderForm);
+        InflationConfig inflationConfig = automaticOrderViewAssembler.assembleInflationConfig(market, automaticOrderForm);
 
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
