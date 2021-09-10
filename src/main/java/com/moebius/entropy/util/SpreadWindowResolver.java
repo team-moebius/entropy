@@ -4,6 +4,7 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.trade.TradePrice;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +20,16 @@ import org.springframework.stereotype.Component;
 public class SpreadWindowResolver {
 
     private final EntropyRandomUtils randomUtils;
+
+    public List<BigDecimal> resolvePrices(
+        int count, BigDecimal startPrice,
+        BinaryOperator<BigDecimal> operationOnPrice, int spreadWindow, BigDecimal priceUnit
+    ){
+        return resolvePrices(
+            count, BigDecimal.ZERO, startPrice, operationOnPrice,
+            spreadWindow, priceUnit, Collections.emptyMap()
+        );
+    }
 
     public List<BigDecimal> resolvePrices(
         int count, BigDecimal minimumVolume, BigDecimal startPrice,
