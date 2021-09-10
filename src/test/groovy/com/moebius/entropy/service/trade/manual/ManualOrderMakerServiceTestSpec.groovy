@@ -27,6 +27,7 @@ import java.util.stream.Collectors
 class ManualOrderMakerServiceTestSpec extends Specification {
     def randomUtil = Mock(EntropyRandomUtils)
     def orderServiceFactory = Mock(OrderServiceFactory)
+    def orderService = Mock(OrderService)
     def tradeDataRepository = Mock(TradeDataRepository)
 
     @Subject
@@ -54,27 +55,20 @@ class ManualOrderMakerServiceTestSpec extends Specification {
                 .collect(Collectors.toList())
 
         randomUtil.getRandomDecimal(reqVolumeFrom.floatValue(), reqVolumeTo.floatValue(), _) >> requestedVolume
-        randomUtil.getRandomSlices(requestedVolume, selectedDivision, _) >> randomVolumes
         randomUtil.getRandomInteger(divisionRange[0], divisionRange[1]) >> selectedDivision
+        randomUtil.getRandomSlices(requestedVolume, selectedDivision, _) >> randomVolumes
         tradeDataRepository.getMarketPriceByMarket(market) >> marketPrice
         def requestedMarketPrice = OrderPosition.ASK == orderPosition ? marketPrice.subtract(market.tradeCurrency.priceUnit) : marketPrice
 
+        orderServiceFactory.getOrderService(_ as Exchange) >> orderService
         (0..<selectedDivision).forEach({ index ->
             def volume = randomVolumes[index]
             def remainVolume = remainVolumes[index]
-            def orderService = Stub(OrderService) {
-                requestManualOrder({
-                    it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(requestedMarketPrice) && it.volume == volume
-                } as OrderRequest) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
-            }
-
-            orderServiceFactory.getOrderService(_ as Exchange) >> orderService
-            if (remainVolume.doubleValue() > 0.0) {
-                orderService.requestManualOrder({
-                    it.market == market && it.orderPosition == orderPosition && BigDecimal.valueOf(requestedMarketPrice) && it.volume == remainVolume
-                } as Order) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
-            }
+            orderService.requestManualOrder({
+                it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(requestedMarketPrice) && it.volume == volume
+            } as OrderRequest) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
         })
+
         def request = ManualOrderMakingRequest.builder()
                 .orderPosition(orderPosition)
                 .startRange(divisionRange[0])
