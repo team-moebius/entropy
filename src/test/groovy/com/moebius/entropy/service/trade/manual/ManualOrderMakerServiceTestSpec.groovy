@@ -16,7 +16,6 @@ import com.moebius.entropy.util.EntropyRandomUtils
 import org.apache.commons.lang3.tuple.Pair
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
-import spock.lang.Ignore
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
@@ -24,7 +23,6 @@ import spock.lang.Unroll
 
 import java.util.stream.Collectors
 
-@Ignore
 @SuppressWarnings('GroovyAssignabilityCheck')
 class ManualOrderMakerServiceTestSpec extends Specification {
     def randomUtil = Mock(EntropyRandomUtils)
@@ -72,7 +70,7 @@ class ManualOrderMakerServiceTestSpec extends Specification {
 
             orderServiceFactory.getOrderService(_ as Exchange) >> orderService
             if (remainVolume.doubleValue() > 0.0) {
-                orderService.cancelOrder({
+                orderService.requestManualOrder({
                     it.market == market && it.orderPosition == orderPosition && BigDecimal.valueOf(requestedMarketPrice) && it.volume == remainVolume
                 } as Order) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
             }
