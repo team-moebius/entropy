@@ -14,6 +14,7 @@ import com.moebius.entropy.repository.InflationConfigRepository
 import com.moebius.entropy.service.order.OrderService
 import com.moebius.entropy.service.order.OrderServiceFactory
 import com.moebius.entropy.util.EntropyRandomUtils
+import com.moebius.entropy.util.SpreadWindowResolver
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
@@ -37,10 +38,13 @@ class TradeWindowInflateServiceTestSpec extends Specification {
     def orderServiceFactory = Mock(OrderServiceFactory)
     def inflationVolumeResolver = Mock(TradeWindowVolumeResolver)
     def randomUtil = Mock(EntropyRandomUtils)
+    def spreadWindowResolver = new SpreadWindowResolver(randomUtil)
+
 
     @Subject
     TradeWindowInflateService sut = new TradeWindowInflateService(
-            tradeWindowQueryService, inflationConfigRepository, orderServiceFactory, inflationVolumeResolver, randomUtil
+            tradeWindowQueryService, inflationConfigRepository, orderServiceFactory,
+            inflationVolumeResolver, spreadWindowResolver
     )
     def askInflationVolume = new BigDecimal("99.9999")
     def bidInflationVolume = new BigDecimal("111.1111")

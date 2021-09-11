@@ -20,6 +20,7 @@ class AutomaticOrderViewAssemblerTestSpec extends Specification {
         form.getBuyInflationCount() >> 2L
         form.getBuyVolumeRangeFrom() >> BigDecimal.valueOf(34.56)
         form.getBuyVolumeRangeTo() >> BigDecimal.valueOf(78.91)
+        form.getSpreadWindow() >> 23
 
         when:
         def inflationConfig = sut.assembleInflationConfig(market, form)
@@ -30,6 +31,7 @@ class AutomaticOrderViewAssemblerTestSpec extends Specification {
         inflationConfig.getAskMinVolume() == form.getSellVolumeRangeFrom()
         inflationConfig.getAskMaxVolume() == form.getSellVolumeRangeTo()
         inflationConfig.market == market
+        inflationConfig.spreadWindow == 23
     }
 
     def "Assemble DividedDummyOrderDto"() {

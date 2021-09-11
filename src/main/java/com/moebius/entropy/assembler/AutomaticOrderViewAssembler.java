@@ -40,6 +40,7 @@ public class AutomaticOrderViewAssembler {
             .bidMinVolume(automaticOrderForm.getBuyVolumeRangeFrom())
             .bidMaxVolume(automaticOrderForm.getBuyVolumeRangeTo())
             .enable(true)
+            .spreadWindow(automaticOrderForm.getSpreadWindow())
             .build();
     }
 

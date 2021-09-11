@@ -15,27 +15,31 @@
         <div class="col col-lg-12"><span id="text-response"></span></div>
     </div>
 </div>
-<div class="container-lg">
+<form id="automatic-form" class="container-lg" enctype="application/x-www-form-urlencoded">
     <div class="row market-info price">
       <div class="col col-sm-3"><span class="text-symbol"></span></div>
       <div class="col col-md"><span id="text-price"></span></div>
-    </div>
-    <div class="row market-info currency-unit">
-        <div class="col col-sm-3">최소 호가단위</div>
-      <div class="col col-md"><span id="text-price-unit"></span></div>
-    </div>
-
-</div>
-<form id="automatic-form" class="container-lg" enctype="application/x-www-form-urlencoded">
-    <div class="row auto-sell-header border-color-sell color-sell">
-        <div class="col col-lg-12">자동 매도 설정</div>
     </div>
 
     <div class="row auto-sell-item trade-item">
         <div class="col-sm-3 col"><label class="col-form-label" for="custom-unit-price">호가 단위</label></div>
         <div class="col col-lg">
             <div class="input-group">
-                <input class="form-control" id="custom-unit-price" name="custom-unit-price" type="number">
+                <input class="form-control" id="custom-unit-price" name="custom-unit-price" type="number" th:value="${unitPrice}">
+                <span class="input-group-text" th:text="${tradeCurrency}">tradeCurrency</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row auto-sell-header border-color-sell color-sell">
+        <div class="col col-lg-12">자동 매도 설정</div>
+    </div>
+
+    <div class="row auto-sell-item trade-item">
+        <div class="col-sm-3 col"><label class="col-form-label" for="spread-window">호가 폭</label></div>
+        <div class="col col-lg">
+            <div class="input-group">
+                <input class="form-control" id="spread-window" name="spread-window" type="number">
             </div>
 
         </div>

@@ -31,6 +31,10 @@ public class AutomaticOrderForm {
     @Positive
     private BigDecimal customUnitPrice;
 
+    @JsonProperty("spread-window")
+    @Positive
+    private int spreadWindow;
+
     @JsonProperty("sell-inflation-count")
     @Positive
     private long sellInflationCount;

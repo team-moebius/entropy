@@ -16,6 +16,8 @@ import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import com.moebius.entropy.util.EntropyRandomUtils;
+import com.moebius.entropy.util.SpreadWindowResolver;
+import java.util.function.BinaryOperator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -47,6 +49,7 @@ public class DividedDummyOrderService {
 	private final TradeWindowVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
 	private final EntropyRandomUtils randomUtils;
+	private final SpreadWindowResolver spreadWindowResolver;
 
 	public Mono<ResponseEntity<?>> executeDividedDummyOrders(DividedDummyOrderDto dividedDummyOrderDto) {
 		if (dividedDummyOrderDto == null) {
@@ -83,19 +86,24 @@ public class DividedDummyOrderService {
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(marketDto.toDomainEntity());
 		BigDecimal priceUnit = marketDto.getTradeCurrency().getPriceUnit();
 
-		List<DummyOrderRequest> dummyOrderRequests = Stream.concat(IntStream.range(0, inflationConfig.getAskCount())
-				.mapToObj(BigDecimal::valueOf)
-				.map(multiplier -> marketPrice.add(priceUnit.multiply(multiplier)))
-				.map(price -> getDummyOrderRequest(dto, OrderPosition.ASK, price)),
-			IntStream.rangeClosed(1, inflationConfig.getBidCount())
-				.mapToObj(BigDecimal::valueOf)
-				.map(multiplier -> marketPrice.subtract(priceUnit.multiply(multiplier)))
-				.map(price -> getDummyOrderRequest(dto, OrderPosition.BID, price)))
-			.collect(Collectors.toList());
+		List<DummyOrderRequest> dummyOrderRequests = Stream.concat(
+			resolveOrderRequestStream(inflationConfig.getAskCount(), marketPrice, BigDecimal::add,
+				inflationConfig.getSpreadWindow(), priceUnit, dto, OrderPosition.ASK),
+			resolveOrderRequestStream(inflationConfig.getBidCount(), marketPrice.subtract(priceUnit), BigDecimal::subtract,
+				inflationConfig.getSpreadWindow(), priceUnit, dto, OrderPosition.BID)
+		).collect(Collectors.toList());
 
 		Collections.shuffle(dummyOrderRequests);
 
 		return dummyOrderRequests;
+	}
+	private Stream<DummyOrderRequest> resolveOrderRequestStream(
+		int count, BigDecimal startPrice, BinaryOperator<BigDecimal> operationOnPrice,
+		int spreadWindow, BigDecimal priceUnit, DividedDummyOrderDto dto, OrderPosition position
+	){
+		return spreadWindowResolver.resolvePrices(count, startPrice, operationOnPrice, spreadWindow, priceUnit)
+			.stream()
+			.map(price->getDummyOrderRequest(dto, position, price));
 	}
 
 	private DummyOrderRequest getDummyOrderRequest(DividedDummyOrderDto dto, OrderPosition orderPosition, BigDecimal price) {
