@@ -88,3 +88,6 @@ entropy:
       oausdt:
         accessKey: fad1a6eb-f6b0-11eb-87a8-3632f06506f2
         secretKey: 7392C9364FBE3B6869C55061E76FF37375BCFB55825245F7D144EBF0D30F034D
+    hotbit:
+      accessKey: d93e9235-7cc2-4eb8-92cb55e2b851f7a3
+      secretKey: 1085163f57fb5d8ccf24af4d8459a252
