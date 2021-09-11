@@ -14,7 +14,9 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -23,30 +25,34 @@ public class HotbitAssembler {
     private final ObjectMapper objectMapper;
 
     public MultiValueMap<String, String> assembleOpenOrdersQueryParams(ApiKey apikey, HotbitOpenOrderRequestDto openOrderRequestDto) {
-        return getQueryParamsMap(openOrderRequestDto.withAccessKey(apikey.getAccessKey()));
+        return getQueryParamsMap(apikey.getSecretKey(), openOrderRequestDto.withAccessKey(apikey.getAccessKey()));
     }
 
     public MultiValueMap<String, String> assembleCancelOrderQueryParams(ApiKey apikey, HotbitCancelRequestDto cancelRequest) {
-        return getQueryParamsMap(cancelRequest.withAccessKey(apikey.getAccessKey()));
+        return getQueryParamsMap(apikey.getSecretKey(), cancelRequest.withAccessKey(apikey.getAccessKey()));
     }
 
     public MultiValueMap<String, String> assembleRequestOrderQueryParams(ApiKey apikey, HotbitRequestOrderDto orderRequest) {
-        return getQueryParamsMap(orderRequest.withAccessKey(apikey.getAccessKey()));
+        return getQueryParamsMap(apikey.getSecretKey(), orderRequest.withAccessKey(apikey.getAccessKey()));
     }
 
-    private MultiValueMap<String, String> getQueryParamsMap(Object request) {
+    private MultiValueMap<String, String> getQueryParamsMap(String secretKey, Object request) {
         var queryParams = new LinkedMultiValueMap<String, String>();
         var map = objectMapper.convertValue(request, new TypeReference<Map<String, String>>() {
         });
         queryParams.setAll(map);
-        queryParams.add("sign", DigestUtils.md5Hex(getQueryString(queryParams)).toUpperCase());
+        queryParams.add("sign", DigestUtils.md5Hex(getQueryString(secretKey, queryParams)).toUpperCase());
         return queryParams;
     }
 
-    private String getQueryString(MultiValueMap<String, String> queryParams) {
-        return UriComponentsBuilder.newInstance()
+    private String getQueryString(String secretKey, MultiValueMap<String, String> queryParams) {
+        var queryString = UriComponentsBuilder.newInstance()
                 .queryParams(queryParams)
                 .build().encode()
                 .getQuery();
+
+        var orderedQueryString = Arrays.stream(queryString.split("&")).sorted().collect(Collectors.joining("&"));
+
+        return String.format("%s&secret_key=%s", orderedQueryString, secretKey);
     }
 }
