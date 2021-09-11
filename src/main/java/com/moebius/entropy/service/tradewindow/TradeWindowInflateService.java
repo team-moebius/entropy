@@ -10,6 +10,7 @@ import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
+import com.moebius.entropy.util.SpreadWindowResolveRequest;
 import com.moebius.entropy.util.SpreadWindowResolver;
 import java.math.BigDecimal;
 import java.util.List;
@@ -100,10 +101,17 @@ public class TradeWindowInflateService {
             .getTradeCurrency()
             .getPriceUnit();
 
-        List<BigDecimal> resolvedPriceWindow = spreadWindowResolver.resolvePrices(
-            count, minimumVolume, startPrice, operationOnPrice,
-            spreadWindow, priceUnit, volumesBySpreadWindow
-        );
+        SpreadWindowResolveRequest request = SpreadWindowResolveRequest.builder()
+            .count(count)
+            .minimumVolume(minimumVolume)
+            .startPrice(startPrice)
+            .operationOnPrice(operationOnPrice)
+            .spreadWindow(spreadWindow)
+            .priceUnit(priceUnit)
+            .previousWindow(volumesBySpreadWindow)
+            .build();
+
+        List<BigDecimal> resolvedPriceWindow = spreadWindowResolver.resolvePrices(request);
 
         return Flux.fromIterable(resolvedPriceWindow)
             .map(price -> {

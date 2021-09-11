@@ -92,11 +92,15 @@ class SpreadWindowResolverTestSpec extends Specification {
 
         BinaryOperator<BigDecimal> operatorOnPrice = BigDecimal.&add
         def startPrice = marketPrice.add(tradeCurrency.getPriceUnit())
+        def request = SpreadWindowResolveRequest.builder()
+                .count(8).minimumVolume(minVolume)
+                .startPrice(startPrice).operationOnPrice(operatorOnPrice)
+                .spreadWindow(spreadWindow).priceUnit(tradeCurrency.getPriceUnit())
+                .previousWindow(previousWindow)
+                .build()
 
         when:
-        def resolvedPrices = sut.resolvePrices(
-                8, minVolume, startPrice, operatorOnPrice, spreadWindow, tradeCurrency.getPriceUnit(), previousWindow
-        )
+        def resolvedPrices = sut.resolvePrices(request)
 
         then:
         randomUtil.getRandomDecimal(_ as BigDecimal, _ as BigDecimal, _ as Integer) >> { BigDecimal min, BigDecimal max, int decimalPlaces ->
