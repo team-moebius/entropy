@@ -18,7 +18,7 @@ public class SpreadWindowResolveRequest {
     private int count;
 
     @Builder.Default
-    private BigDecimal minimumVolume = BigDecimal.ZERO;
+    private BigDecimal minimumVolume = new BigDecimal(Integer.MAX_VALUE);
 
     private BigDecimal startPrice;
 
