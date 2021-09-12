@@ -16,7 +16,6 @@ import java.util.function.BinaryOperator
 class SpreadWindowResolverTestSpec extends Specification {
     @Shared
     def marketPrice = new BigDecimal("11.35")
-    def minVolume = new BigDecimal("99.9999")
     @Shared
     def symbol = "GTAX2USDT"
     @Shared
@@ -93,10 +92,20 @@ class SpreadWindowResolverTestSpec extends Specification {
         BinaryOperator<BigDecimal> operatorOnPrice = BigDecimal.&add
         def startPrice = marketPrice.add(tradeCurrency.getPriceUnit())
 
+        def requestBuilder = SpreadWindowResolveRequest.builder()
+        if (params.get("minVolumeStr") != null) {
+            def minVolume = new BigDecimal(params.get("minVolumeStr") as String)
+            requestBuilder.minimumVolume(minVolume)
+        }
+        def request = requestBuilder
+                .count(8)
+                .startPrice(startPrice).operationOnPrice(operatorOnPrice)
+                .spreadWindow(spreadWindow).priceUnit(tradeCurrency.getPriceUnit())
+                .previousWindow(previousWindow)
+                .build()
+
         when:
-        def resolvedPrices = sut.resolvePrices(
-                8, minVolume, startPrice, operatorOnPrice, spreadWindow, tradeCurrency.getPriceUnit(), previousWindow
-        )
+        def resolvedPrices = sut.resolvePrices(request)
 
         then:
         randomUtil.getRandomDecimal(_ as BigDecimal, _ as BigDecimal, _ as Integer) >> { BigDecimal min, BigDecimal max, int decimalPlaces ->
@@ -107,22 +116,32 @@ class SpreadWindowResolverTestSpec extends Specification {
         where:
         params << [
                 [
+                        "minVolumeStr"      : null,
+                        "previousWindowPair": [],
+                        "madeAskPrices"     : ["11.39", "11.44", "11.49", "11.54", "11.59", "11.64", "11.69", "11.74"],
+                        "comment"           : "previous window is empty and minVolume is not designated"
+                ],
+                [
+                        "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [],
                         "madeAskPrices"     : ["11.39", "11.44", "11.49", "11.54", "11.59", "11.64", "11.69", "11.74"],
                         "comment"           : "previous window is empty"
                 ],
                 [
+                        "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128]],
                         "madeAskPrices"     : ["11.69", "11.74"],
                         "comment"           : "previous window is less than desired size"
                 ],
                 [
+                        "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128], ["11.66", 128], ["11.71", 129], ["11.76", 130], ["11.81", 131]],
                         "madeAskPrices"     : [],
                         "comment"           : "previous window is greater than desired size"
                 ]
         ]
         comment << [
+                "previous window is empty and minVolume is not designated",
                 "previous window is empty",
                 "previous window is less than desired size",
                 "previous window is greater than desired size"
