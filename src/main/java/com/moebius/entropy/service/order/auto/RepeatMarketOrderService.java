@@ -87,7 +87,7 @@ public class RepeatMarketOrderService {
 		if (orderPosition == OrderPosition.ASK) {
 			targetPrice = tradeWindow.getBidPrices()
 				.stream()
-				.min(Comparator.comparing(TradePrice::getUnitPrice))
+				.max(Comparator.comparing(TradePrice::getUnitPrice))
 				.map(TradePrice::getUnitPrice)
 				.orElse(marketPrice.subtract(priceUnit));
 			RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
@@ -99,7 +99,7 @@ public class RepeatMarketOrderService {
 		} else if (orderPosition == OrderPosition.BID) {
 			targetPrice = tradeWindow.getAskPrices()
 				.stream()
-				.max(Comparator.comparing(TradePrice::getUnitPrice))
+				.min(Comparator.comparing(TradePrice::getUnitPrice))
 				.map(TradePrice::getUnitPrice)
 				.orElse(marketPrice);
 
