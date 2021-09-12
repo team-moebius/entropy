@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Builder
 @ToString
@@ -14,11 +16,12 @@ public class HotbitOrderDto {
     /**
      * order-Id
      */
-    private int id;
+    private String id;
     /**
      * Transaction Pair
      */
-    private String market;
+    @JsonProperty("market")
+    private String symbol;
     /**
      * Identifier on source of data request
      */
@@ -47,9 +50,9 @@ public class HotbitOrderDto {
     @JsonProperty("mtime")
     private double updateTime;
 
-    private double price;
+    private BigDecimal price;
 
-    private String amount;
+    private BigDecimal amount;
 
     @JsonProperty("taker_fee")
     private String takerFee;
