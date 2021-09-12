@@ -5,6 +5,8 @@ import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.order.config.RepeatMarketOrderConfig;
+import com.moebius.entropy.domain.trade.TradePrice;
+import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderResponseDto;
@@ -13,6 +15,9 @@ import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
+import java.math.BigDecimal;
+import java.time.Duration;
+import java.util.Comparator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +26,6 @@ import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
-
-import java.math.BigDecimal;
-import java.time.Duration;
 
 @Slf4j
 @Service
@@ -76,22 +78,37 @@ public class RepeatMarketOrderService {
 		Market market = marketDto.toDomainEntity();
 
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+		TradeWindow tradeWindow = tradeWindowQueryService.getTradeWindow(market);
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
 		OrderRequest orderRequest = null;
+		BigDecimal targetPrice;
 
 		if (orderPosition == OrderPosition.ASK) {
+			targetPrice = tradeWindow.getBidPrices()
+				.stream()
+				.min(Comparator.comparing(TradePrice::getUnitPrice))
+				.map(TradePrice::getUnitPrice)
+				.orElse(marketPrice.subtract(priceUnit));
 			RepeatMarketOrderConfig askOrderConfig = repeatMarketOrderDto.getAskOrderConfig();
-			BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(), askOrderConfig.getMaxVolume(),
+			BigDecimal volume = volumeResolver.getRandomMarketVolume(askOrderConfig.getMinVolume(),
+				askOrderConfig.getMaxVolume(),
 				market.getVolumeDecimalPosition());
 
-			orderRequest = new OrderRequest(market, orderPosition, marketPrice.subtract(priceUnit), volume);
+			orderRequest = new OrderRequest(market, orderPosition, targetPrice, volume);
 		} else if (orderPosition == OrderPosition.BID) {
+			targetPrice = tradeWindow.getAskPrices()
+				.stream()
+				.max(Comparator.comparing(TradePrice::getUnitPrice))
+				.map(TradePrice::getUnitPrice)
+				.orElse(marketPrice);
+
 			RepeatMarketOrderConfig bidOrderConfig = repeatMarketOrderDto.getBidOrderConfig();
-			BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(), bidOrderConfig.getMaxVolume(),
+			BigDecimal volume = volumeResolver.getRandomMarketVolume(bidOrderConfig.getMinVolume(),
+				bidOrderConfig.getMaxVolume(),
 				market.getVolumeDecimalPosition());
 
-			orderRequest = new OrderRequest(market, orderPosition, marketPrice, volume);
+			orderRequest = new OrderRequest(market, orderPosition, targetPrice, volume);
 		}
 
 		if (orderRequest == null) {
