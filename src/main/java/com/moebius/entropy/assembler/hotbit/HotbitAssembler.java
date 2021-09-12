@@ -1,22 +1,31 @@
 package com.moebius.entropy.assembler.hotbit;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitCancelRequestDto;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOpenOrderRequestDto;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitRequestOrderDto;
+import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
+import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto;
+import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookRequestDto;
+import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.apache.commons.lang3.StringUtils.EMPTY;
 
 @Slf4j
 @Component
@@ -34,6 +43,28 @@ public class HotbitAssembler {
 
     public MultiValueMap<String, String> assembleRequestOrderQueryParams(ApiKey apikey, HotbitRequestOrderDto orderRequest) {
         return getQueryParamsMap(apikey.getSecretKey(), orderRequest.withAccessKey(apikey.getAccessKey()));
+    }
+
+    public String assembleOrderBookPayload(String symbol) {
+        try {
+            return objectMapper.writeValueAsString(HotbitOrderBookRequestDto.builder()
+                    .symbol(symbol)
+                    .priceLevel(1)
+                    .pricePrecision(0.1)
+                    .build());
+        } catch (JsonProcessingException e) {
+            log.warn("[{}}] Failed to processing json.", Exchange.HOTBIT, e);
+            return EMPTY;
+        }
+    }
+
+    public HotbitOrderBookResponseDto assembleOrderBookDto(WebSocketMessage message) {
+        try {
+            return objectMapper.readValue(message.getPayloadAsText(), HotbitOrderBookResponseDto.class);
+        } catch (JsonProcessingException e) {
+            log.warn("[Boboo] Failed to processing json.", e);
+            return null;
+        }
     }
 
     private MultiValueMap<String, String> getQueryParamsMap(String secretKey, Object request) {
