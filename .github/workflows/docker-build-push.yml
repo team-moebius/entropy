@@ -1,4 +1,4 @@
-name: Entropy docker image build & push
+name: Docker image build & push
 
 on:
   push:

@@ -4,11 +4,14 @@ import com.moebius.entropy.domain.Market;
 import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.order.config.DummyOrderConfig;
 import com.moebius.entropy.domain.order.config.RepeatMarketOrderConfig;
+import com.moebius.entropy.domain.trade.TradeCurrency;
 import com.moebius.entropy.dto.MarketDto;
 import com.moebius.entropy.dto.order.DividedDummyOrderDto;
 import com.moebius.entropy.dto.order.RepeatMarketOrderDto;
 import com.moebius.entropy.dto.view.AutomaticOrderForm;
 import com.moebius.entropy.dto.view.AutomaticOrderResult;
+import java.math.BigDecimal;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,9 +19,20 @@ import java.util.List;
 @Component
 public class AutomaticOrderViewAssembler {
 
-    public InflationConfig assembleInflationConfig(AutomaticOrderForm automaticOrderForm) {
+    public InflationConfig assembleInflationConfig(Market market, AutomaticOrderForm automaticOrderForm) {
+        Market marketWithCustomUnitPrice = Optional.ofNullable(automaticOrderForm.getCustomUnitPrice())
+            .map(customUnitPrice -> new TradeCurrency(customUnitPrice, market.getTradeCurrency()
+                .name()))
+            .map(tradeCurrency -> new Market(
+                market.getExchange(),
+                market.getSymbol(),
+                tradeCurrency,
+                market.getPriceDecimalPosition(),
+                market.getVolumeDecimalPosition()))
+            .orElse(market);
 
         return InflationConfig.builder()
+            .market(marketWithCustomUnitPrice)
             .askCount(Math.toIntExact(automaticOrderForm.getSellInflationCount()))
             .bidCount(Math.toIntExact(automaticOrderForm.getBuyInflationCount()))
             .askMinVolume(automaticOrderForm.getSellVolumeRangeFrom())
@@ -26,13 +40,14 @@ public class AutomaticOrderViewAssembler {
             .bidMinVolume(automaticOrderForm.getBuyVolumeRangeFrom())
             .bidMaxVolume(automaticOrderForm.getBuyVolumeRangeTo())
             .enable(true)
+            .spreadWindow(automaticOrderForm.getSpreadWindow())
             .build();
     }
 
     public DividedDummyOrderDto assembleDivideDummyOrder(Market market, AutomaticOrderForm automaticOrderForm) {
         return DividedDummyOrderDto.builder()
             .market(assembleMarketDto(market))
-            .inflationConfig(assembleInflationConfig(automaticOrderForm))
+            .inflationConfig(assembleInflationConfig(market, automaticOrderForm))
             .askOrderConfig(DummyOrderConfig.builder()
                 .minDividedOrderCount(Math.toIntExact(automaticOrderForm.getSellDivisionTimeFrom()))
                 .maxDividedOrderCount(Math.toIntExact(automaticOrderForm.getSellDivisionTimeTo()))

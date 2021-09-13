@@ -32,19 +32,21 @@ public class EntropyWebController {
 
 	@GetMapping(value = "")
 	public String index(Model model) {
-		model.addAttribute("market", "gtax2");
+		decorateViewWithMarket("gtax2", model);
 		return "index";
 	}
 
 	@GetMapping(value = "/{market}")
 	public String index(@PathVariable("market") String market, Model model) {
-		if (!MARKETS.containsKey(market.toLowerCase())) {
-			model.addAttribute("market", "gtax2");
-		} else {
-			model.addAttribute("market", market);
-		}
-
+		decorateViewWithMarket(market, model);
 		return "index";
+	}
+
+	private void decorateViewWithMarket(String marketString, Model model){
+		Market market = MARKETS.getOrDefault(marketString.toLowerCase(), GTAX2USDT.getMarket());
+		model.addAttribute("market", market.getSymbol());
+		model.addAttribute("unitPrice", market.getTradeCurrency().getPriceUnit());
+		model.addAttribute("tradeCurrency", market.getTradeCurrency().getCurrencyName());
 	}
 
 	@GetMapping(value = "/{market}/subscribe-market-prices", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

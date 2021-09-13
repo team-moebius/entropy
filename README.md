@@ -1,4 +1,5 @@
 # Entropy
+[![Docker image build & push](https://github.com/team-moebius/entropy/actions/workflows/docker-build-push.yml/badge.svg)](https://github.com/team-moebius/entropy/actions/workflows/docker-build-push.yml)
 
 ## Definition
 
