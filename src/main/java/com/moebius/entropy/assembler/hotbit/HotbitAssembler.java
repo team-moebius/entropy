@@ -8,10 +8,10 @@ import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitCancelRequestDto;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOpenOrderRequestDto;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitRequestOrderDto;
-import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookDto;
-import com.moebius.entropy.dto.exchange.orderbook.boboo.BobooOrderBookRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookResponseDto;
+import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookSubscribeResponseDto;
+import com.moebius.entropy.service.inflate.bigone.ZipUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -21,8 +21,10 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.socket.WebSocketMessage;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -50,7 +52,7 @@ public class HotbitAssembler {
             return objectMapper.writeValueAsString(HotbitOrderBookRequestDto.builder()
                     .symbol(symbol)
                     .priceLevel(1)
-                    .pricePrecision(0.1)
+                    .pricePrecision(0.001)
                     .build());
         } catch (JsonProcessingException e) {
             log.warn("[{}}] Failed to processing json.", Exchange.HOTBIT, e);
@@ -60,12 +62,31 @@ public class HotbitAssembler {
 
     public HotbitOrderBookResponseDto assembleOrderBookDto(WebSocketMessage message) {
         try {
-            return objectMapper.readValue(message.getPayloadAsText(), HotbitOrderBookResponseDto.class);
-        } catch (JsonProcessingException e) {
-            log.warn("[Boboo] Failed to processing json.", e);
+            var decompress = ZipUtils.decompress(message);
+            if (decompress.contains("result")) {
+                parseSubscribeResult(decompress);
+                return HotbitOrderBookResponseDto.builder().build();
+            }
+            System.out.println(decompress);
+            return objectMapper.readValue(decompress, HotbitOrderBookResponseDto.class);
+        } catch (IOException e) {
+            log.warn("[{}}] Failed to decompress message", Exchange.HOTBIT, e);
             return null;
         }
     }
+
+    private void parseSubscribeResult(String message) {
+        try {
+            var response = objectMapper.readValue(message, HotbitOrderBookSubscribeResponseDto.class);
+            var status = Optional.ofNullable(response.getResult())
+                    .map(HotbitOrderBookSubscribeResponseDto.Data::getStatus)
+                    .orElseGet(response::getError);
+            log.info("[{}] orderbook subscription status : {}", Exchange.HOTBIT, status);
+        } catch (IOException e) {
+            log.warn("[{}}] Failed to processing json.", Exchange.HOTBIT, e);
+        }
+    }
+
 
     private MultiValueMap<String, String> getQueryParamsMap(String secretKey, Object request) {
         var queryParams = new LinkedMultiValueMap<String, String>();
