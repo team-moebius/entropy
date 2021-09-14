@@ -59,25 +59,27 @@ public class TradeWindowInflateService {
         InflationConfig inflationConfig) {
         BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
+        int spreadWindow = inflationConfig.getSpreadWindow();
 
-        BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
+        BigDecimal operandForPrice = priceUnit.multiply(BigDecimal.valueOf(spreadWindow));
+        BigDecimal bidStartPrice = marketPrice.subtract(operandForPrice);
         Map<String, BigDecimal> bidVolumeBySpreadWindow = spreadWindowResolver.mergeIntoTradeWindow(
-            market, bidStartPrice, inflationConfig.getSpreadWindow(), BigDecimal::subtract,
+            market, bidStartPrice, spreadWindow, BigDecimal::subtract,
             window.getBidPrices()
         );
         Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
             inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market, bidStartPrice,
-            OrderPosition.BID, BigDecimal::subtract, inflationConfig.getSpreadWindow(),
+            OrderPosition.BID, BigDecimal::subtract, spreadWindow,
             bidVolumeBySpreadWindow);
 
-        BigDecimal askStartPrice = marketPrice.add(priceUnit);
+        BigDecimal askStartPrice = marketPrice.add(operandForPrice);
         Map<String, BigDecimal> askVolumeBySpreadWindow = spreadWindowResolver.mergeIntoTradeWindow(
-            market, askStartPrice, inflationConfig.getSpreadWindow(), BigDecimal::add,
+            market, askStartPrice, spreadWindow, BigDecimal::add,
             window.getAskPrices()
         );
         Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
             inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market, askStartPrice,
-            OrderPosition.ASK, BigDecimal::add, inflationConfig.getSpreadWindow(),
+            OrderPosition.ASK, BigDecimal::add, spreadWindow,
             askVolumeBySpreadWindow);
 
         OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
