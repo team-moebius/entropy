@@ -33,7 +33,7 @@ public class SpreadWindowResolver {
             .multiply(BigDecimal.valueOf(spreadWindow));
 
         int scale = priceUnit.scale();
-        return IntStream.range(0, count)
+        return IntStream.range(1, count + 1)
             .mapToObj(BigDecimal::valueOf)
             .map(multiplier -> Pair.of(multiplier, operationOnPrice
                 .apply(startPrice, stepPriceRange.multiply(multiplier))))

@@ -61,8 +61,7 @@ public class TradeWindowInflateService {
         BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
         int spreadWindow = inflationConfig.getSpreadWindow();
 
-        BigDecimal operandForPrice = priceUnit.multiply(BigDecimal.valueOf(spreadWindow));
-        BigDecimal bidStartPrice = marketPrice.subtract(operandForPrice);
+        BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
         Map<String, BigDecimal> bidVolumeBySpreadWindow = spreadWindowResolver.mergeIntoTradeWindow(
             market, bidStartPrice, spreadWindow, BigDecimal::subtract,
             window.getBidPrices()
@@ -72,7 +71,7 @@ public class TradeWindowInflateService {
             OrderPosition.BID, BigDecimal::subtract, spreadWindow,
             bidVolumeBySpreadWindow);
 
-        BigDecimal askStartPrice = marketPrice.add(operandForPrice);
+        BigDecimal askStartPrice = marketPrice.add(priceUnit);
         Map<String, BigDecimal> askVolumeBySpreadWindow = spreadWindowResolver.mergeIntoTradeWindow(
             market, askStartPrice, spreadWindow, BigDecimal::add,
             window.getAskPrices()
