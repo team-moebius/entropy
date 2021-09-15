@@ -6,6 +6,7 @@ import com.moebius.entropy.domain.inflate.InflationConfig;
 import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
+import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,24 +64,24 @@ public class TradeWindowInflateService {
         int spreadWindow = inflationConfig.getSpreadWindow();
 
         BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
-        Map<String, BigDecimal> bidVolumeBySpreadWindow = spreadWindowResolver.mergeIntoTradeWindow(
-            market, bidStartPrice, spreadWindow, BigDecimal::subtract,
-            window.getBidPrices()
-        );
+
+        Map<BigDecimal, BigDecimal> bidPriceVolumeMap = window.getBidPrices().stream()
+            .collect(Collectors.toMap(TradePrice::getUnitPrice, TradePrice::getVolume));
+
         Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
             inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market, bidStartPrice,
             OrderPosition.BID, BigDecimal::subtract, spreadWindow,
-            bidVolumeBySpreadWindow);
+            bidPriceVolumeMap);
 
         BigDecimal askStartPrice = marketPrice.add(priceUnit);
-        Map<String, BigDecimal> askVolumeBySpreadWindow = spreadWindowResolver.mergeIntoTradeWindow(
-            market, askStartPrice, spreadWindow, BigDecimal::add,
-            window.getAskPrices()
-        );
+
+        Map<BigDecimal, BigDecimal> askPriceVolumeMap = window.getAskPrices().stream()
+            .collect(Collectors.toMap(TradePrice::getUnitPrice, TradePrice::getVolume));
+
         Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
             inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market, askStartPrice,
             OrderPosition.ASK, BigDecimal::add, spreadWindow,
-            askVolumeBySpreadWindow);
+            askPriceVolumeMap);
 
         OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
@@ -96,7 +98,7 @@ public class TradeWindowInflateService {
     private Flux<OrderRequest> makeOrderRequestWith(
         int count, BigDecimal minimumVolume, Market market, BigDecimal startPrice,
         OrderPosition orderPosition, BinaryOperator<BigDecimal> operationOnPrice, int spreadWindow,
-        Map<String, BigDecimal> volumesBySpreadWindow
+        Map<BigDecimal, BigDecimal> volumesBySpreadWindow
     ) {
         BigDecimal priceUnit = market
             .getTradeCurrency()
@@ -109,7 +111,7 @@ public class TradeWindowInflateService {
             .operationOnPrice(operationOnPrice)
             .spreadWindow(spreadWindow)
             .priceUnit(priceUnit)
-            .previousWindow(volumesBySpreadWindow)
+//            .previousWindow(volumesBySpreadWindow)
             .build();
 
         List<BigDecimal> resolvedPriceWindow = spreadWindowResolver.resolvePrices(request);

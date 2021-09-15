@@ -5,6 +5,7 @@ import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradePrice
+import org.apache.commons.lang3.tuple.Pair
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
@@ -40,17 +41,33 @@ class SpreadWindowResolverTestSpec extends Specification {
                     new TradePrice(OrderPosition.ASK, new BigDecimal(priceStr), new BigDecimal(volume))
                 }
 
-        Map<String, BigDecimal> desiredResult = (params['desiredPair'] as List<List>)
+        Map<String, TradePrice> desiredResult = new HashMap<>((params['desiredPair'] as List<List>)
                 .collectEntries {
-                    [it.get(0), BigDecimal.valueOf(it.get(1) as Integer)]
+                    def priceVolumePair = it.get(1) as List
+                    def tradePrice = new TradePrice(
+                            OrderPosition.ASK,
+                            new BigDecimal(priceVolumePair.get(0) as String),
+                            new BigDecimal(priceVolumePair.get(1) as String)
+                    )
+                    [it.get(0) as String, tradePrice]
                 }
+        )
 
         when:
         def result = sut.mergeIntoTradeWindow(
-                market, marketPrice.add(tradeCurrency.getPriceUnit()), spreadWindow, operatorOnPrice, prices
+                tradeCurrency.getPriceUnit(), marketPrice.add(tradeCurrency.getPriceUnit()), spreadWindow, operatorOnPrice, prices
         )
         then:
-        result == desiredResult
+        result.size() == desiredResult.size()
+        result.entrySet().forEach {
+            def key = it.getKey()
+            def resultItem = it.value
+            assert desiredResult.containsKey(key)
+            def desiredResultItem = desiredResult.get(key)
+            assert resultItem.getOrderPosition() == desiredResultItem.getOrderPosition()
+            assert resultItem.getUnitPrice() == desiredResultItem.getUnitPrice()
+            assert resultItem.getVolume() == desiredResultItem.getVolume()
+        }
 
         where:
         params << [
@@ -62,12 +79,12 @@ class SpreadWindowResolverTestSpec extends Specification {
                 [
                         //11.36, 11.41, 11.46, 11.51, 11.56, 11.61, 11.66, 11.71, 11.76, 11.81, 11.86, 11.91, 11.96, 12.01,
                         "previousWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128]],
-                        "desiredPair"       : [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128]],
+                        "desiredPair"       : [["11.36", ["11.36", 123]], ["11.41", ["11.43", 124]], ["11.46", ["11.47", 125]], ["11.51", ["11.55", 126]], ["11.56", ["11.56", 127]], ["11.61", ["11.61", 128]]],
                         "comment"           : "prices are less than desired size"
                 ],
                 [
                         "previousWindowPair": [["11.36", 123], ["11.39", 123], ["11.43", 124], ["11.47", 125], ["11.55", 126], ["11.56", 127], ["11.61", 128], ["11.70", 128], ["11.72", 129], ["11.78", 130], ["11.85", 131]],
-                        "desiredPair"       : [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128], ["11.66", 128], ["11.71", 129], ["11.76", 130], ["11.81", 131]],
+                        "desiredPair"       : [["11.36", ["11.36", 123]], ["11.41", ["11.43", 124]], ["11.46", ["11.47", 125]], ["11.51", ["11.55", 126]], ["11.56", ["11.56", 127]], ["11.61", ["11.61", 128]], ["11.66", ["11.70", 128]], ["11.71", ["11.72", 129]], ["11.76", ["11.78", 130]], ["11.81", ["11.85", 131]]],
                         "comment"           : "prices are greater than desired size"
                 ],
         ]
@@ -82,12 +99,21 @@ class SpreadWindowResolverTestSpec extends Specification {
     @Unroll
     def "Test resolve prices for spreadWindow when #comment"() {
         given:
-        Map<String, BigDecimal> previousWindow = (params.get("previousWindowPair") as List<List>)
-                .collectEntries() {
-                    [it.get(0), new BigDecimal(it.get(1) as Integer)]
+        List<TradePrice> previousWindow = (params.get("previousWindowPair") as List<List>)
+                .collect {
+                    new TradePrice(
+                            OrderPosition.ASK,
+                            new BigDecimal(it.get(0) as String),
+                            new BigDecimal(it.get(1) as Integer)
+                    )
                 }
-        def expectedPrices = (params.get("madeAskPrices") as List<String>)
-                .collect { new BigDecimal(it) }
+
+        def expectedPrices = (params.get("madeAskPrices") as List<List>)
+                .collect {
+                    def price = new BigDecimal(it.get(0) as String)
+                    def startVolume = it.get(1) as BigDecimal
+                    Pair.of(price, startVolume)
+                }
 
         BinaryOperator<BigDecimal> operatorOnPrice = BigDecimal.&add
         def startPrice = marketPrice.add(tradeCurrency.getPriceUnit())
@@ -105,7 +131,7 @@ class SpreadWindowResolverTestSpec extends Specification {
                 .build()
 
         when:
-        def resolvedPrices = sut.resolvePrices(request)
+        def resolvedPrices = sut.resolvePriceMinVolumePair(request)
 
         then:
         randomUtil.getRandomDecimal(_ as BigDecimal, _ as BigDecimal, _ as Integer) >> { BigDecimal min, BigDecimal max, int decimalPlaces ->
@@ -118,19 +144,19 @@ class SpreadWindowResolverTestSpec extends Specification {
                 [
                         "minVolumeStr"      : null,
                         "previousWindowPair": [],
-                        "madeAskPrices"     : ["11.39", "11.44", "11.49", "11.54", "11.59", "11.64", "11.69", "11.74"],
+                        "madeAskPrices"     : [["11.44", BigDecimal.ZERO], ["11.49", BigDecimal.ZERO], ["11.54", BigDecimal.ZERO], ["11.59", BigDecimal.ZERO], ["11.64", BigDecimal.ZERO], ["11.69", BigDecimal.ZERO], ["11.74", BigDecimal.ZERO], ["11.79", BigDecimal.ZERO]],
                         "comment"           : "previous window is empty and minVolume is not designated"
                 ],
                 [
                         "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [],
-                        "madeAskPrices"     : ["11.39", "11.44", "11.49", "11.54", "11.59", "11.64", "11.69", "11.74"],
+                        "madeAskPrices"     : [["11.44", BigDecimal.ZERO], ["11.49", BigDecimal.ZERO], ["11.54", BigDecimal.ZERO], ["11.59", BigDecimal.ZERO], ["11.64", BigDecimal.ZERO], ["11.69", BigDecimal.ZERO], ["11.74", BigDecimal.ZERO], ["11.79", BigDecimal.ZERO]],
                         "comment"           : "previous window is empty"
                 ],
                 [
                         "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128]],
-                        "madeAskPrices"     : ["11.69", "11.74"],
+                        "madeAskPrices"     : [["11.69", BigDecimal.ZERO], ["11.74", BigDecimal.ZERO], ["11.79", BigDecimal.ZERO]],
                         "comment"           : "previous window is less than desired size"
                 ],
                 [
@@ -138,13 +164,20 @@ class SpreadWindowResolverTestSpec extends Specification {
                         "previousWindowPair": [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128], ["11.66", 128], ["11.71", 129], ["11.76", 130], ["11.81", 131]],
                         "madeAskPrices"     : [],
                         "comment"           : "previous window is greater than desired size"
+                ],
+                [
+                        "minVolumeStr"      : "99.9999",
+                        "previousWindowPair": [["11.36", 50], ["11.42", 50], ["11.45", 60], ["11.46", 124], ["11.51", 126], ["11.56", 127], ["11.61", 128], ["11.66", 128], ["11.71", 129], ["11.76", 130], ["11.81", 131]],
+                        "madeAskPrices"     : [["11.45", new BigDecimal("60")]],
+                        "comment"           : "previous window is greater than desired size but first 2 orders are requested less than min volume"
                 ]
         ]
         comment << [
                 "previous window is empty and minVolume is not designated",
                 "previous window is empty",
                 "previous window is less than desired size",
-                "previous window is greater than desired size"
+                "previous window is greater than desired size",
+                "previous window is greater than desired size but first 2 orders are requested less than min volume"
         ]
     }
 }

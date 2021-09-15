@@ -1,8 +1,9 @@
 package com.moebius.entropy.util;
 
+import com.moebius.entropy.domain.trade.TradePrice;
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.Map;
+import java.util.List;
 import java.util.function.BinaryOperator;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -29,6 +30,6 @@ public class SpreadWindowResolveRequest {
     private BigDecimal priceUnit;
 
     @Builder.Default
-    private Map<String, BigDecimal> previousWindow = Collections.emptyMap();
+    private List<TradePrice> previousWindow = Collections.emptyList();
 
 }
