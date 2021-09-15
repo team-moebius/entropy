@@ -93,18 +93,7 @@ public class HotbitAssembler {
         var map = objectMapper.convertValue(request, new TypeReference<Map<String, String>>() {
         });
         queryParams.setAll(map);
-        queryParams.add("sign", DigestUtils.md5Hex(getQueryString(secretKey, queryParams)).toUpperCase());
+        queryParams.add("sign", HotbitSignature.generate(secretKey, queryParams));
         return queryParams;
-    }
-
-    private String getQueryString(String secretKey, MultiValueMap<String, String> queryParams) {
-        var queryString = UriComponentsBuilder.newInstance()
-                .queryParams(queryParams)
-                .build().encode()
-                .getQuery();
-
-        var orderedQueryString = Arrays.stream(queryString.split("&")).sorted().collect(Collectors.joining("&"));
-
-        return String.format("%s&secret_key=%s", orderedQueryString, secretKey);
     }
 }
