@@ -1,7 +1,7 @@
 package com.moebius.entropy.service.exchange.hotbit;
 
 import com.moebius.entropy.assembler.hotbit.HotbitAssembler;
-import com.moebius.entropy.configuration.hotbit.HotbitConfiguration;
+import com.moebius.entropy.configuration.HotbitProperties;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.hotbit.*;
@@ -21,12 +21,12 @@ public class HotbitExchangeService implements ExchangeService<
         HotbitOrderRequestDto,
         HotbitOrderResponseDto, HotbitOpenOrderResponseDto> {
     private final WebClient webClient;
-    private final HotbitConfiguration hotbitConfiguration;
+    private final HotbitProperties hotbitProperties;
     private final HotbitAssembler hotbitAssembler;
 
     @Override
     public Flux<HotbitOpenOrderResponseDto> getOpenOrders(String symbol, ApiKey apiKey) {
-        var rest = hotbitConfiguration.getRest();
+        var rest = hotbitProperties.getRest();
         var request = HotbitOpenOrderRequestDto.builder()
                 .symbol(symbol)
                 .build();
@@ -43,7 +43,7 @@ public class HotbitExchangeService implements ExchangeService<
 
     @Override
     public Mono<HotbitCancelResponseDto> cancelOrder(HotbitCancelRequestDto cancelRequest, ApiKey apiKey) {
-        var rest = hotbitConfiguration.getRest();
+        var rest = hotbitProperties.getRest();
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.scheme(rest.getScheme())
                         .host(rest.getHost())
@@ -56,7 +56,7 @@ public class HotbitExchangeService implements ExchangeService<
 
     @Override
     public Mono<HotbitOrderResponseDto> requestOrder(HotbitOrderRequestDto orderRequest, ApiKey apiKey) {
-        var rest = hotbitConfiguration.getRest();
+        var rest = hotbitProperties.getRest();
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.scheme(rest.getScheme())
                         .host(rest.getHost())

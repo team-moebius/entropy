@@ -1,7 +1,7 @@
 package com.moebius.entropy.service.inflate.hotbit;
 
 import com.moebius.entropy.assembler.hotbit.HotbitAssembler;
-import com.moebius.entropy.configuration.hotbit.HotbitConfiguration;
+import com.moebius.entropy.configuration.HotbitProperties;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.repository.DisposableOrderRepository;
 import com.moebius.entropy.service.inflate.InflateService;
@@ -27,7 +27,7 @@ public class HotbitInflateService implements InflateService {
     private final HotbitAssembler assembler;
     private final TradeWindowChangeEventListener tradeWindowChangeEventListener;
     private final DisposableOrderRepository disposableOrderRepository;
-    private final HotbitConfiguration configuration;
+    private final HotbitProperties configuration;
 
     @Override
     public void inflateOrdersByOrderBook(String symbol) {
