@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
@@ -49,12 +48,12 @@ public class SpreadWindowResolver {
             .mapToObj(BigDecimal::valueOf)
             .map(multiplier -> Pair.of(multiplier, operationOnPrice
                 .apply(startPrice, stepPriceRange.multiply(multiplier))))
-            .filter(pricePair -> tradeFromExistWindow(existOrderPerWindow, pricePair.getValue())
-                .map(tradePrice -> shouldPopulateTradeWindow(tradePrice, minimumVolume))
-                .orElse(true)
-            )
-            .map(pricePair -> tradeFromExistWindow(existOrderPerWindow, pricePair.getValue())
-                .map(tradePrice -> Pair.of(tradePrice.getUnitPrice(), tradePrice.getVolume()))
+            .map(pricePair -> tradeFromExistWindow(existOrderPerWindow,
+                pricePair.getValue())
+                .map(tradePrice -> {
+                    BigDecimal volumeDeducted = minimumVolume.subtract(tradePrice.getVolume());
+                    return Pair.of(tradePrice.getUnitPrice(), volumeDeducted);
+                })
                 .orElseGet(() -> {
                     if (spreadWindow == 1) {
                         return Pair.of(pricePair.getValue(), BigDecimal.ZERO);
@@ -68,7 +67,8 @@ public class SpreadWindowResolver {
                             rangeEndPrice, scale);
                         return Pair.of(resolvedPrice, BigDecimal.ZERO);
                     }
-                }))
+                })
+            )
             .collect(Collectors.toList());
     }
 
@@ -81,13 +81,6 @@ public class SpreadWindowResolver {
         } else {
             return Optional.empty();
         }
-    }
-
-    private boolean shouldPopulateTradeWindow(TradePrice tradePrice, BigDecimal minVolume) {
-        if (Objects.isNull(tradePrice)) {
-            return true;
-        }
-        return tradePrice.getVolume().compareTo(minVolume) < 0;
     }
 
     protected Map<String, TradePrice> mergeIntoTradeWindow(

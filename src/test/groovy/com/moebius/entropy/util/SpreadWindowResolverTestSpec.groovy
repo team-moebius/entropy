@@ -156,19 +156,19 @@ class SpreadWindowResolverTestSpec extends Specification {
                 [
                         "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128]],
-                        "madeAskPrices"     : [["11.69", BigDecimal.ZERO], ["11.74", BigDecimal.ZERO], ["11.79", BigDecimal.ZERO]],
+                        "madeAskPrices"     : [["11.41", new BigDecimal("-2.40001E1")], ["11.46", new BigDecimal("-2.50001E1")], ["11.51", new BigDecimal("-2.60001E1")], ["11.56", new BigDecimal("-2.70001E1")], ["11.61", new BigDecimal("-2.80001E1")], ["11.69", BigDecimal.ZERO], ["11.74", BigDecimal.ZERO], ["11.79", BigDecimal.ZERO]],
                         "comment"           : "previous window is less than desired size"
                 ],
                 [
                         "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [["11.36", 246], ["11.41", 124], ["11.46", 125], ["11.51", 126], ["11.56", 127], ["11.61", 128], ["11.66", 128], ["11.71", 129], ["11.76", 130], ["11.81", 131]],
-                        "madeAskPrices"     : [],
+                        "madeAskPrices"     : [["11.41", new BigDecimal("-2.40001E1")], ["11.46", new BigDecimal("-2.50001E1")], ["11.51", new BigDecimal("-2.60001E1")], ["11.56", new BigDecimal("-2.70001E1")], ["11.61", new BigDecimal("-2.80001E1")], ["11.66", new BigDecimal("-2.80001E1")], ["11.71", new BigDecimal("-2.90001E1")], ["11.76", new BigDecimal("-3.00001E1")]],
                         "comment"           : "previous window is greater than desired size"
                 ],
                 [
                         "minVolumeStr"      : "99.9999",
                         "previousWindowPair": [["11.36", 50], ["11.42", 50], ["11.45", 60], ["11.46", 124], ["11.51", 126], ["11.56", 127], ["11.61", 128], ["11.66", 128], ["11.71", 129], ["11.76", 130], ["11.81", 131]],
-                        "madeAskPrices"     : [["11.45", new BigDecimal("60")]],
+                        "madeAskPrices"     : [["11.45", new BigDecimal("39.9999")], ["11.46", new BigDecimal("-2.40001E1")], ["11.51", new BigDecimal("-2.60001E1")], ["11.56", new BigDecimal("-2.70001E1")], ["11.61", new BigDecimal("-2.80001E1")], ["11.66", new BigDecimal("-2.80001E1")], ["11.71", new BigDecimal("-2.90001E1")], ["11.76", new BigDecimal("-3.00001E1")]],
                         "comment"           : "previous window is greater than desired size but first 2 orders are requested less than min volume"
                 ]
         ]
