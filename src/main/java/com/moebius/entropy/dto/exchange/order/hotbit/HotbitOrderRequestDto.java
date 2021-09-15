@@ -7,7 +7,7 @@ import lombok.With;
 
 @Value
 @Builder
-public class HotbitRequestOrderDto {
+public class HotbitOrderRequestDto {
     /**
      * User's API KEY
      */

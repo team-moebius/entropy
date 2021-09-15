@@ -6,8 +6,8 @@ import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitCancelRequestDto;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOrderDto;
-import com.moebius.entropy.dto.exchange.order.hotbit.HotbitRequestOrderDto;
-import com.moebius.entropy.dto.exchange.order.hotbit.HotbitRequestOrderResponseDto;
+import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOrderRequestDto;
+import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOrderResponseDto;
 import com.moebius.entropy.util.SymbolUtil;
 import org.springframework.stereotype.Component;
 
@@ -19,11 +19,11 @@ import static com.moebius.entropy.domain.order.OrderPosition.BID;
 
 @Component
 public class HotbitOrderExchangeAssembler implements OrderExchangeAssembler<HotbitCancelRequestDto,
-        HotbitRequestOrderDto, HotbitRequestOrderResponseDto, HotbitOrderDto> {
+        HotbitOrderRequestDto, HotbitOrderResponseDto, HotbitOrderDto> {
     @Override
-    public HotbitRequestOrderDto convertToOrderRequest(OrderRequest orderRequest) {
+    public HotbitOrderRequestDto convertToOrderRequest(OrderRequest orderRequest) {
         return Optional.ofNullable(orderRequest)
-                .map(request -> HotbitRequestOrderDto.builder()
+                .map(request -> HotbitOrderRequestDto.builder()
                         .symbol(request.getMarket().getSymbol())
                         .side(convertOrderPosition(request.getOrderPosition()))
                         .price(request.getPrice().doubleValue())
@@ -41,9 +41,9 @@ public class HotbitOrderExchangeAssembler implements OrderExchangeAssembler<Hotb
     }
 
     @Override
-    public Order convertToOrder(HotbitRequestOrderResponseDto orderResponse) {
+    public Order convertToOrder(HotbitOrderResponseDto orderResponse) {
         return Optional.ofNullable(orderResponse)
-                .map(HotbitRequestOrderResponseDto::getResult)
+                .map(HotbitOrderResponseDto::getResult)
                 .filter(Objects::nonNull)
                 .map(data -> new Order(
                         data.getId(),

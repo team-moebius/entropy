@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.moebius.entropy.domain.order.ApiKey
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitCancelRequestDto
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOpenOrderRequestDto
-import com.moebius.entropy.dto.exchange.order.hotbit.HotbitRequestOrderDto
+import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOrderRequestDto
 import spock.lang.Specification
 
 class HotbitAssemblerTest extends Specification {
@@ -47,7 +47,7 @@ class HotbitAssemblerTest extends Specification {
         given:
         def key = new ApiKey()
         key.setAccessKey("accessKey")
-        def requestOrderDto = HotbitRequestOrderDto.builder()
+        def requestOrderDto = HotbitOrderRequestDto.builder()
                 .symbol("symbol")
                 .side(1)
                 .amount(10.0)

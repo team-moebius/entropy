@@ -7,7 +7,7 @@ import lombok.*;
 @ToString
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class HotbitRequestOrderResponseDto {
+public class HotbitOrderResponseDto {
     String error;
     HotbitOrderDto result;
     String id;

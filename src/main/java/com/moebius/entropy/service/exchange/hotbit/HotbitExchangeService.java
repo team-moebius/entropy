@@ -18,8 +18,8 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class HotbitExchangeService implements ExchangeService<
         HotbitCancelRequestDto, HotbitCancelResponseDto,
-        HotbitRequestOrderDto,
-        HotbitRequestOrderResponseDto, HotbitOpenOrderResponseDto> {
+        HotbitOrderRequestDto,
+        HotbitOrderResponseDto, HotbitOpenOrderResponseDto> {
     private final WebClient webClient;
     private final HotbitConfiguration hotbitConfiguration;
     private final HotbitAssembler hotbitAssembler;
@@ -55,7 +55,7 @@ public class HotbitExchangeService implements ExchangeService<
     }
 
     @Override
-    public Mono<HotbitRequestOrderResponseDto> requestOrder(HotbitRequestOrderDto orderRequest, ApiKey apiKey) {
+    public Mono<HotbitOrderResponseDto> requestOrder(HotbitOrderRequestDto orderRequest, ApiKey apiKey) {
         var rest = hotbitConfiguration.getRest();
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder.scheme(rest.getScheme())
@@ -64,7 +64,7 @@ public class HotbitExchangeService implements ExchangeService<
                         .queryParams(hotbitAssembler.assembleRequestOrderQueryParams(apiKey, orderRequest))
                         .build()
                 )
-                .retrieve().bodyToMono(HotbitRequestOrderResponseDto.class);
+                .retrieve().bodyToMono(HotbitOrderResponseDto.class);
 
     }
 

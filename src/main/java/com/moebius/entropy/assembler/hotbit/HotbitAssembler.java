@@ -7,7 +7,7 @@ import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitCancelRequestDto;
 import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOpenOrderRequestDto;
-import com.moebius.entropy.dto.exchange.order.hotbit.HotbitRequestOrderDto;
+import com.moebius.entropy.dto.exchange.order.hotbit.HotbitOrderRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookRequestDto;
 import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookResponseDto;
 import com.moebius.entropy.dto.exchange.orderbook.hotbit.HotbitOrderBookSubscribeResponseDto;
@@ -43,7 +43,7 @@ public class HotbitAssembler {
         return getQueryParamsMap(apikey.getSecretKey(), cancelRequest.withAccessKey(apikey.getAccessKey()));
     }
 
-    public MultiValueMap<String, String> assembleRequestOrderQueryParams(ApiKey apikey, HotbitRequestOrderDto orderRequest) {
+    public MultiValueMap<String, String> assembleRequestOrderQueryParams(ApiKey apikey, HotbitOrderRequestDto orderRequest) {
         return getQueryParamsMap(apikey.getSecretKey(), orderRequest.withAccessKey(apikey.getAccessKey()));
     }
 
