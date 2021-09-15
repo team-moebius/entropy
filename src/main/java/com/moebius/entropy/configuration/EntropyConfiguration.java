@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Configuration
-@EnableConfigurationProperties
+@EnableConfigurationProperties(HotbitProperties.class)
 @ConfigurationProperties(prefix = "entropy")
 public class EntropyConfiguration {
 	private Map<String, List<String>> symbols;
