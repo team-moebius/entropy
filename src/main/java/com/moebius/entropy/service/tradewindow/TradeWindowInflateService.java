@@ -7,6 +7,7 @@ import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.trade.TradePrice;
+import com.moebius.entropy.dto.util.PriceAndVolume;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
@@ -20,7 +21,6 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -48,7 +48,7 @@ public class TradeWindowInflateService {
             .flatMapMany(tradeWindow -> {
                 List<TradePrice> askWindow = tradeWindow.getAskPrices();
 
-                List<Pair<BigDecimal, BigDecimal>> newAskInflation = resolveSpreadWindow(market,
+                List<PriceAndVolume> newAskInflation = resolveSpreadWindow(market,
                     OrderPosition.ASK, inflationConfig, askWindow);
 
                 Flux<Order> askRequestOrderFlux = requestRequiredOrders(
@@ -57,7 +57,7 @@ public class TradeWindowInflateService {
 
                 List<TradePrice> bidWindow = tradeWindow.getBidPrices();
 
-                List<Pair<BigDecimal, BigDecimal>> newBidInflation = resolveSpreadWindow(market,
+                List<PriceAndVolume> newBidInflation = resolveSpreadWindow(market,
                     OrderPosition.BID, inflationConfig, bidWindow);
 
                 Flux<Order> bidRequestOrderFlux = requestRequiredOrders(
@@ -75,7 +75,7 @@ public class TradeWindowInflateService {
                     throwable));
     }
 
-    private List<Pair<BigDecimal, BigDecimal>> resolveSpreadWindow(
+    private List<PriceAndVolume> resolveSpreadWindow(
         Market market, OrderPosition orderPosition,
         InflationConfig inflationConfig, List<TradePrice> tradeWindow
     ) {
@@ -116,15 +116,15 @@ public class TradeWindowInflateService {
 
     private Flux<Order> requestRequiredOrders(
         Market market, OrderPosition orderPosition,
-        List<Pair<BigDecimal, BigDecimal>> resolvedInflation
+        List<PriceAndVolume> resolvedInflation
     ) {
         OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
         return Flux.fromIterable(resolvedInflation)
-            .filter(priceVolumePair -> priceVolumePair.getValue().compareTo(BigDecimal.ZERO) >= 0)
+            .filter(priceAndVolume -> priceAndVolume.getVolume().compareTo(BigDecimal.ZERO) >= 0)
             .map(priceVolumePair -> {
-                BigDecimal price = priceVolumePair.getKey();
-                BigDecimal deductiveVolume = priceVolumePair.getValue();
+                BigDecimal price = priceVolumePair.getPrice();
+                BigDecimal deductiveVolume = priceVolumePair.getVolume();
 
                 BigDecimal randomVolume = volumeResolver.getInflationVolume(market,
                     orderPosition);
@@ -141,15 +141,15 @@ public class TradeWindowInflateService {
     }
 
     private Flux<Order> cancelInvalidOrders(Market market,
-        List<Pair<BigDecimal, BigDecimal>> newAskInflation,
-        List<Pair<BigDecimal, BigDecimal>> newBidInflation
+        List<PriceAndVolume> newAskInflation,
+        List<PriceAndVolume> newBidInflation
     ) {
         Set<String> validAskPrices = newAskInflation.stream()
-            .map(Pair::getKey)
+            .map(PriceAndVolume::getPrice)
             .map(BigDecimal::toPlainString)
             .collect(Collectors.toSet());
         Set<String> validBidPrices = newBidInflation.stream()
-            .map(Pair::getKey)
+            .map(PriceAndVolume::getPrice)
             .map(BigDecimal::toPlainString)
             .collect(Collectors.toSet());
 

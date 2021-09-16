@@ -5,7 +5,7 @@ import com.moebius.entropy.domain.Market
 import com.moebius.entropy.domain.order.OrderPosition
 import com.moebius.entropy.domain.trade.TradeCurrency
 import com.moebius.entropy.domain.trade.TradePrice
-import org.apache.commons.lang3.tuple.Pair
+import com.moebius.entropy.dto.util.PriceAndVolume
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Subject
@@ -112,7 +112,7 @@ class SpreadWindowResolverTestSpec extends Specification {
                 .collect {
                     def price = new BigDecimal(it.get(0) as String)
                     def startVolume = it.get(1) as BigDecimal
-                    Pair.of(price, startVolume)
+                    PriceAndVolume.of(price, startVolume)
                 }
 
         BinaryOperator<BigDecimal> operatorOnPrice = BigDecimal.&add

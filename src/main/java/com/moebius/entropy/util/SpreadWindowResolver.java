@@ -1,6 +1,7 @@
 package com.moebius.entropy.util;
 
 import com.moebius.entropy.domain.trade.TradePrice;
+import com.moebius.entropy.dto.util.PriceAndVolume;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Collections;
@@ -27,7 +28,7 @@ public class SpreadWindowResolver {
         return Collections.emptyList();
     }
 
-    public List<Pair<BigDecimal, BigDecimal>> resolvePriceMinVolumePair(
+    public List<PriceAndVolume> resolvePriceMinVolumePair(
         SpreadWindowResolveRequest request) {
         int count = request.getCount();
         BigDecimal minimumVolume = request.getMinimumVolume();
@@ -52,11 +53,11 @@ public class SpreadWindowResolver {
                 pricePair.getValue())
                 .map(tradePrice -> {
                     BigDecimal volumeDeducted = minimumVolume.subtract(tradePrice.getVolume());
-                    return Pair.of(tradePrice.getUnitPrice(), volumeDeducted);
+                    return PriceAndVolume.of(tradePrice.getUnitPrice(), volumeDeducted);
                 })
                 .orElseGet(() -> {
                     if (spreadWindow == 1) {
-                        return Pair.of(pricePair.getValue(), BigDecimal.ZERO);
+                        return PriceAndVolume.of(pricePair.getValue(), BigDecimal.ZERO);
                     } else {
                         BigDecimal startMultiplier = pricePair.getKey();
                         BigDecimal endMultiplier = startMultiplier.add(BigDecimal.ONE);
@@ -65,7 +66,7 @@ public class SpreadWindowResolver {
                             stepPriceRange.multiply(endMultiplier));
                         BigDecimal resolvedPrice = randomUtils.getRandomDecimal(rangeStartPrice,
                             rangeEndPrice, scale);
-                        return Pair.of(resolvedPrice, BigDecimal.ZERO);
+                        return PriceAndVolume.of(resolvedPrice, BigDecimal.ZERO);
                     }
                 })
             )
