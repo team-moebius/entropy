@@ -90,6 +90,7 @@ public class SpreadWindowResolver {
     ) {
         BigDecimal stepPriceRange = priceUnit.multiply(BigDecimal.valueOf(spreadWindow));
         return prices.stream()
+            .filter(tradePrice -> tradePrice.getVolume().compareTo(BigDecimal.ZERO) != 0)
             .collect(Collectors.groupingBy(tradePrice -> {
                 //when marketPrice is 11.35 and spreadWindow is 5
                 /*

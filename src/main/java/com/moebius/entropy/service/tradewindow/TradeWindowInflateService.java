@@ -7,7 +7,6 @@ import com.moebius.entropy.domain.order.Order;
 import com.moebius.entropy.domain.order.OrderPosition;
 import com.moebius.entropy.domain.order.OrderRequest;
 import com.moebius.entropy.domain.trade.TradePrice;
-import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
@@ -15,12 +14,13 @@ import com.moebius.entropy.util.SpreadWindowResolveRequest;
 import com.moebius.entropy.util.SpreadWindowResolver;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
@@ -46,46 +46,91 @@ public class TradeWindowInflateService {
 
         return tradeWindowQueryService.getTradeWindowMono(market)
             .flatMapMany(tradeWindow -> {
-                Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow,
-                    inflationConfig);
-                Flux<Order> cancelOrderFlux = cancelInvalidOrders(market, inflationConfig);
+                List<TradePrice> askWindow = tradeWindow.getAskPrices();
 
-                return Flux.merge(requestOrderFlux, cancelOrderFlux);
+                List<Pair<BigDecimal, BigDecimal>> newAskInflation = resolveSpreadWindow(market,
+                    OrderPosition.ASK, inflationConfig, askWindow);
+
+                Flux<Order> askRequestOrderFlux = requestRequiredOrders(
+                    market, OrderPosition.ASK, newAskInflation
+                );
+
+                List<TradePrice> bidWindow = tradeWindow.getBidPrices();
+
+                List<Pair<BigDecimal, BigDecimal>> newBidInflation = resolveSpreadWindow(market,
+                    OrderPosition.BID, inflationConfig, bidWindow);
+
+                Flux<Order> bidRequestOrderFlux = requestRequiredOrders(
+                    market, OrderPosition.BID, newBidInflation
+                );
+
+                Flux<Order> cancelOrderFlux = cancelInvalidOrders(
+                    market, newAskInflation, newBidInflation
+                );
+
+                return Flux.merge(cancelOrderFlux, askRequestOrderFlux, bidRequestOrderFlux);
             })
             .onErrorContinue(
                 (throwable, o) -> log.warn("[TradeWindowInflation] Failed to collect order result.",
                     throwable));
     }
 
-    private Flux<Order> requestRequiredOrders(Market market, TradeWindow window,
-        InflationConfig inflationConfig) {
+    private List<Pair<BigDecimal, BigDecimal>> resolveSpreadWindow(
+        Market market, OrderPosition orderPosition,
+        InflationConfig inflationConfig, List<TradePrice> tradeWindow
+    ) {
+        BigDecimal priceUnit = market
+            .getTradeCurrency()
+            .getPriceUnit();
         BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
-        BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
+
+        BigDecimal minimumVolume;
+        BigDecimal startPrice;
+        BinaryOperator<BigDecimal> operationOnPrice;
+        int count;
         int spreadWindow = inflationConfig.getSpreadWindow();
+        if (OrderPosition.ASK.equals(orderPosition)) {
+            count = inflationConfig.getAskCount();
+            minimumVolume = inflationConfig.getAskMinVolume();
+            operationOnPrice = BigDecimal::add;
+            startPrice = marketPrice.add(priceUnit);
+        } else {
+            count = inflationConfig.getBidCount();
+            minimumVolume = inflationConfig.getBidMinVolume();
+            operationOnPrice = BigDecimal::subtract;
+            startPrice = marketPrice.subtract(priceUnit);
+        }
 
-        BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
+        SpreadWindowResolveRequest request = SpreadWindowResolveRequest.builder()
+            .count(count)
+            .minimumVolume(minimumVolume)
+            .startPrice(startPrice)
+            .operationOnPrice(operationOnPrice)
+            .spreadWindow(spreadWindow)
+            .priceUnit(priceUnit)
+            .previousWindow(tradeWindow)
+            .build();
 
-        Map<BigDecimal, BigDecimal> bidPriceVolumeMap = window.getBidPrices().stream()
-            .collect(Collectors.toMap(TradePrice::getUnitPrice, TradePrice::getVolume));
+        return spreadWindowResolver.resolvePriceMinVolumePair(request);
+    }
 
-        Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
-            inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market, bidStartPrice,
-            OrderPosition.BID, BigDecimal::subtract, spreadWindow,
-            bidPriceVolumeMap);
-
-        BigDecimal askStartPrice = marketPrice.add(priceUnit);
-
-        Map<BigDecimal, BigDecimal> askPriceVolumeMap = window.getAskPrices().stream()
-            .collect(Collectors.toMap(TradePrice::getUnitPrice, TradePrice::getVolume));
-
-        Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
-            inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market, askStartPrice,
-            OrderPosition.ASK, BigDecimal::add, spreadWindow,
-            askPriceVolumeMap);
-
+    private Flux<Order> requestRequiredOrders(
+        Market market, OrderPosition orderPosition,
+        List<Pair<BigDecimal, BigDecimal>> resolvedInflation
+    ) {
         OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
-        return Flux.merge(bidRequestFlux, askRequestFlux)
+        return Flux.fromIterable(resolvedInflation)
+            .filter(priceVolumePair -> priceVolumePair.getValue().compareTo(BigDecimal.ZERO) >= 0)
+            .map(priceVolumePair -> {
+                BigDecimal price = priceVolumePair.getKey();
+                BigDecimal deductiveVolume = priceVolumePair.getValue();
+
+                BigDecimal randomVolume = volumeResolver.getInflationVolume(market,
+                    orderPosition);
+                BigDecimal inflationVolume = randomVolume.subtract(deductiveVolume);
+                return new OrderRequest(market, orderPosition, price, inflationVolume);
+            })
             .doOnNext(
                 orderRequest -> log.info("[TradeWindowInflation] Create order for inflation. [{}]",
                     orderRequest))
@@ -95,62 +140,29 @@ public class TradeWindowInflateService {
                     throwable));
     }
 
-    private Flux<OrderRequest> makeOrderRequestWith(
-        int count, BigDecimal minimumVolume, Market market, BigDecimal startPrice,
-        OrderPosition orderPosition, BinaryOperator<BigDecimal> operationOnPrice, int spreadWindow,
-        Map<BigDecimal, BigDecimal> volumesBySpreadWindow
+    private Flux<Order> cancelInvalidOrders(Market market,
+        List<Pair<BigDecimal, BigDecimal>> newAskInflation,
+        List<Pair<BigDecimal, BigDecimal>> newBidInflation
     ) {
-        BigDecimal priceUnit = market
-            .getTradeCurrency()
-            .getPriceUnit();
-
-        SpreadWindowResolveRequest request = SpreadWindowResolveRequest.builder()
-            .count(count)
-            .minimumVolume(minimumVolume)
-            .startPrice(startPrice)
-            .operationOnPrice(operationOnPrice)
-            .spreadWindow(spreadWindow)
-            .priceUnit(priceUnit)
-//            .previousWindow(volumesBySpreadWindow)
-            .build();
-
-        List<BigDecimal> resolvedPriceWindow = spreadWindowResolver.resolvePrices(request);
-
-        return Flux.fromIterable(resolvedPriceWindow)
-            .map(price -> {
-                BigDecimal inflationVolume = volumeResolver.getInflationVolume(market,
-                    orderPosition);
-                return new OrderRequest(market, orderPosition, price, inflationVolume);
-            });
-    }
-
-
-    private Flux<Order> cancelInvalidOrders(Market market, InflationConfig inflationConfig) {
-        BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
-        BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
-
-        int spreadWindow = inflationConfig.getSpreadWindow();
-        BigDecimal priceRangeForSteps = priceUnit.multiply(BigDecimal.valueOf(spreadWindow));
-
-        BigDecimal askStartPrice = marketPrice.add(priceUnit);
-        BigDecimal maxAskPrice = askStartPrice.add(
-            priceRangeForSteps.multiply(BigDecimal.valueOf(inflationConfig.getAskCount()))
-        );
-
-        BigDecimal bidStartPrice = marketPrice.subtract(priceUnit);
-        BigDecimal minBidPrice = bidStartPrice.subtract(
-            priceRangeForSteps.multiply(BigDecimal.valueOf(inflationConfig.getBidCount()))
-        );
+        Set<String> validAskPrices = newAskInflation.stream()
+            .map(Pair::getKey)
+            .map(BigDecimal::toPlainString)
+            .collect(Collectors.toSet());
+        Set<String> validBidPrices = newBidInflation.stream()
+            .map(Pair::getKey)
+            .map(BigDecimal::toPlainString)
+            .collect(Collectors.toSet());
 
         OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
         return orderService.fetchAllOrdersFor(market)
             .filter(order -> {
                 BigDecimal orderPrice = order.getPrice();
+                String priceKey = orderPrice.toPlainString();
                 if (OrderPosition.ASK.equals(order.getOrderPosition())) {
-                    return orderPrice.compareTo(maxAskPrice) > 0;
+                    return !validAskPrices.contains(priceKey);
                 } else {
-                    return orderPrice.compareTo(minBidPrice) < 0;
+                    return !validBidPrices.contains(priceKey);
                 }
             })
             .doOnNext(
