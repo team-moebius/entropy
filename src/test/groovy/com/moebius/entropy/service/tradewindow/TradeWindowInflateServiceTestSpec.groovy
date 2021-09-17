@@ -69,6 +69,8 @@ class TradeWindowInflateServiceTestSpec extends Specification {
                 .askMinVolume(askInflationVolume)
                 .market(market)
                 .spreadWindow(spreadWindow)
+                .bidShift(1)
+                .askShift(1)
                 .enable(true)
                 .build()
 

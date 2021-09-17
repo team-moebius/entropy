@@ -27,6 +27,9 @@ public class SpreadWindowResolveRequest {
 
     private int spreadWindow;
 
+    @Builder.Default
+    private int shiftCount = 1;
+
     private BigDecimal priceUnit;
 
     @Builder.Default

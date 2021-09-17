@@ -81,9 +81,7 @@ public class DividedDummyOrderService {
 	private List<DummyOrderRequest> getDummyOrderRequests(DividedDummyOrderDto dto) {
 		MarketDto marketDto = dto.getMarket();
 
-		InflationConfig inflationConfig = dto.getInflationConfig();
 		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(marketDto.toDomainEntity());
-		BigDecimal priceUnit = marketDto.getTradeCurrency().getPriceUnit();
 
 		List<DummyOrderRequest> dummyOrderRequests = Stream.concat(
 			resolveOrderRequestStream(marketPrice, BigDecimal::add, dto, OrderPosition.ASK),
@@ -99,16 +97,18 @@ public class DividedDummyOrderService {
 		DividedDummyOrderDto dto, OrderPosition position
 	) {
 		BigDecimal startPrice;
-		int count;
+		int count, shiftCount;
 		InflationConfig inflationConfig = dto.getInflationConfig();
 		BigDecimal priceUnit = inflationConfig.getMarket().getTradeCurrency().getPriceUnit();
 
 		if (OrderPosition.BID.equals(position)) {
 			startPrice = operationOnPrice.apply(marketPrice, priceUnit);
 			count = inflationConfig.getBidCount();
+			shiftCount = inflationConfig.getBidShift();
 		} else {
 			startPrice = marketPrice;
 			count = inflationConfig.getAskCount();
+			shiftCount = inflationConfig.getAskShift();
 		}
 
 		SpreadWindowResolveRequest request = SpreadWindowResolveRequest.builder()
@@ -117,6 +117,7 @@ public class DividedDummyOrderService {
 			.operationOnPrice(operationOnPrice)
 			.spreadWindow(inflationConfig.getSpreadWindow())
 			.priceUnit(priceUnit)
+			.shiftCount(shiftCount)
 			.build();
 
 		return spreadWindowResolver.resolvePrices(request)

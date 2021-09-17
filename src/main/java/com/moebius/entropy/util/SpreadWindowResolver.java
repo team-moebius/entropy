@@ -4,7 +4,6 @@ import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.dto.util.PriceAndVolume;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -23,13 +22,17 @@ public class SpreadWindowResolver {
 
     private final EntropyRandomUtils randomUtils;
 
-    //TODO: Delete
     public List<BigDecimal> resolvePrices(SpreadWindowResolveRequest request) {
-        return Collections.emptyList();
+        return resolvePriceMinVolumePair(request)
+            .stream()
+            .map(PriceAndVolume::getPrice)
+            .filter(price -> price.compareTo(BigDecimal.ZERO) >= 0)
+            .collect(Collectors.toList());
     }
 
     public List<PriceAndVolume> resolvePriceMinVolumePair(
         SpreadWindowResolveRequest request) {
+        int shiftCount = request.getShiftCount();
         int count = request.getCount();
         BigDecimal minimumVolume = request.getMinimumVolume();
         BigDecimal startPrice = request.getStartPrice();
@@ -45,7 +48,7 @@ public class SpreadWindowResolver {
             .multiply(BigDecimal.valueOf(spreadWindow));
 
         int scale = priceUnit.scale();
-        return IntStream.range(1, count + 1)
+        return IntStream.range(shiftCount, count + shiftCount)
             .mapToObj(BigDecimal::valueOf)
             .map(multiplier -> Pair.of(multiplier, operationOnPrice
                 .apply(startPrice, stepPriceRange.multiply(multiplier))))

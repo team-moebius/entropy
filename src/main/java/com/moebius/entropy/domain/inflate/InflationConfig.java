@@ -25,6 +25,10 @@ public class InflationConfig {
     private final boolean enable = false;
     @Builder.Default
     private final int spreadWindow = 1;
+    @Builder.Default
+    private final int bidShift = 2;
+    @Builder.Default
+    private final int askShift = 1;
 
     public InflationConfig disable() {
         return InflationConfig.builder()

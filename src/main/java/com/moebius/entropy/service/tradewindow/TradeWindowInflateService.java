@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
@@ -70,6 +71,7 @@ public class TradeWindowInflateService {
 
                 return Flux.merge(cancelOrderFlux, askRequestOrderFlux, bidRequestOrderFlux);
             })
+            .subscribeOn(Schedulers.boundedElastic())
             .onErrorContinue(
                 (throwable, o) -> log.warn("[TradeWindowInflation] Failed to collect order result.",
                     throwable));
@@ -89,16 +91,19 @@ public class TradeWindowInflateService {
         BinaryOperator<BigDecimal> operationOnPrice;
         int count;
         int spreadWindow = inflationConfig.getSpreadWindow();
+        int shiftCount;
         if (OrderPosition.ASK.equals(orderPosition)) {
             count = inflationConfig.getAskCount();
             minimumVolume = inflationConfig.getAskMinVolume();
             operationOnPrice = BigDecimal::add;
             startPrice = marketPrice.add(priceUnit);
+            shiftCount = inflationConfig.getAskShift();
         } else {
             count = inflationConfig.getBidCount();
             minimumVolume = inflationConfig.getBidMinVolume();
             operationOnPrice = BigDecimal::subtract;
             startPrice = marketPrice.subtract(priceUnit);
+            shiftCount = inflationConfig.getBidShift();
         }
 
         SpreadWindowResolveRequest request = SpreadWindowResolveRequest.builder()
@@ -109,6 +114,7 @@ public class TradeWindowInflateService {
             .spreadWindow(spreadWindow)
             .priceUnit(priceUnit)
             .previousWindow(tradeWindow)
+            .shiftCount(shiftCount)
             .build();
 
         return spreadWindowResolver.resolvePriceMinVolumePair(request);
