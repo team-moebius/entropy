@@ -65,6 +65,7 @@ entropy:
       - MOIUSDT
     bigone:
       - OAUSDT
+      - KLAYGUSDT
   apiKeys:
     boboo:
       gtax2usdt:
