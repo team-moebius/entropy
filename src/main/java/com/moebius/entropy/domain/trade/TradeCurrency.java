@@ -8,7 +8,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum TradeCurrency {
     USDT(new BigDecimal("0.01")),
-    DETAILED_USDT(new BigDecimal("0.0001")),
+    THIRD_DECIMAL_USDT(new BigDecimal("0.001")),
+    FOURTH_DECIMAL_USDT(new BigDecimal("0.0001")),
     KRW(BigDecimal.ONE);
 
     private final BigDecimal priceUnit;
