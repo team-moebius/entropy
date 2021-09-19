@@ -12,8 +12,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repo
+      - name: Check out repository
         uses: actions/checkout@v2
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
 
       - name: Cache Docker layers
         uses: actions/cache@v2
@@ -43,6 +48,6 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/entropy:latest
+          tags: ${{ secrets.DOCKER_HUB_USERNAME }}/entropy:${{ steps.extract_branch.outputs.branch }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
