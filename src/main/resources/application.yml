@@ -65,7 +65,6 @@ entropy:
       - MOIUSDT
     bigone:
       - OAUSDT
-      - KLAYGUSDT
   apiKeys:
     boboo:
       gtax2usdt:
@@ -78,6 +77,3 @@ entropy:
       oausdt:
         accessKey: fad1a6eb-f6b0-11eb-87a8-3632f06506f2
         secretKey: 7392C9364FBE3B6869C55061E76FF37375BCFB55825245F7D144EBF0D30F034D
-      klaygusdt:
-        accessKey: fcab5ca8-18f8-11ec-9637-7a1d50170327
-        secretKey: FEB66709849F54C5200DF24FCB149E6C5EA4F65B01A2DD1D8A86B4F8AF9B454F
