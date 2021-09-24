@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InflationConfig {
@@ -31,6 +31,18 @@ public class InflationConfig {
             .bidMinVolume(bidMinVolume)
             .bidMaxVolume(bidMaxVolume)
             .enable(false)
+            .build();
+    }
+
+    public InflationConfig enable() {
+        return InflationConfig.builder()
+            .askCount(askCount)
+            .bidCount(bidCount)
+            .askMinVolume(askMinVolume)
+            .askMaxVolume(askMaxVolume)
+            .bidMinVolume(bidMinVolume)
+            .bidMaxVolume(bidMaxVolume)
+            .enable(true)
             .build();
     }
 }

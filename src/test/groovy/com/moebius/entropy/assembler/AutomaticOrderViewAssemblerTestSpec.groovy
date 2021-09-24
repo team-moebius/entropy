@@ -22,7 +22,7 @@ class AutomaticOrderViewAssemblerTestSpec extends Specification {
         form.getBuyVolumeRangeTo() >> BigDecimal.valueOf(78.91)
 
         when:
-        def inflationConfig = sut.assembleInflationConfig(form)
+        def inflationConfig = sut.assembleInitialInflationConfig(form)
 
         then:
         inflationConfig.askCount == form.getSellInflationCount().toInteger()

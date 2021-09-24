@@ -22,21 +22,19 @@ import java.time.Duration;
 public class OptimizeOrderService {
 	private final static long DEFAULT_DELAY = 300L;
 	private final OrderServiceFactory orderServiceFactory;
-	private final TradeWindowQueryService tradeWindowQueryService;
 	private final TradeWindowVolumeResolver volumeResolver;
 
 	public Flux<Order> optimizeOrders(Market market) {
-		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
-		BigDecimal highestBidPrice = marketPrice.subtract(market.getTradeCurrency().getPriceUnit());
 		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
 		return orderService.fetchAllOrdersFor(market)
 			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(orderService::cancelOrder)
 			.doOnNext(order -> log.info("[OptimizeOrder] Succeeded to cancel existent order. [{}]", order))
-			.filter(order -> order.getPrice().compareTo(marketPrice) == 0 || order.getPrice().compareTo(highestBidPrice) == 0)
+			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.flatMap(order -> orderService.requestOrder(new OrderRequest(market, order.getOrderPosition(), order.getPrice(),
 				volumeResolver.getInflationVolume(market, order.getOrderPosition()))))
+			.doOnNext(order -> log.info("[OptimizeOrder] Succeeded to request order again. [{}]", order))
 			.onErrorContinue((throwable, o) -> log.warn("[OptimizeOrder] Failed to optimize order. [{}]",
 				((WebClientResponseException) throwable).getResponseBodyAsString(), throwable));
 	}
