@@ -16,18 +16,14 @@ import com.moebius.entropy.service.order.OrderServiceFactory;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.service.tradewindow.TradeWindowVolumeResolver;
 import com.moebius.entropy.util.EntropyRandomUtils;
-import com.moebius.entropy.util.SpreadWindowResolveRequest;
-import com.moebius.entropy.util.SpreadWindowResolver;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.Range;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -48,7 +44,6 @@ public class DividedDummyOrderService {
 	private final TradeWindowVolumeResolver volumeResolver;
 	private final DisposableOrderRepository disposableOrderRepository;
 	private final EntropyRandomUtils randomUtils;
-	private final SpreadWindowResolver spreadWindowResolver;
 
 	public Mono<ResponseEntity<?>> executeDividedDummyOrders(DividedDummyOrderDto dividedDummyOrderDto) {
 		if (dividedDummyOrderDto == null) {
@@ -67,65 +62,73 @@ public class DividedDummyOrderService {
 			.flatMap(this::requestAndCancelDummyOrder)
 			.subscribe();
 
-		String disposableId = marketDto.getExchange() + "-" + marketDto.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
+		String disposableId =
+			marketDto.getExchange() + "-" + marketDto.getSymbol() + "-" + DISPOSABLE_ID_POSTFIX;
 		disposableOrderRepository.set(disposableId, disposable);
 		return Mono.just(ResponseEntity.ok(disposableId));
 	}
 
 	private Flux<DummyOrderRequest> getDummyOrderRequestsRepeatFlux(DividedDummyOrderDto dto) {
-		return Flux.defer(() -> Flux.fromIterable(getDummyOrderRequests(dto))
-			.delayElements(Duration.ofMillis(DEFAULT_DELAY)))
+		InflationConfig inflationConfig = dto.getInflationConfig();
+		Market market = inflationConfig.getMarket();
+
+		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(market);
+
+		Range<BigDecimal> askPriceRange = resolvePriceRange(marketPrice, dto, OrderPosition.ASK);
+		Range<BigDecimal> bidPriceRange = resolvePriceRange(marketPrice, dto, OrderPosition.BID);
+
+		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
+		return orderService.fetchAllOrdersFor(market)
+			.filter(order -> this.priceInRange(order, askPriceRange, bidPriceRange))
+			.map(order -> getDummyOrderRequest(dto, order.getOrderPosition(), order.getPrice()))
+			.delayElements(Duration.ofMillis(DEFAULT_DELAY))
 			.repeat();
 	}
 
-	private List<DummyOrderRequest> getDummyOrderRequests(DividedDummyOrderDto dto) {
-		MarketDto marketDto = dto.getMarket();
-
-		BigDecimal marketPrice = tradeWindowQueryService.getMarketPrice(marketDto.toDomainEntity());
-
-		List<DummyOrderRequest> dummyOrderRequests = Stream.concat(
-			resolveOrderRequestStream(marketPrice, BigDecimal::add, dto, OrderPosition.ASK),
-			resolveOrderRequestStream(marketPrice, BigDecimal::subtract, dto, OrderPosition.BID)
-		).collect(Collectors.toList());
-
-		Collections.shuffle(dummyOrderRequests);
-
-		return dummyOrderRequests;
-	}
-	private Stream<DummyOrderRequest> resolveOrderRequestStream(
-		BigDecimal marketPrice, BinaryOperator<BigDecimal> operationOnPrice,
-		DividedDummyOrderDto dto, OrderPosition position
+	private Range<BigDecimal> resolvePriceRange(
+		BigDecimal marketPrice, DividedDummyOrderDto dto, OrderPosition orderPosition
 	) {
-		BigDecimal startPrice;
-		int count, shiftCount;
-		InflationConfig inflationConfig = dto.getInflationConfig();
-		BigDecimal priceUnit = inflationConfig.getMarket().getTradeCurrency().getPriceUnit();
 
-		if (OrderPosition.BID.equals(position)) {
-			startPrice = operationOnPrice.apply(marketPrice, priceUnit);
-			count = inflationConfig.getBidCount();
-			shiftCount = inflationConfig.getBidShift();
+		InflationConfig inflationConfig = dto.getInflationConfig();
+		BigDecimal from, to;
+		Market market = inflationConfig.getMarket();
+		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
+
+		BigDecimal stepPriceRange = priceUnit.multiply(
+			BigDecimal.valueOf(inflationConfig.getSpreadWindow())
+		);
+
+		if (OrderPosition.ASK.equals(orderPosition)) {
+			BigDecimal askFromMultiplier = BigDecimal.valueOf(inflationConfig.getAskShift());
+			BigDecimal askToMultiplier = BigDecimal.valueOf(inflationConfig.getAskCount())
+				.add(askFromMultiplier);
+			from = marketPrice.add(stepPriceRange.multiply(askFromMultiplier));
+			to = marketPrice.add(stepPriceRange.multiply(askToMultiplier));
 		} else {
-			startPrice = marketPrice;
-			count = inflationConfig.getAskCount();
-			shiftCount = inflationConfig.getAskShift();
+			BigDecimal bidFromMultiplier = BigDecimal.valueOf(inflationConfig.getBidShift());
+			BigDecimal bidToMultiplier = BigDecimal.valueOf(inflationConfig.getBidCount())
+				.add(bidFromMultiplier);
+			from = marketPrice.subtract(stepPriceRange.multiply(bidFromMultiplier));
+			to = marketPrice.subtract(stepPriceRange.multiply(bidToMultiplier));
 		}
 
-		SpreadWindowResolveRequest request = SpreadWindowResolveRequest.builder()
-			.count(count)
-			.startPrice(startPrice)
-			.operationOnPrice(operationOnPrice)
-			.spreadWindow(inflationConfig.getSpreadWindow())
-			.priceUnit(priceUnit)
-			.shiftCount(shiftCount)
-			.build();
+		return Range.between(from, to);
 
-		return spreadWindowResolver.resolvePrices(request)
-			.stream()
-			.map(price->getDummyOrderRequest(dto, position, price));
 	}
 
-	private DummyOrderRequest getDummyOrderRequest(DividedDummyOrderDto dto, OrderPosition orderPosition, BigDecimal price) {
+	private boolean priceInRange(
+		Order order, Range<BigDecimal> askPriceRange, Range<BigDecimal> bidPriceRange
+	) {
+		BigDecimal price = order.getPrice();
+		if (OrderPosition.ASK.equals(order.getOrderPosition())) {
+			return askPriceRange.contains(price) || askPriceRange.isEndedBy(price);
+		} else {
+			return bidPriceRange.contains(price) || bidPriceRange.isEndedBy(price);
+		}
+	}
+
+	private DummyOrderRequest getDummyOrderRequest(DividedDummyOrderDto dto,
+		OrderPosition orderPosition, BigDecimal price) {
 		List<BigDecimal> dividedVolumes = volumeResolver.getDividedVolume(dto, orderPosition);
 		DummyOrderConfig dummyOrderConfig = getDummyOrderConfig(dto, orderPosition);
 		int reorderCount = getReorderCount(dummyOrderConfig);
