@@ -14,7 +14,7 @@ public enum Symbol {
 	GTAX2USDT("gtax2", new Market(Exchange.BOBOO, "GTAX2USDT", TradeCurrency.USDT, 2, 2)),
 	MOIUSDT("moi", new Market(Exchange.BOBOO, "MOIUSDT", TradeCurrency.USDT, 2, 2)),
 	OAUSDT("oa", new Market(Exchange.BIGONE, "OAUSDT", TradeCurrency.USDT, 2, 2)),
-	KLAYGUSDT("klayg", new Market(Exchange.BIGONE, "KLAYGUSDT", TradeCurrency.THIRD_DECIMAL_USDT, 3, 2));
+	KLAYGUSDT("klayg", new Market(Exchange.BIGONE, "KLAYGUSDT", TradeCurrency.USDT, 2, 2));
 
 	private final String key;
 	private final Market market;

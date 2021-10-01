@@ -6,6 +6,7 @@ import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.TradeDataRepository;
 import com.moebius.entropy.service.tradewindow.TradeDataService;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -61,27 +62,21 @@ public class BigoneTradeDataService implements TradeDataService {
 		List<TradePrice> oldBidPrices = oldWindow.getBidPrices();
 
 		oldAskPrices.removeIf(tradePrice -> updatedAskPrices.stream()
-			.anyMatch(getSamePricePredicate(tradePrice)));
+			.filter(Objects::nonNull)
+			.anyMatch(newTradePrice -> newTradePrice.getUnitPrice().compareTo(tradePrice.getUnitPrice()) == 0));
 
 		oldBidPrices.removeIf(tradePrice -> updatedBidPrices.stream()
-			.anyMatch(getSamePricePredicate(tradePrice)));
+			.filter(Objects::nonNull)
+			.anyMatch(newTradePrice -> newTradePrice.getUnitPrice().compareTo(tradePrice.getUnitPrice()) == 0));
 
 		updatedAskPrices.stream()
-			.filter(getValidVolumePredicate())
+			.filter(newTradePrice -> newTradePrice.getVolume().compareTo(BigDecimal.ZERO) > 0)
 			.forEach(oldAskPrices::add);
 
 		updatedBidPrices.stream()
-			.filter(getValidVolumePredicate())
+			.filter(newTradePrice -> newTradePrice.getVolume().compareTo(BigDecimal.ZERO) > 0)
 			.forEach(oldBidPrices::add);
 
 		return oldWindow;
-	}
-
-	private Predicate<TradePrice> getSamePricePredicate(TradePrice tradePrice) {
-		return newTradePrice -> newTradePrice.getUnitPrice().compareTo(tradePrice.getUnitPrice()) == 0;
-	}
-
-	private Predicate<TradePrice> getValidVolumePredicate() {
-		return tradePrice -> tradePrice.getVolume().compareTo(BigDecimal.ZERO) > 0;
 	}
 }

@@ -11,17 +11,16 @@ import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 @RequiredArgsConstructor
@@ -45,35 +44,43 @@ public class TradeWindowInflateService {
 
 		return tradeWindowQueryService.getTradeWindowMono(market)
 			.flatMapMany(tradeWindow -> {
-				Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow, inflationConfig);
+				Flux<Order> requestOrderFlux = requestRequiredOrders(market, tradeWindow,
+					inflationConfig);
 				Flux<Order> cancelOrderFlux = cancelInvalidOrders(market, inflationConfig);
 
 				return Flux.merge(requestOrderFlux, cancelOrderFlux);
 			})
-			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
+			.onErrorContinue((throwable, o) -> log
+				.warn("[TradeWindowInflation] Failed to collect order result.", throwable));
 	}
 
-	private Flux<Order> requestRequiredOrders(Market market, TradeWindow window, InflationConfig inflationConfig) {
+	private Flux<Order> requestRequiredOrders(Market market, TradeWindow window,
+		InflationConfig inflationConfig) {
 		Flux<OrderRequest> bidRequestFlux = makeOrderRequestWith(
-			START_FROM_MARKET_PRICE, inflationConfig.getBidCount(), inflationConfig.getBidMinVolume(), market,
+			START_FROM_MARKET_PRICE, inflationConfig.getBidCount(),
+			inflationConfig.getBidMinVolume(), market,
 			OrderPosition.BID, BigDecimal::subtract,
 			window.getBidPrices());
 
 		Flux<OrderRequest> askRequestFlux = makeOrderRequestWith(
-			START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(), market,
+			START_FROM_NEXT_PRICE, inflationConfig.getAskCount(), inflationConfig.getAskMinVolume(),
+			market,
 			OrderPosition.ASK, BigDecimal::add,
 			window.getAskPrices());
 
 		OrderService orderService = orderServiceFactory.getOrderService(market.getExchange());
 
 		return Flux.merge(bidRequestFlux, askRequestFlux)
-			.doOnNext(orderRequest -> log.info("[TradeWindowInflation] Create order for inflation. [{}]", orderRequest))
+			.doOnNext(orderRequest -> log
+				.info("[TradeWindowInflation] Create order for inflation. [{}]", orderRequest))
 			.flatMap(orderService::requestOrder)
-			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to request order.", throwable));
+			.onErrorContinue((throwable, o) -> log
+				.warn("[TradeWindowInflation] Failed to request order. [{}]", o, throwable));
 	}
 
 	private Flux<OrderRequest> makeOrderRequestWith(
-		int startFrom, int count, BigDecimal minimumVolume, Market market, OrderPosition orderPosition,
+		int startFrom, int count, BigDecimal minimumVolume, Market market,
+		OrderPosition orderPosition,
 		BinaryOperator<BigDecimal> priceCalculationHandler,
 		List<TradePrice> prices
 	) {
@@ -86,7 +93,8 @@ public class TradeWindowInflateService {
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 		BigDecimal highestBidPrice = marketPrice.subtract(priceUnit);
 		Map<Float, Float> priceVolumeMap = prices.stream()
-			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue(),
+			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(),
+				tradePrice -> tradePrice.getVolume().floatValue(),
 				Float::sum));
 
 		return Flux.range(startFrom, count)
@@ -95,9 +103,11 @@ public class TradeWindowInflateService {
 				.apply(startPrice, priceUnit.multiply(multiplier)))
 			.filter(price -> price.compareTo(marketPrice) != 0 &&
 				price.compareTo(highestBidPrice) != 0 &&
-				(!priceVolumeMap.containsKey(price.floatValue()) || priceVolumeMap.get(price.floatValue()) < minimumVolume.floatValue()))
+				(!priceVolumeMap.containsKey(price.floatValue())
+					|| priceVolumeMap.get(price.floatValue()) < minimumVolume.floatValue()))
 			.map(price -> {
-				BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
+				BigDecimal inflationVolume = volumeResolver
+					.getInflationVolume(market, orderPosition);
 				return new OrderRequest(market, orderPosition, price, inflationVolume);
 			});
 	}
@@ -107,7 +117,8 @@ public class TradeWindowInflateService {
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 
 		BigDecimal maxAskPrice = marketPrice.add(
-			priceUnit.multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
+			priceUnit
+				.multiply(BigDecimal.valueOf(inflationConfig.getAskCount() + START_FROM_NEXT_PRICE))
 		);
 
 		BigDecimal minBidPrice = marketPrice.subtract(
@@ -125,8 +136,10 @@ public class TradeWindowInflateService {
 					return orderPrice.compareTo(minBidPrice) < 0;
 				}
 			})
-			.doOnNext(order -> log.info("[TradeWindowInflation] Cancel order for inflation. [{}]", order))
+			.doOnNext(
+				order -> log.info("[TradeWindowInflation] Cancel order for inflation. [{}]", order))
 			.flatMap(orderService::cancelOrder)
-			.onErrorContinue((throwable, o) -> log.warn("[TradeWindowInflation] Failed to cancel order.", throwable));
+			.onErrorContinue((throwable, o) -> log
+				.warn("[TradeWindowInflation] Failed to cancel order. [{}]", o, throwable));
 	}
 }
