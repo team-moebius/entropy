@@ -46,11 +46,11 @@ public class EntropyViewService {
 
     public Mono<AutomaticOrderResult> startAutomaticOrder(Market market,
         @Valid AutomaticOrderForm automaticOrderForm) {
-        InflationConfig inflationConfig = automaticOrderViewAssembler.assembleInflationConfig(automaticOrderForm);
-
+        InflationConfig inflationConfig = automaticOrderViewAssembler.assembleInitialInflationConfig(automaticOrderForm);
         inflationConfigRepository.saveConfigFor(market, inflationConfig);
 
         return optimizeOrderService.optimizeOrders(market)
+            .doOnComplete(() -> inflationConfigRepository.enableConfig(market))
             .then(Mono.zip(
                 Mono.just(automaticOrderViewAssembler.assembleDivideDummyOrder(market, automaticOrderForm)),
                 Mono.just(automaticOrderViewAssembler.assembleRepeatMarketOrder(market, automaticOrderForm)))

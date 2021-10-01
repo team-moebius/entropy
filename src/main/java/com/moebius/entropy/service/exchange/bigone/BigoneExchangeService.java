@@ -70,7 +70,8 @@ public class BigoneExchangeService implements
 			.headers(httpHeaders -> httpHeaders.setBearerAuth(bigoneJwtService.create(apiKey)))
 			.bodyValue(bigoneAssembler.assembleOrderRequestBodyValue(orderRequest))
 			.retrieve()
-			.bodyToMono(BigoneOrderResponseDto.class);
+			.bodyToMono(BigoneOrderResponseDto.class)
+			.doOnError(throwable -> log.error("[Bigone] Failed to request order. [{}]", orderRequest));
 	}
 
 	@Override

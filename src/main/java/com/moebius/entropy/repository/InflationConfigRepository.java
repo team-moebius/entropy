@@ -29,6 +29,15 @@ public class InflationConfigRepository {
 			}, () -> {
 				throw new RuntimeException("Inflation configuration is null and tried to save it.");
 			});
+	}
+
+	public void enableConfig(Market market) {
+		String key = market.getSymbol();
+
+		InflationConfig inflationConfig = configMap.getOrDefault(key, null);
+		if (inflationConfig != null) {
+			configMap.put(key, inflationConfig.enable());
+		}
 
 	}
 }

@@ -16,7 +16,7 @@ import java.util.List;
 @Component
 public class AutomaticOrderViewAssembler {
 
-    public InflationConfig assembleInflationConfig(AutomaticOrderForm automaticOrderForm) {
+    public InflationConfig assembleInitialInflationConfig(AutomaticOrderForm automaticOrderForm) {
 
         return InflationConfig.builder()
             .askCount(Math.toIntExact(automaticOrderForm.getSellInflationCount()))
@@ -25,14 +25,14 @@ public class AutomaticOrderViewAssembler {
             .askMaxVolume(automaticOrderForm.getSellVolumeRangeTo())
             .bidMinVolume(automaticOrderForm.getBuyVolumeRangeFrom())
             .bidMaxVolume(automaticOrderForm.getBuyVolumeRangeTo())
-            .enable(true)
+            .enable(false)
             .build();
     }
 
     public DividedDummyOrderDto assembleDivideDummyOrder(Market market, AutomaticOrderForm automaticOrderForm) {
         return DividedDummyOrderDto.builder()
             .market(assembleMarketDto(market))
-            .inflationConfig(assembleInflationConfig(automaticOrderForm))
+            .inflationConfig(assembleInitialInflationConfig(automaticOrderForm))
             .askOrderConfig(DummyOrderConfig.builder()
                 .minDividedOrderCount(Math.toIntExact(automaticOrderForm.getSellDivisionTimeFrom()))
                 .maxDividedOrderCount(Math.toIntExact(automaticOrderForm.getSellDivisionTimeTo()))
