@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 @Slf4j
 @Service
@@ -63,11 +62,11 @@ public class BigoneTradeDataService implements TradeDataService {
 
 		oldAskPrices.removeIf(tradePrice -> updatedAskPrices.stream()
 			.filter(Objects::nonNull)
-			.anyMatch(newTradePrice -> newTradePrice.getUnitPrice().compareTo(tradePrice.getUnitPrice()) == 0));
+			.anyMatch(newTradePrice -> tradePrice.getUnitPrice().compareTo(newTradePrice.getUnitPrice()) == 0));
 
 		oldBidPrices.removeIf(tradePrice -> updatedBidPrices.stream()
 			.filter(Objects::nonNull)
-			.anyMatch(newTradePrice -> newTradePrice.getUnitPrice().compareTo(tradePrice.getUnitPrice()) == 0));
+			.anyMatch(newTradePrice -> tradePrice.getUnitPrice().compareTo(newTradePrice.getUnitPrice()) == 0));
 
 		updatedAskPrices.stream()
 			.filter(newTradePrice -> newTradePrice.getVolume().compareTo(BigDecimal.ZERO) > 0)

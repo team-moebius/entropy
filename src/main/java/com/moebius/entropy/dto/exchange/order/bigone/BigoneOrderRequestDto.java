@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@ToString
 public class BigoneOrderRequestDto {
 	@JsonProperty("asset_pair_name")
 	private String symbol;
