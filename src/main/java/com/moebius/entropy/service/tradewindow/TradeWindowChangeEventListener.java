@@ -29,8 +29,6 @@ public class TradeWindowChangeEventListener {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public void inflateOrdersOnTradeWindowChange(OrderBookDto orderBookDto) {
 		Market market = SymbolUtil.marketFromSymbol(orderBookDto.getSymbol());
-		AtomicBoolean test = new AtomicBoolean(false);
-		test.set(false);
 		TradeWindowAssembler<?> assembler = Optional.ofNullable(market)
 			.map(foundMarket -> assemblerFactory.getTradeWindowAssembler(foundMarket.getExchange()))
 			.orElse(null);

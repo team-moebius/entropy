@@ -3,38 +3,29 @@ package com.moebius.entropy.service.inflate.bigone;
 import com.moebius.entropy.assembler.bigone.BigoneAssembler;
 import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto;
 import com.moebius.entropy.service.tradewindow.TradeWindowChangeEventListener;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.WebSocketSession;
 import org.thymeleaf.util.StringUtils;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class BigoneWebSocketHandler implements WebSocketHandler {
+@Builder
+final class BigoneWebSocketHandler implements WebSocketHandler {
+
+	private final BigoneInflateService bigoneInflateService;
 	private final BigoneAssembler bigoneAssembler;
 	private final TradeWindowChangeEventListener tradeWindowChangeEventListener;
-
-	@Value("${exchange.bigone.websocket.sub-protocol}")
-	private String subProtocol;
-	@Value("${exchange.bigone.websocket.timeout}")
-	private long timeout;
-	@Setter
-	private String symbol;
-	@Setter
-	private BigoneInflateService bigoneInflateService;
+	private final String symbol;
+	private final String subProtocol;
+	private final long timeout;
 
 	@Override
 	public List<String> getSubProtocols() {
@@ -48,7 +39,8 @@ public class BigoneWebSocketHandler implements WebSocketHandler {
 			return Mono.empty();
 		}
 
-		return session.send(Mono.just(session.textMessage(bigoneAssembler.assembleOrderBookPayload(symbol))))
+		return session
+			.send(Mono.just(session.textMessage(bigoneAssembler.assembleOrderBookPayload(symbol))))
 			.thenMany(session.receive())
 			.subscribeOn(Schedulers.boundedElastic())
 			.timeout(Duration.ofMillis(timeout), Schedulers.boundedElastic())
@@ -56,7 +48,8 @@ public class BigoneWebSocketHandler implements WebSocketHandler {
 			.filter(this::isValidOrderBookDto)
 			.doOnNext(tradeWindowChangeEventListener::inflateOrdersOnTradeWindowChange)
 			.then()
-			.doOnError(exception -> log.error("[Bigone] Failed to inflate orders of {} by order book.", symbol, exception))
+			.doOnError(exception -> log
+				.error("[Bigone] Failed to inflate orders of {} by order book.", symbol, exception))
 			.doOnTerminate(() -> {
 				log.error("[Bigone] Terminated order inflation of {}, retry inflation ...", symbol);
 				bigoneInflateService.inflateOrdersByOrderBook(symbol);
