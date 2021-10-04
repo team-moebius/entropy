@@ -11,17 +11,16 @@ import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.repository.InflationConfigRepository;
 import com.moebius.entropy.service.order.OrderService;
 import com.moebius.entropy.service.order.OrderServiceFactory;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 @RequiredArgsConstructor
@@ -85,8 +84,9 @@ public class TradeWindowInflateService {
 
 		BigDecimal priceUnit = market.getTradeCurrency().getPriceUnit();
 		BigDecimal highestBidPrice = marketPrice.subtract(priceUnit);
-		Map<Float, Float> priceVolumeMap = prices.stream()
-			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().floatValue(), tradePrice -> tradePrice.getVolume().floatValue()));
+		Map<String, BigDecimal> priceVolumeMap = prices.stream()
+			.collect(Collectors.toMap(tradePrice -> tradePrice.getUnitPrice().toPlainString(),
+				TradePrice::getVolume));
 
 		return Flux.range(startFrom, count)
 			.map(BigDecimal::valueOf)
@@ -94,9 +94,11 @@ public class TradeWindowInflateService {
 				.apply(startPrice, priceUnit.multiply(multiplier)))
 			.filter(price -> price.compareTo(marketPrice) != 0 &&
 				price.compareTo(highestBidPrice) != 0 &&
-				(!priceVolumeMap.containsKey(price.toPlainString()) || priceVolumeMap.get(price.toPlainString()).compareTo(minimumVolume) < 0))
+				(!priceVolumeMap.containsKey(price.toPlainString())
+					|| priceVolumeMap.get(price.toPlainString()).compareTo(minimumVolume) < 0))
 			.map(price -> {
-				BigDecimal inflationVolume = volumeResolver.getInflationVolume(market, orderPosition);
+				BigDecimal inflationVolume = volumeResolver.getInflationVolume(market,
+					orderPosition);
 				return new OrderRequest(market, orderPosition, price, inflationVolume);
 			});
 	}

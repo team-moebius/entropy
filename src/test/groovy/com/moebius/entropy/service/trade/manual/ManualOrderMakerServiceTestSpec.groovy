@@ -64,18 +64,9 @@ class ManualOrderMakerServiceTestSpec extends Specification {
         (0..<selectedDivision).forEach({ index ->
             def volume = randomVolumes[index]
             def remainVolume = remainVolumes[index]
-            def orderService = Stub(OrderService) {
-                requestManualOrder({
-                    it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(requestedMarketPrice) && it.volume == volume
-                } as OrderRequest) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
-            }
-
-            orderServiceFactory.getOrderService(_ as Exchange) >> orderService
-            if (remainVolume.doubleValue() > 0.0) {
-                orderService.requestManualOrder({
-                    it.market == market && it.orderPosition == orderPosition && BigDecimal.valueOf(requestedMarketPrice) && it.volume == remainVolume
-                } as Order) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
-            }
+            orderService.requestManualOrder({
+                it.market == market && it.orderPosition == orderPosition && it.price == BigDecimal.valueOf(requestedMarketPrice) && it.volume == volume
+            } as OrderRequest) >> Mono.just(new Order("$index", market, orderPosition, requestedMarketPrice, remainVolume))
         })
 
         def request = ManualOrderMakingRequest.builder()
