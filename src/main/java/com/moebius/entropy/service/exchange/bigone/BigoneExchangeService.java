@@ -3,7 +3,12 @@ package com.moebius.entropy.service.exchange.bigone;
 import com.moebius.entropy.assembler.bigone.BigoneAssembler;
 import com.moebius.entropy.domain.Exchange;
 import com.moebius.entropy.domain.order.ApiKey;
-import com.moebius.entropy.dto.exchange.order.bigone.*;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneCancelRequestDto;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneCancelResponseDto;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneOpenOrderDto;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneOrderRequestDto;
+import com.moebius.entropy.dto.exchange.order.bigone.BigoneOrderResponseDto;
+import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto;
 import com.moebius.entropy.service.exchange.ExchangeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +24,7 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class BigoneExchangeService implements
 	ExchangeService<BigoneCancelRequestDto, BigoneCancelResponseDto, BigoneOrderRequestDto, BigoneOrderResponseDto, BigoneOpenOrderDto> {
+
 	private final WebClient webClient;
 	private final BigoneJwtService bigoneJwtService;
 	private final BigoneAssembler bigoneAssembler;
@@ -33,6 +39,8 @@ public class BigoneExchangeService implements
 	private String requestOrderPath;
 	@Value("${exchange.bigone.rest.cancel-orders}")
 	private String cancelOrderPath;
+	@Value("${exchange.bigone.rest.order-book}")
+	private String orderBookPath;
 
 	@Override
 	public Flux<BigoneOpenOrderDto> getOpenOrders(String symbol, ApiKey apiKey) {
@@ -48,7 +56,8 @@ public class BigoneExchangeService implements
 	}
 
 	@Override
-	public Mono<BigoneCancelResponseDto> cancelOrder(BigoneCancelRequestDto cancelRequest, ApiKey apiKey) {
+	public Mono<BigoneCancelResponseDto> cancelOrder(BigoneCancelRequestDto cancelRequest,
+		ApiKey apiKey) {
 		return webClient.post()
 			.uri(uriBuilder -> uriBuilder.scheme(scheme)
 				.host(host)
@@ -60,7 +69,8 @@ public class BigoneExchangeService implements
 	}
 
 	@Override
-	public Mono<BigoneOrderResponseDto> requestOrder(BigoneOrderRequestDto orderRequest, ApiKey apiKey) {
+	public Mono<BigoneOrderResponseDto> requestOrder(BigoneOrderRequestDto orderRequest,
+		ApiKey apiKey) {
 		return webClient.post()
 			.uri(uriBuilder -> uriBuilder.scheme(scheme)
 				.host(host)
@@ -76,5 +86,16 @@ public class BigoneExchangeService implements
 	@Override
 	public Exchange getExchange() {
 		return Exchange.BIGONE;
+	}
+
+	public Mono<BigoneOrderBookDto> getOrderBook(String symbol) {
+		return webClient.get()
+			.uri(uriBuilder -> uriBuilder.scheme(scheme)
+				.host(host)
+				.path(orderBookPath)
+				.queryParams(bigoneAssembler.assembleOrderBookQueryParams())
+				.build(symbol))
+			.retrieve()
+			.bodyToMono(BigoneOrderBookDto.class);
 	}
 }
