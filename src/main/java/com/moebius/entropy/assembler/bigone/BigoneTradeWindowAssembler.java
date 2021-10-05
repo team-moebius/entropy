@@ -8,30 +8,33 @@ import com.moebius.entropy.domain.trade.TradePrice;
 import com.moebius.entropy.domain.trade.TradeWindow;
 import com.moebius.entropy.dto.exchange.orderbook.OrderBookDto;
 import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto;
+import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto.Data;
+import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto.UnitData;
 import com.moebius.entropy.service.tradewindow.TradeWindowQueryService;
 import com.moebius.entropy.util.SymbolUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 
 @Component
 @RequiredArgsConstructor
-public final class BigoneTradeWindowAssembler extends TradeWindowAssembler<BigoneOrderBookDto.Depth> {
+public final class BigoneTradeWindowAssembler extends
+	TradeWindowAssembler<BigoneOrderBookDto.Data> {
+
 	private final TradeWindowQueryService tradeWindowQueryService;
 
 	@Override
-	public BigDecimal extractMarketPrice(OrderBookDto<BigoneOrderBookDto.Depth> orderBookDto) {
+	public BigDecimal extractMarketPrice(OrderBookDto<Data> orderBookDto) {
 		return Optional.ofNullable(orderBookDto)
 			.map(OrderBookDto::getData)
 			.map(this::findFirst)
-			.map(this::getMarketPrice)
+			.map(wrappedData -> getMarketPrice(orderBookDto.getSymbol(), wrappedData))
 			.orElseThrow(() -> new IllegalStateException(
 				String.format(
 					"[%s] Failed to extract market price from BigoneOrderBookDto due to data missing %s",
@@ -46,8 +49,8 @@ public final class BigoneTradeWindowAssembler extends TradeWindowAssembler<Bigon
 	}
 
 	@Override
-	protected List<TradePrice> mapTrade(OrderPosition orderPosition, BigoneOrderBookDto.Depth depth) {
-		List<BigoneOrderBookDto.Data> rawTradeData = null;
+	protected List<TradePrice> mapTrade(OrderPosition orderPosition, Data depth) {
+		List<UnitData> rawTradeData = null;
 
 		if (orderPosition == OrderPosition.ASK) {
 			rawTradeData = depth.getAsks();
@@ -58,25 +61,27 @@ public final class BigoneTradeWindowAssembler extends TradeWindowAssembler<Bigon
 		return Optional.ofNullable(rawTradeData)
 			.stream()
 			.flatMap(Collection::stream)
-			.map(data -> new TradePrice(orderPosition, data.getPrice(), data.getAmount()))
+			.map(data -> new TradePrice(orderPosition, data.getPrice(), data.getQuantity()))
 			.collect(Collectors.toList());
 	}
 
-	private BigDecimal getMarketPrice(BigoneOrderBookDto.Depth depth) {
-		Market market = SymbolUtil.marketFromSymbol(depth.getSymbol());
+	private BigDecimal getMarketPrice(String symbol, Data depth) {
+		Market market = SymbolUtil.marketFromSymbol(symbol);
 		TradeWindow tradeWindow = tradeWindowQueryService.getTradeWindow(market);
 
-		if (CollectionUtils.isEmpty(tradeWindow.getAskPrices()) && CollectionUtils.isEmpty(tradeWindow.getBidPrices())) {
+		if (CollectionUtils.isEmpty(tradeWindow.getAskPrices()) &&
+			CollectionUtils.isEmpty(tradeWindow.getBidPrices())) {
 			if (CollectionUtils.isEmpty(depth.getAsks())) {
 				return Optional.ofNullable(depth.getBids())
 					.map(this::findFirst)
-					.map(BigoneOrderBookDto.Data::getPrice)
-					.map(highestBidPrice -> highestBidPrice.add(market.getTradeCurrency().getPriceUnit()))
+					.map(UnitData::getPrice)
+					.map(highestBidPrice -> highestBidPrice
+						.add(market.getTradeCurrency().getPriceUnit()))
 					.orElse(null);
 			} else {
 				return Optional.ofNullable(depth.getAsks())
 					.map(this::findFirst)
-					.map(BigoneOrderBookDto.Data::getPrice)
+					.map(UnitData::getPrice)
 					.orElse(null);
 			}
 		}

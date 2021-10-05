@@ -3,12 +3,16 @@ package com.moebius.entropy.dto.exchange.orderbook.bigone;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.moebius.entropy.dto.exchange.orderbook.OrderBookDto;
-import lombok.*;
-
+import com.moebius.entropy.dto.exchange.orderbook.bigone.BigoneOrderBookDto.Data;
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Getter
 @Builder
@@ -16,48 +20,32 @@ import java.util.Optional;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class BigoneOrderBookDto implements OrderBookDto<BigoneOrderBookDto.Depth> {
-	private String requestId;
-	private DepthWrapper depthSnapshot;
-	private DepthWrapper depthUpdate;
+public class BigoneOrderBookDto implements OrderBookDto<Data> {
+	private DataWrapper data;
 
 	@Override
 	public String getSymbol() {
-		return Optional.ofNullable(getValidDepthWrapper())
-			.map(DepthWrapper::getDepth)
-			.map(Depth::getSymbol)
-			.orElse(null);
+		return data.getSymbol();
 	}
 
 	@Override
-	public List<Depth> getData() {
-		return Optional.ofNullable(getValidDepthWrapper())
-			.map(DepthWrapper::getDepth)
-			.map(Collections::singletonList)
-			.orElse(Collections.emptyList());
+	public List<Data> getData() {
+		return Collections.singletonList(Data.builder()
+			.asks(data.getAsks())
+			.bids(data.getBids())
+			.build());
 	}
-
 	@Getter
 	@Builder
 	@ToString
 	@NoArgsConstructor(access = AccessLevel.PRIVATE)
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	private static class DepthWrapper {
-		private Depth depth;
-	}
-
-	@Getter
-	@Builder
-	@ToString
-	@NoArgsConstructor(access = AccessLevel.PRIVATE)
-	@AllArgsConstructor(access = AccessLevel.PRIVATE)
-	@JsonIgnoreProperties(ignoreUnknown = true)
-	public static class Depth {
-		@JsonProperty("market")
+	public static class DataWrapper {
+		@JsonProperty("asset_pair_name")
 		private String symbol;
-		private List<Data> asks;
-		private List<Data> bids;
+		private List<UnitData> asks;
+		private List<UnitData> bids;
 	}
 
 	@Getter
@@ -67,12 +55,22 @@ public class BigoneOrderBookDto implements OrderBookDto<BigoneOrderBookDto.Depth
 	@AllArgsConstructor(access = AccessLevel.PRIVATE)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Data {
-		private BigDecimal price;
-		private BigDecimal amount;
-		private BigDecimal orderCount;
+
+		private List<UnitData> asks;
+		private List<UnitData> bids;
 	}
 
-	private DepthWrapper getValidDepthWrapper() {
-		return depthSnapshot == null ? depthUpdate : depthSnapshot;
+	@Getter
+	@Builder
+	@ToString
+	@NoArgsConstructor(access = AccessLevel.PRIVATE)
+	@AllArgsConstructor(access = AccessLevel.PRIVATE)
+	@JsonIgnoreProperties(ignoreUnknown = true)
+	public static class UnitData {
+
+		private BigDecimal price;
+		private BigDecimal quantity;
+		@JsonProperty("order_count")
+		private BigDecimal orderCount;
 	}
 }
