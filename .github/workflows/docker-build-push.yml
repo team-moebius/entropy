@@ -3,8 +3,6 @@ name: Docker image build & push
 on:
   push:
     branches: [ master, develop ]
-  pull_request:
-    branches: [ master ]
 
   workflow_dispatch:
 
